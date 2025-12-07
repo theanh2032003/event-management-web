@@ -47,7 +47,7 @@ import EditProduct from './features/product/pages/EditProduct';
 import RFQ from './features/rfq/pages/RfqSupplier';
 import Quotations from './features/quote/pages/QuotationSuppliers';
 import Contracts from './features/contract/pages/ContractSuppliers';
-import LocationManagement from './features/location/pages/LocationManagement';
+import LocationSupplier from './features/location/pages/LocationSupplier';
 import LocationDetail from './features/location/pages/LocationDetail';
 import SupplierInfo from './features/supplier/pages/Profile';
 
@@ -118,7 +118,7 @@ function SupplierRoutes() {
         <Route path="marketplace" element={<SupplierMarketplace />} />
         <Route path="create-product" element={<CreateProduct />} />
         <Route path="edit-product/:productId" element={<EditProduct />} />
-        <Route path="locations" element={<LocationManagement />} />
+        <Route path="locations" element={<LocationSupplier />} />
         <Route path="locations/:locationId" element={<LocationDetail />} />
         <Route path="info" element={<SupplierInfo />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />

@@ -9,17 +9,23 @@ const projectApi = {
    */
   getById: (projectId) => {
     const url = `/project/${projectId}`;
-    const finalEnterpriseId = localStorage.getItem("enterpriseId");
-    const userId = localStorage.getItem("userId");
-    const token = localStorage.getItem("token");
 
-    return axiosClient.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "enterprise-id": finalEnterpriseId,
-        "user-id": userId,
-      },
-    });
+    return axiosClient.get(url);
+  },
+
+  create: (projectData) => {
+    const url = `/project`;
+    return axiosClient.post(url, projectData);
+  },
+
+  update: (projectId, projectData) => {
+    const url = `/project/${projectId}`;
+    return axiosClient.put(url, projectData);
+  },
+
+  delete: (projectId) => {
+    const url = `/project/${projectId}`;
+    return axiosClient.delete(url);
   },
 
   /**

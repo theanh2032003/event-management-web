@@ -487,7 +487,7 @@ const EventDialog = ({
         {event ? "Chỉnh sửa sự kiện" : "Tạo sự kiện mới"}
       </DialogTitle>
       <DialogContent sx={{ mt: 2 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 2 }}>
           {error && (
             <Alert severity="error" onClose={() => setError("")} sx={{ borderRadius: 2 }}>
               {error}

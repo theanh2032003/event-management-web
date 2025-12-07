@@ -11,8 +11,7 @@ const locationApi = {
    */
   getLocations: async (enterpriseId) => {
     try {
-      const headers = enterpriseId ? { 'enterprise-id': enterpriseId } : {};
-      const response = await axiosClient.get(`/location`, { headers });
+      const response = await axiosClient.get(`/location`);
       return response;
     } catch (error) {
       throw error;
@@ -75,6 +74,61 @@ const locationApi = {
   deleteLocation: async (locationId) => {
     try {
       const response = await axiosClient.delete(`/location/${locationId}/enterprise`);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+    createLocationSupplier: async (locationData) => {
+    try {
+      const response = await axiosClient.post(`/location/supplier`, locationData);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Cập nhật địa điểm
+   * @param {string} enterpriseId - ID của doanh nghiệp
+   * @param {string} locationId - ID của địa điểm
+   * @param {object} locationData - Dữ liệu địa điểm
+   * @returns {Promise} Địa điểm đã cập nhật
+   */
+  updateLocationSupplier: async (locationId, locationData) => {
+    try {
+      const response = await axiosClient.put(`/location/${locationId}/supplier`, locationData);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+    /**
+   * Cập nhật địa điểm
+   * @param {string} enterpriseId - ID của doanh nghiệp
+   * @param {string} locationId - ID của địa điểm
+   * @param {object} locationData - Dữ liệu địa điểm
+   * @returns {Promise} Địa điểm đã cập nhật
+   */
+  changeAvailableSupplier: async (locationId, available) => {
+    try {
+      const response = await axiosClient.patch(`/location/${locationId}/availability/supplier?available=${available}`);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Xóa địa điểm
+   * @param {string} locationId - ID của địa điểm
+   * @returns {Promise}
+   */
+  deleteLocationSupplier: async (locationId) => {
+    try {
+      const response = await axiosClient.delete(`/location/${locationId}/supplier`);
       return response;
     } catch (error) {
       throw error;

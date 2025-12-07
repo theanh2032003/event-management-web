@@ -33,6 +33,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import productApi from '../api/product.api';
 import categoryApi from '../api/category.api';
+import locationApi from '../../location/api/location.api';
 import { uploadToCloudinary } from '../../../shared/utils/uploadToCloudinary';
 
 const HeaderBox = styled(Box)(({ theme }) => ({
@@ -196,9 +197,11 @@ export default function CreateProduct() {
     price: '',
     unit: '',
     images: [],
+    locationId: '',
   });
 
   const [categories, setCategories] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -226,10 +229,104 @@ export default function CreateProduct() {
     fetchCategories();
   }, []);
 
+  // Fetch locations when category ID = 3 is selected
+  useEffect(() => {
+    const fetchLocations = async () => {
+      if (!supplierId) return;
+      
+      try {
+        const response = await locationApi.getSupplierLocationsSimple(supplierId);
+        const data = response?.content || response?.data || response || [];
+        setLocations(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+        setSnackbar({
+          open: true,
+          message: 'Không thể tải danh sách địa điểm',
+          severity: 'warning',
+        });
+      }
+    };
+
+    // Chỉ fetch locations khi category ID = 3
+    if (formData.categoryId === 3 || formData.categoryId === '3') {
+      fetchLocations();
+    } else {
+      setLocations([]);
+      // Clear location khi đổi sang category khác
+      if (formData.locationId) {
+        setFormData(prev => ({ ...prev, locationId: '' }));
+      }
+    }
+  }, [supplierId, formData.categoryId]);
+
   const handleChange = (field) => (event) => {
     setFormData({ ...formData, [field]: event.target.value });
     if (errors[field]) {
       setErrors({ ...errors, [field]: '' });
+    }
+  };
+
+  const handleLocationChange = async (event) => {
+    const locationId = event.target.value;
+    
+    if (!locationId) {
+      // Khi bỏ chọn location, xóa các trường liên quan
+      setFormData({ 
+        ...formData, 
+        locationId: '',
+        name: '',
+        price: '',
+        unit: '',
+        description: '',
+        images: [],
+      });
+      return;
+    }
+
+    try {
+      // Call API to get full location details
+      const response = await locationApi.getLocationById(locationId);
+      const locationDetail = response?.data || response;
+      
+      if (locationDetail) {
+        // Auto-fill form with location data from API
+        const capacity = locationDetail.capacity || '';
+        const address = locationDetail.address || '';
+        const description = `Địa chỉ: ${address}${capacity ? ` - Sức chứa: ${capacity} người` : ''}`;
+        
+        // Xử lý hình ảnh từ location - thay thế hoàn toàn hình cũ
+        let locationImages = [];
+        if (locationDetail.images && Array.isArray(locationDetail.images) && locationDetail.images.length > 0) {
+          locationImages = locationDetail.images;
+        } else if (locationDetail.image) {
+          locationImages = [locationDetail.image];
+        }
+        
+        // Thay thế hoàn toàn form data với dữ liệu từ location mới
+        setFormData({
+          ...formData,
+          locationId,
+          name: locationDetail.name || '',
+          price: locationDetail.pricePerHour || '',
+          unit: 'giờ',
+          description,
+          images: locationImages, // Thay thế hoàn toàn, không giữ ảnh cũ
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching location details:', error);
+      setSnackbar({
+        open: true,
+        message: 'Không thể tải thông tin địa điểm',
+        severity: 'error',
+      });
+      // Still set the locationId even if fetch fails
+      setFormData({ ...formData, locationId });
+    }
+    
+    if (errors.locationId) {
+      setErrors({ ...errors, locationId: '' });
     }
   };
 
@@ -570,21 +667,6 @@ export default function CreateProduct() {
                     />
                   </Grid>
 
-                  <Grid item xs={12}>
-                    <StyledTextField
-                      fullWidth
-                      size="small"
-                      label="Mô tả"
-                      value={formData.description}
-                      onChange={handleChange('description')}
-                      error={!!errors.description}
-                      helperText={errors.description}
-                      multiline
-                      rows={3}
-                      disabled={loading}
-                    />
-                  </Grid>
-
                   <Grid item xs={12} sm={6}>
                     <StyledFormControl fullWidth size="small" required error={!!errors.categoryId} disabled={loading}>
                       <InputLabel>Danh mục</InputLabel>
@@ -592,6 +674,9 @@ export default function CreateProduct() {
                         value={formData.categoryId}
                         onChange={handleChange('categoryId')}
                         label="Danh mục"
+                        sx={{
+                          minWidth: 130
+                        }}
                       >
                         <MenuItem value="">
                           <em>Chọn danh mục</em>
@@ -608,6 +693,57 @@ export default function CreateProduct() {
                         </Typography>
                       )}
                     </StyledFormControl>
+                  </Grid>
+
+                  {/* Location dropdown - chỉ hiển thị khi category ID = 3 */}
+                  {(formData.categoryId === 3 || formData.categoryId === '3') && (
+                    <Grid item xs={12} sm={6}>
+                      <StyledFormControl fullWidth size="small" error={!!errors.locationId} disabled={loading}>
+                        <InputLabel>Chọn địa điểm</InputLabel>
+                        <Select
+                          value={formData.locationId}
+                          onChange={handleLocationChange}
+                          label="Chọn địa điểm"
+                          sx={{
+                            minWidth: 140, 
+                          }}
+                        >
+                          <MenuItem value="">
+                            <em>-- Chọn địa điểm --</em>
+                          </MenuItem>
+                          {locations.map((location) => (
+                            <MenuItem key={location.id || location._id} value={location.id || location._id}>
+                              {location.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.locationId && (
+                          <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+                            {errors.locationId}
+                          </Typography>
+                        )}
+                      </StyledFormControl>
+                    </Grid>
+                  )}
+
+                  <Grid item xs={12}>
+                    <StyledTextField
+                      fullWidth
+                      size="small"
+                      label="Mô tả"
+                      value={formData.description}
+                      onChange={handleChange('description')}
+                      error={!!errors.description}
+                      helperText={errors.description}
+                      multiline
+                      rows={3}
+                      disabled={loading}
+                      InputProps={{
+                        sx: {
+                          alignItems: 'flex-start',
+                        }
+                      }}
+                    />
                   </Grid>
 
                   <Grid item xs={12} sm={3}>

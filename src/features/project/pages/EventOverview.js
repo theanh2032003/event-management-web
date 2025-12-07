@@ -18,6 +18,7 @@ import {
   MenuItem,
   Button,
   TextField,
+  CircularProgress,
 } from "@mui/material";
 import {
   CalendarMonth as CalendarIcon,
@@ -36,6 +37,8 @@ import {
 } from "@mui/icons-material";
 import PermissionGate from "../../../shared/components/PermissionGate";
 import { CommonDialog } from "../../../shared/components/CommonDialog";
+import projectApi from "../api/project.api";
+import { useToast } from "../../../app/providers/ToastContext";
 
 // Styled Components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -168,12 +171,16 @@ export default function EventOverview({
   onRefresh,
   hasPermission = () => true
 }) {
+  const toast = useToast();
   const [anchorEl, setAnchorEl] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [imageCarouselPage, setImageCarouselPage] = useState(0);
   const [images, setImages] = useState(eventData.images);
   const [animating, setAnimating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [currentEventData, setCurrentEventData] = useState(eventData);
 
   // Format date
   const formatDate = (dateString) => {
@@ -265,16 +272,71 @@ export default function EventOverview({
     handleMenuClose();
   };
 
-  const handleDeleteConfirm = () => {
-    // TODO: Call API to delete event
-    console.log('Delete event:', eventData.id);
-    setDeleteDialogOpen(false);
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
+    try {
+      await projectApi.delete(eventData.id);
+      toast.success('Sự kiện đã được xóa thành công');
+      setDeleteDialogOpen(false);
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast.error('Không thể xóa sự kiện. Vui lòng thử lại.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  const handleEditSave = () => {
-    // TODO: Call API to update event
-    console.log('Update event:', editingEvent);
-    setEditingEvent(null);
+  const handleEditSave = async () => {
+    if (!editingEvent.name.trim()) {
+      toast.error('Tên sự kiện không được để trống');
+      return;
+    }
+
+    if (new Date(editingEvent.startedAt) >= new Date(editingEvent.endedAt)) {
+      toast.error('Thời gian kết thúc phải sau thời gian bắt đầu');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const updateData = {
+        name: editingEvent.name.trim(),
+        description: editingEvent.description?.trim() || null,
+        startedAt: new Date(editingEvent.startedAt).toISOString(),
+        endedAt: new Date(editingEvent.endedAt).toISOString(),
+        avatar: editingEvent.avatar || null,
+        images: editingEvent.images || [],
+        category: editingEvent.category,
+        feeType: editingEvent.feeType,
+        visibility: editingEvent.visibility,
+        accessType: editingEvent.accessType,
+        locationId: editingEvent.locationId,
+        groupTaskStateId: editingEvent.groupTaskStateId,
+        groupTaskTypeId: editingEvent.groupTaskTypeId,
+      };
+
+      await projectApi.update(eventData.id, updateData);
+      
+      // Fetch lại dữ liệu chi tiết sự kiện
+      const updatedEvent = await projectApi.getById(eventData.id);
+      setCurrentEventData(updatedEvent?.data || updatedEvent);
+      
+      toast.success('Sự kiện đã được cập nhật thành công');
+      setEditingEvent(null);
+      
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error('Error updating event:', error);
+      const errorMessage = error?.response?.data?.message || 'Không thể cập nhật sự kiện. Vui lòng thử lại.';
+      toast.error(errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleEditCancel = () => {
@@ -326,7 +388,7 @@ export default function EventOverview({
         <Box
           sx={{
             position: 'relative',
-            backgroundImage: `url(${eventData.avatar || 'https://via.placeholder.com/1200x400'})`,
+            backgroundImage: `url(${currentEventData.avatar || 'https://via.placeholder.com/1200x400'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             height: { xs: 280, sm: 350, md: 420 },
@@ -398,13 +460,13 @@ export default function EventOverview({
                 color: '#fff',
               }}
             >
-              {eventData.name}
+              {currentEventData.name}
             </Typography>
 
             {/* Status & Category */}
             <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
               <Chip
-                label={getCategoryLabel(eventData.category)}
+                label={getCategoryLabel(currentEventData.category)}
                 size="small"
                 sx={{
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -413,8 +475,8 @@ export default function EventOverview({
                 }}
               />
               <Chip
-                label={getStateLabel(eventData.state)}
-                color={getStateColor(eventData.state)}
+                label={getStateLabel(currentEventData.state)}
+                color={getStateColor(currentEventData.state)}
                 size="small"
                 sx={{ fontWeight: 600 }}
               />
@@ -425,14 +487,14 @@ export default function EventOverview({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#fff' }}>
                 <CalendarIcon sx={{ fontSize: 20 }} />
                 <Typography variant="body2" sx={{fontSize: '0.9rem'}}>
-                  {formatDate(eventData.startedAt)} - {formatDate(eventData.endedAt)}
+                  {formatDate(currentEventData.startedAt)} - {formatDate(currentEventData.endedAt)}
                 </Typography>
               </Box>
-              {eventData.location && (
+              {currentEventData.location && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#fff' }}>
                   <LocationIcon sx={{ fontSize: 20 }} />
                   <Typography variant="body2" sx={{fontSize: '0.9rem'}}> 
-                    {eventData.location.name}
+                    {currentEventData.location.name}
                   </Typography>
                 </Box>
               )}
@@ -487,6 +549,7 @@ export default function EventOverview({
                   <Button 
                     onClick={handleEditCancel} 
                     variant="outlined"
+                    disabled={submitting}
                     sx={{
                       borderColor: '#cbd5e1',
                       color: '#64748b',
@@ -501,6 +564,7 @@ export default function EventOverview({
                   <Button 
                     onClick={handleEditSave} 
                     variant="contained"
+                    disabled={submitting}
                     sx={{
                       backgroundColor: '#3b82f6',
                       color: '#fff',
@@ -509,7 +573,7 @@ export default function EventOverview({
                       },
                     }}
                   >
-                    Lưu
+                    {submitting ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Lưu'}
                   </Button>
                 </Stack>
               </Stack>
@@ -518,7 +582,7 @@ export default function EventOverview({
           )}
 
           {/* Description Section */}
-          {eventData.description && !editingEvent && (
+          {currentEventData.description && !editingEvent && (
             <Box sx={{ mb: 4 }}>
               <SectionTitle sx={{ mt: 0 }}>Mô tả</SectionTitle>
               <Typography
@@ -530,7 +594,7 @@ export default function EventOverview({
                   fontWeight: 400,
                 }}
               >
-                {eventData.description}
+                {currentEventData.description}
               </Typography>
             </Box>
           )}
@@ -545,7 +609,7 @@ export default function EventOverview({
                     Hiển thị:
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: '#000000ff', fontSize: '0.95rem' }}>
-                    {getVisibilityLabel(eventData.visibility)}
+                    {getVisibilityLabel(currentEventData.visibility)}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -553,7 +617,7 @@ export default function EventOverview({
                     Truy cập:
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: '#000000ff', fontSize: '0.95rem' }}>
-                    {getAccessTypeLabel(eventData.accessType)}
+                    {getAccessTypeLabel(currentEventData.accessType)}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -561,7 +625,7 @@ export default function EventOverview({
                     Phí tham gia:
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: '#000000ff', fontSize: '0.95rem' }}>
-                    {getFeeTypeLabel(eventData.feeType)}
+                    {getFeeTypeLabel(currentEventData.feeType)}
                   </Typography>
                 </Box>
               </Stack>
@@ -569,7 +633,7 @@ export default function EventOverview({
           )}
 
           {/* Gallery Section */}
-          {eventData.images?.length > 0 && !editingEvent && (
+          {currentEventData.images?.length > 0 && !editingEvent && (
             <Box sx={{ mb: 4 }}>
               <SectionTitle>Hình ảnh</SectionTitle>
 
@@ -656,24 +720,24 @@ export default function EventOverview({
           )}
 
           {/* Task State & Type Section */}
-          {(eventData.groupTaskState || eventData.groupTaskType) && !editingEvent && (
+          {(currentEventData.groupTaskState || currentEventData.groupTaskType) && !editingEvent && (
             <Box>
               <SectionTitle>Thông tin bổ sung</SectionTitle>
 
               {/* Group Task State */}
-              {eventData.groupTaskState && (
+              {currentEventData.groupTaskState && (
                 <Box sx={{ mb: 3 }}>
                   <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1.5 }}>
                     <Typography variant="caption" sx={{ color: '#000000ff', fontWeight: 600, fontSize: '0.95rem', minWidth: 100 }}>
                       Nhóm tiến trình:
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#000000ff', fontSize: '0.95rem' }}>
-                      {eventData.groupTaskState.name}
+                      {currentEventData.groupTaskState.name}
                     </Typography>
                   </Box>
-                  {eventData.groupTaskState.states?.length > 0 && (
+                  {currentEventData.groupTaskState.states?.length > 0 && (
                     <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                      {eventData.groupTaskState.states.map((state) => (
+                      {currentEventData.groupTaskState.states.map((state) => (
                         <Chip
                           key={state.id}
                           icon={<CircleIcon sx={{ fontSize: 12 }} />}
@@ -692,19 +756,19 @@ export default function EventOverview({
               )}
 
               {/* Group Task Type */}
-              {eventData.groupTaskType && (
+              {currentEventData.groupTaskType && (
                 <Box>
                   <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1.5 }}>
                     <Typography variant="caption" sx={{ color: '#000000ff', fontWeight: 600, fontSize: '0.95rem', minWidth: 100 }}>
                       Nhóm công việc:
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#000000ff', fontSize: '0.95rem' }}>
-                      {eventData.groupTaskType.name}
+                      {currentEventData.groupTaskType.name}
                     </Typography>
                   </Box>
-                  {eventData.groupTaskType.types?.length > 0 && (
+                  {currentEventData.groupTaskType.types?.length > 0 && (
                     <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                      {eventData.groupTaskType.types.map((type) => (
+                      {currentEventData.groupTaskType.types.map((type) => (
                         <Chip
                           key={type.id}
                           icon={<CircleIcon sx={{ fontSize: 12 }} />}
@@ -730,9 +794,10 @@ export default function EventOverview({
       <CommonDialog
         open={deleteDialogOpen}
         title="Xoá sự kiện"
-        submitLabel="Xoá"
+        submitLabel={deleting ? "Đang xóa..." : "Xoá"}
         centerButtons={true}
         cancelLabel="Hủy"
+        loading={deleting}
         buttonStyles={{
           submit: {
             backgroundColor: '#ef4444',
@@ -742,11 +807,11 @@ export default function EventOverview({
             },
           },
         }}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
         onSubmit={handleDeleteConfirm}
       >
         <Typography sx={{ textAlign: 'center' }}>
-          Bạn chắc chắn muốn xoá sự kiện "{eventData.name}"? 
+          Bạn chắc chắn muốn xoá sự kiện "{currentEventData.name}"? 
           Hành động này không thể hoàn tác.
         </Typography>
       </CommonDialog>

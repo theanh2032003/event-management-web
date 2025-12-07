@@ -175,7 +175,6 @@ const StageRow = ({ stage, onEdit, onDelete, onChangeStatus, projectId, enterpri
           ...taskData,
           stageId: stage.id
         };
-        console.log("➕ CREATE Mode - Payload with stageId:", taskDataWithStage);
         await taskApi.create(taskDataWithStage, enterpriseId);
       }
       console.log("✅ Save task successful");

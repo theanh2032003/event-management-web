@@ -212,69 +212,71 @@ export default function PaymentApproval() {
     }
   }, [enterpriseId, permissionsLoading, isOwner]);
 
+  // Helper function to fetch payments
+  const refreshPayments = async (newPage = 0, newRowsPerPage = rowsPerPage) => {
+    try {
+      setLoading(true);
+      console.log("[PAYMENT_APPROVAL] 📡 Fetching payments with filters:", {
+        projectId: selectedProjectId,
+        states: filterStates,
+        type: filterType,
+        keyword: filterKeyword,
+        supplierIds: filterSupplierIds,
+        page: newPage,
+        rowsPerPage: newRowsPerPage,
+      });
+      
+      const filters = {};
+      if (filterStates.length > 0) filters.states = filterStates;
+      if (filterType) filters.type = filterType;
+      if (filterKeyword) filters.keyword = filterKeyword;
+      if (filterSupplierIds.length > 0) filters.supplierIds = filterSupplierIds;
+      
+      const response = await paymentApprovalApi.getPaymentApprovals(selectedProjectId || null, filters, newPage, newRowsPerPage);
+      
+      // Xử lý response structure
+      let data = [];
+      let total = 0;
+      
+      if (response?.content && Array.isArray(response.content)) {
+        data = response.content;
+        total = response.totalElements || response.total || 0;
+      } else if (Array.isArray(response)) {
+        data = response;
+        total = response.length;
+      } else if (response?.data) {
+        if (Array.isArray(response.data)) {
+          data = response.data;
+          total = response.totalElements || response.total || response.data.length;
+        } else if (response.data.content) {
+          data = response.data.content;
+          total = response.data.totalElements || response.data.total || 0;
+        }
+      }
+      
+      console.log("[PAYMENT_APPROVAL] ✅ Payments fetched:", data);
+      setPayments(Array.isArray(data) ? data : []);
+      setTotalCount(total);
+      setPage(newPage);
+    } catch (error) {
+      console.error("[PAYMENT_APPROVAL] ❌ Error fetching payments:", {
+        message: error?.response?.data?.message || error.message,
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
+      const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách phê duyệt thanh toán";
+      enqueueSnackbar(errorMessage, { variant: "error" });
+      setPayments([]);
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch payments
   useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        setLoading(true);
-        console.log("[PAYMENT_APPROVAL] 📡 Fetching payments with filters:", {
-          projectId: selectedProjectId,
-          states: filterStates,
-          type: filterType,
-          keyword: filterKeyword,
-          supplierIds: filterSupplierIds,
-          page: page,
-          rowsPerPage: rowsPerPage,
-        });
-        
-        const filters = {};
-        if (filterStates.length > 0) filters.states = filterStates;
-        if (filterType) filters.type = filterType;
-        if (filterKeyword) filters.keyword = filterKeyword;
-        if (filterSupplierIds.length > 0) filters.supplierIds = filterSupplierIds;
-        
-        const response = await paymentApprovalApi.getPaymentApprovals(selectedProjectId || null, filters, page, rowsPerPage);
-        
-        // Xử lý response structure
-        let data = [];
-        let total = 0;
-        
-        if (response?.content && Array.isArray(response.content)) {
-          data = response.content;
-          total = response.totalElements || response.total || 0;
-        } else if (Array.isArray(response)) {
-          data = response;
-          total = response.length;
-        } else if (response?.data) {
-          if (Array.isArray(response.data)) {
-            data = response.data;
-            total = response.totalElements || response.total || response.data.length;
-          } else if (response.data.content) {
-            data = response.data.content;
-            total = response.data.totalElements || response.data.total || 0;
-          }
-        }
-        
-        console.log("[PAYMENT_APPROVAL] ✅ Payments fetched:", data);
-        setPayments(Array.isArray(data) ? data : []);
-        setTotalCount(total);
-      } catch (error) {
-        console.error("[PAYMENT_APPROVAL] ❌ Error fetching payments:", {
-          message: error?.response?.data?.message || error.message,
-          status: error?.response?.status,
-          data: error?.response?.data,
-        });
-        const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách phê duyệt thanh toán";
-        enqueueSnackbar(errorMessage, { variant: "error" });
-        setPayments([]);
-        setTotalCount(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (!permissionsLoading && isOwner) {
-      fetchPayments();
+      refreshPayments(page, rowsPerPage);
     }
   }, [selectedProjectId, filterStates, filterType, filterKeyword, filterSupplierIds, page, rowsPerPage, permissionsLoading, isOwner, enqueueSnackbar]);
 
@@ -524,16 +526,8 @@ export default function PaymentApproval() {
 
       enqueueSnackbar("✅ Cập nhật phê duyệt thanh toán thành công", { variant: "success" });
       
-      // Refresh list with current filters
-      const filters = {};
-      if (filterStates.length > 0) filters.states = filterStates;
-      if (filterType) filters.type = filterType;
-      if (filterKeyword) filters.keyword = filterKeyword;
-      if (filterSupplierIds.length > 0) filters.supplierIds = filterSupplierIds;
-      
-      const response = await paymentApprovalApi.getPaymentApprovals(selectedProjectId || null, filters, 0, 50);
-      const data = response?.data || response || [];
-      setPayments(Array.isArray(data) ? data : []);
+      // Fetch lại data từ đầu
+      await refreshPayments(0, rowsPerPage);
 
       setEditOpen(false);
       setEditFormData(null);
@@ -562,16 +556,8 @@ export default function PaymentApproval() {
 
       enqueueSnackbar("✅ Xoá phê duyệt thanh toán thành công", { variant: "success" });
       
-      // Refresh list with current filters
-      const filters = {};
-      if (filterStates.length > 0) filters.states = filterStates;
-      if (filterType) filters.type = filterType;
-      if (filterKeyword) filters.keyword = filterKeyword;
-      if (filterSupplierIds.length > 0) filters.supplierIds = filterSupplierIds;
-      
-      const response = await paymentApprovalApi.getPaymentApprovals(selectedProjectId, filters, 0, 50);
-      const data = response?.data || response || [];
-      setPayments(Array.isArray(data) ? data : []);
+      // Fetch lại data từ đầu
+      await refreshPayments(0, rowsPerPage);
 
       setDeleteConfirmOpen(false);
       setDeleteTargetId(null);
@@ -785,16 +771,8 @@ export default function PaymentApproval() {
 
       enqueueSnackbar("✅ Tạo phê duyệt thanh toán thành công", { variant: "success" });
       
-      // Refresh list with current filters
-      const filters = {};
-      if (filterStates.length > 0) filters.states = filterStates;
-      if (filterType) filters.type = filterType;
-      if (filterKeyword) filters.keyword = filterKeyword;
-      if (filterSupplierIds.length > 0) filters.supplierIds = filterSupplierIds;
-      
-      const response = await paymentApprovalApi.getPaymentApprovals(projectIdToUse || null, filters, 0, 50);
-      const data = response?.data || response || [];
-      setPayments(Array.isArray(data) ? data : []);
+      // Fetch lại data từ đầu
+      await refreshPayments(0, rowsPerPage);
 
       // Reset form and close modal
       setCreateFormData({

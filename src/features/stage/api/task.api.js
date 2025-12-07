@@ -21,14 +21,6 @@ const taskApi = {
    */
   getAll: (queryParams = {}) => {
     const url = `/task`;
-    const enterpriseId = localStorage.getItem("enterpriseId");
-    const userId = localStorage.getItem("userId");
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
-    }
-
     // Build params object with all query parameters
     const params = {
       projectId: queryParams.projectId,
@@ -41,15 +33,7 @@ const taskApi = {
       ...(queryParams.sort && { sort: queryParams.sort }),
     };
     
-    return axiosClient.get(url, { 
-      params,
-      headers: { 
-          Authorization: `Bearer ${token}`,
-          owner: 'true',
-          'user-id': userId,
-          'enterprise-id': enterpriseId      
-        }
-    });
+    return axiosClient.get(url);
   },
 
   /**
@@ -85,29 +69,8 @@ const taskApi = {
    */
   create: (data, enterpriseId = null, userId = null) => {
     const url = `/task`;
-    const entId = enterpriseId || localStorage.getItem("enterpriseId");
-    const usrId = userId || localStorage.getItem("userId");
-    const token = localStorage.getItem("token");
 
-    if (!token) {
-      throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
-    }
-
-    if (!entId) {
-      throw new Error("enterprise-id không tồn tại. Vui lòng chọn doanh nghiệp.");
-    }
-
-    if (!usrId) {
-      throw new Error("user-id không tồn tại. Vui lòng đăng nhập lại.");
-    }
-
-    return axiosClient.post(url, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "enterprise-id": entId,
-        "user-id": usrId
-      }
-    });
+    return axiosClient.post(url, data);
   },
 
   /**
@@ -121,22 +84,6 @@ const taskApi = {
    */
   update: (taskId, data, enterpriseId = null, userId = null) => {
     const url = `/task/${taskId}`;
-    const entId = enterpriseId || localStorage.getItem("enterpriseId");
-    const usrId = userId || localStorage.getItem("userId");
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
-    }
-
-    if (!entId) {
-      throw new Error("enterprise-id không tồn tại. Vui lòng chọn doanh nghiệp.");
-    }
-
-    if (!usrId) {
-      throw new Error("user-id không tồn tại. Vui lòng đăng nhập lại.");
-    }
-
 
     console.log("🔧 UPDATE Task - Data Fields:", {
       name: data.name,
@@ -150,13 +97,8 @@ const taskApi = {
       hasStageId: 'stageId' in data
     });
 
-    return axiosClient.put(url, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "enterprise-id": entId,
-        "user-id": usrId
-      }
-    }).then(response => {
+    return axiosClient.put(url, data
+    ).then(response => {
       return response;
     }).catch(error => {
       throw error;
@@ -173,29 +115,8 @@ const taskApi = {
    */
   delete: (taskId, enterpriseId = null, userId = null) => {
     const url = `/task/${taskId}`;
-    const entId = enterpriseId || localStorage.getItem("enterpriseId");
-    const usrId = userId || localStorage.getItem("userId");
-    const token = localStorage.getItem("token");
 
-    if (!token) {
-      throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
-    }
-
-    if (!entId) {
-      throw new Error("enterprise-id không tồn tại. Vui lòng chọn doanh nghiệp.");
-    }
-
-    if (!usrId) {
-      throw new Error("user-id không tồn tại. Vui lòng đăng nhập lại.");
-    }
-
-    return axiosClient.delete(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "enterprise-id": entId,
-        "user-id": usrId
-      }
-    });
+    return axiosClient.delete(url);
   },
 
   /**
@@ -209,30 +130,11 @@ const taskApi = {
    */
   updateStatus: (taskId, stateId, enterpriseId = null, userId = null) => {
     const url = `/task/${taskId}`;
-    const entId = enterpriseId || localStorage.getItem("enterpriseId");
-    const usrId = userId || localStorage.getItem("userId");
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
-    }
-
-    if (!entId) {
-      throw new Error("enterprise-id không tồn tại. Vui lòng chọn doanh nghiệp.");
-    }
-
-    if (!usrId) {
-      throw new Error("user-id không tồn tại. Vui lòng đăng nhập lại.");
-    }
 
     // Ensure stateId is a number
     const numericStateId = typeof stateId === 'string' ? parseInt(stateId, 10) : stateId;
 
-    return axiosClient.patch(url, { id: numericStateId }, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }).then(response => {
+    return axiosClient.patch(url, { id: numericStateId }).then(response => {
       return response;
     }).catch(error => {
       throw error;

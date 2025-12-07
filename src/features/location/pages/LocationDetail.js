@@ -591,7 +591,19 @@ export default function LocationDetail() {
                   Chi tiết
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 0.5 }}>
-                  <IconButton size="small" onClick={() => setEditingSubLocation(selectedSubLocation)}>
+                  <IconButton 
+                    size="small" 
+                    onClick={() => {
+                      setEditingSubLocation(selectedSubLocation);
+                      setSubLocationForm({
+                        name: selectedSubLocation.name || "",
+                        detail: selectedSubLocation.detail || "",
+                        description: selectedSubLocation.description || "",
+                        images: selectedSubLocation.images || []
+                      });
+                      setSubLocationImagePreviews(selectedSubLocation.images || []);
+                    }}
+                  >
                     <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton 
@@ -805,33 +817,43 @@ export default function LocationDetail() {
                   )}
 
                   {/* Title */}
-                  <Typography variant="h6" fontWeight={700} sx={{ mb: 1.5 }}>
+                  <Typography variant="h6" fontWeight={700} sx={{ mb: 1.5, color: 'text.primary' }}>
                     {selectedSubLocation.name}
                   </Typography>
 
                   {/* Detail */}
-                  {selectedSubLocation?.detail && (
-                    <Box sx={{ mb: 1.5 }}>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.25 }}>
-                        Chi tiết
-                      </Typography>
-                      <Typography variant="body2">
-                        {selectedSubLocation.detail}
-                      </Typography>
-                    </Box>
-                  )}
+                  <Box sx={{ mb: 1.5 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.25 }}>
+                      Chi tiết
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: 'text.primary' }}>
+                      {selectedSubLocation?.detail || '-'}
+                    </Typography>
+                  </Box>
 
                   {/* Description */}
-                  {selectedSubLocation?.description && (
-                    <Box sx={{ mb: 1.5 }}>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.25 }}>
-                        Mô tả
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {selectedSubLocation.description}
-                      </Typography>
-                    </Box>
-                  )}
+                  <Box sx={{ mb: 1.5 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.25 }}>
+                      Mô tả
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: 'text.primary' }}>
+                      {selectedSubLocation?.description || '-'}
+                    </Typography>
+                  </Box>
+
+                  {/* Status */}
+                  <Box sx={{ mb: 1.5 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.25 }}>
+                      Trạng thái
+                    </Typography>
+                    <Chip
+                      label={selectedSubLocation?.isDeleted ? 'Đã xóa' : 'Hoạt động'}
+                      color={selectedSubLocation?.isDeleted ? 'error' : 'success'}
+                      size="small"
+                      variant="outlined"
+                    />
+                  </Box>
+
                 </Box>
               )}
             </Box>

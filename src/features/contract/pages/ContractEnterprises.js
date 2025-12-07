@@ -288,14 +288,10 @@ export default function Contracts() {
   useEffect(() => {
     const loadPaymentApprovals = async () => {
       try {
-        console.log("[CONTRACTS] 🔄 Đang gọi API GET paymentApprovals...");
-        const response = await paymentApprovalApi.getPaymentApprovals(null, {}, 0, 100);
+        const response = await paymentApprovalApi.getPaymentApprovals(null, {states: ['APPROVED_ALL']}, 0, 100);
         const approvalsList = response?.data || response || [];
-        console.log("[CONTRACTS] ✅ API GET paymentApprovals thành công. Số lượng:", Array.isArray(approvalsList) ? approvalsList.length : 0);
-        console.log("[CONTRACTS] 📊 Payment Approvals data:", approvalsList);
         setPaymentApprovals(Array.isArray(approvalsList) ? approvalsList : []);
       } catch (error) {
-        console.error("[CONTRACTS] ❌ Error loading payment approvals:", error);
         const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách phê duyệt thanh toán";
         enqueueSnackbar(errorMessage, { variant: "error" });
       }

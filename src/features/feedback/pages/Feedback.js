@@ -304,9 +304,6 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
             <Typography variant="subtitle2">
               Tổng cộng: <strong>{totalElements}</strong> feedback
             </Typography>
-            <Typography variant="subtitle2">
-              Trang: {page}/{totalPages}
-            </Typography>
           </Box>
 
           {/* FIXED HEIGHT LIST - 4 comments height */}
