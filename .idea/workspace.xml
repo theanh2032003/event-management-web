@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="02773529-3894-4c75-95b7-9a1a2f6878b3" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/API_ENDPOINT_FIX.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/API_PROTECTION_ADDED.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CHANGES_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DEPLOYMENT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/EVENTDETAIL_FINAL_CHECKLIST.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/EVENTDETAIL_PERMISSION_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/EVENTDETAIL_PERMISSION_VISUAL.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/FILE_MANIFEST.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/FINAL_CHECKLIST.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/FINAL_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/IMPLEMENTATION_CHECKLIST.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/IMPLEMENTATION_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/IMPLEMENTATION_DONE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/IMPLEMENTATION_OVERVIEW.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/MIGRATION_FINAL_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PERMISSION_CHECK_UPDATE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PERMISSION_HOOKS_MIGRATION.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PERMISSION_HOOKS_QUICK_REFERENCE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PERMISSION_IMPLEMENTATION_EVENT_DETAIL.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PERMISSION_SYSTEM_ARCHITECTURE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PERMISSION_SYSTEM_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/QUICK_REFERENCE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/REFACTORING_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/SCHEDULE_STRUCTURE_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/SUCCESS.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TEMPLATE_DETAIL_LAYOUT_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/UPDATED_FLOW.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/VISUAL_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/eventflow-logo.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/favicon.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/logo192.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/logo512.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/robots.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/activityLogApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/authApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/axiosClient.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/categoryApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/commentApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/contractApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/dashboardApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/enterpriseApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/feedbackApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/groupTaskStateApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/groupTaskTypeApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/locationApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/notificationApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/paymentApprovalApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/productApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/projectApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/projectUserApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/quoteApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/rfqApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/roleApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/scheduleApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/settingsApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/stageApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/statisticApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/supplierApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/taskApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/taskCategoryApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/ticketTypeApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/userApi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/auth/CustomIcons.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/auth/ForgotPassword.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/common/OptimizedTextField.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/common/PermissionGate.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/common/README_TemplateDetailLayout.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/common/TemplateDetailLayout.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/contract/ContractPDFView.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/dashboard/ChartWrapper.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/dashboard/KpiCard.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/dashboard/PageContainer.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/event/CostBoard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/event/EventHeader.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/event/InfoCard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/event/StageBoard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/event/StageList.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/event/TaskBoard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/event/WorkBoard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/layout/AdminLayout.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/location/ImageUpload.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/location/LocationFormDialog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/location/SubLocationDetailDialog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/marketplace/ProductDescriptionCard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/marketplace/ProductSummaryCard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/marketplace/QuoteRequestModal.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/marketplace/SupplierInfoCard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/notification/NotificationBell.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/notification/NotificationDetailDialog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/notification/NotificationDropdown.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/notification/NotificationItem.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constants/permissions.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/contexts/ToastContext.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/events.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/stageData.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/PERMISSION_HOOKS_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useEnterpriseUserPermissions.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useFetchWithRetry.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useProjectUserPermissions.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useStageTaskFormData.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useTaskFormData.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useUserPermissions.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/BackGround.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/Event1.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/Event2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/EventLogo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/EventLogo1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/EventMAlogo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/EventMAlogo1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/FaceBookLogo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/GoogleLogo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconAmNhac.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconChuong.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconEmail.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconGhe.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconHoithao.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconHome.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconLeHoi.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconLienHe.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconLoc.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconMucLuc.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconMuiTen.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconOnBoarding.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconProfile.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconQR.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconTienIch.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconTimKiem.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconTinNhan.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconVe.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/IconWorkshop.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/LogoEvent.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/LogoMucLuc.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/NCC/Logo1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/NCC/Logo2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/NCC/Logo3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/NCC/Logo4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/NCC/Logo5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/NCC/LogoEnter.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/NCC/LogoNCC.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/NCC/a-222.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/NCC/n-215.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/OnBoarding1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/OnBoarding1.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/OnBoarding2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/OnBoarding2.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/OnBoarding3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/OnBoarding3.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/bd1.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/bd2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/bd3.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/chatbot.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/chuongicon.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/momologo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/thetindunglogo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/user.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/image/vnpaylogo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/layouts/EnterpriseLayout.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/layouts/SupplierLayout.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Dashboard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/EventDetail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/EventList.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Notifications.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/SelectWorkspacePage.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Statistic.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/ContractDetail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/Contracts.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/CreateProduct.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/Dashboard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/EditProduct.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/LocationManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/Marketplace.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/QuotationDetail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/Quotations.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/README_DetailPages.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/RFQ.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/RFQDetail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/Supplier/SupplierStatistics.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/auth/ForgotPasswordPage.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/auth/ResetPassword.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/auth/SignIn.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/auth/SignUp.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/auth/VerifyEmail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/ContractDetail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/Contracts.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/Dashboard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/EnterpriseInfo.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/EventDetail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/EventList.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/Marketplace.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/PaymentApproval.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/PaymentApprovalDetail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/ProductDetail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/Profile.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/QuotationDetail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/Quotations.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/QuoteRequestDetail.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/QuoteRequests.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/Settings.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/Statistics.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/EventActivityLog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/EventFeedback.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/EventOverview.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/EventRoleManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/EventSchedule.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/EventTask.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/EventTicketTypeManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/EventUserPermission.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/schedule/ChildScheduleTable.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/schedule/ScheduleDetailDialog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/schedule/ScheduleDialog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/schedule/ScheduleRow.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/schedule/ScheduleTable.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/task/StageDialog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/task/StageRow.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/task/StageTable.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/task/StatusChip.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/task/TaskCard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/task/TaskDetailDialog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/task/TaskDialog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/task/TaskKanbanBoard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-detail/components/task/TaskTable.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-management/EventManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-management/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-management/components/EventCardList.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-management/components/EventDialog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-management/components/EventFilters.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-management/components/EventTable.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/event-management/hooks/useEventManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/settings/LocationManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/settings/MarketplaceManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/settings/RoleManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/settings/StageManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/settings/TaskCategoryManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/settings/TaskStateManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/settings/UserPermissionManagement.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/settings/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/enterprise/settings/sharedStyles.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/theme/dashboardTheme.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/dateFormatter.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/uploadToCloudinary.js" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="feat/refactor_src" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="36FH3pdWqjs7xfD09fJbqLqaBZ7" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "refactor/refactor__src",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/Tai_lieu_PTIT/doan/event-management-ui",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9f38398b9061-39b83d9b5494-intellij.indexing.shared.core-IU-241.18034.62" />
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-IU-241.18034.62" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="02773529-3894-4c75-95b7-9a1a2f6878b3" name="Changes" comment="" />
+      <created>1764595203322</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1764595203322</updated>
+      <workItem from="1764595204463" duration="2634000" />
+      <workItem from="1764729639427" duration="2000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
