@@ -588,9 +588,9 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           stageName={newTaskData.stageName}
           taskTypeId={newTaskData.taskTypeId}
           taskTypes={taskTypes}
-          users={[]}
           onCreate={handleCreateTask}
           submitting={submittingTask}
+          projectId={projectId}
         />
 
         {/* Task Detail Drawer */}
