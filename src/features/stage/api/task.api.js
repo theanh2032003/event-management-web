@@ -111,7 +111,7 @@ const taskApi = {
    * Cập nhật trạng thái công việc
    * PATCH /task/{id}
    * @param {number} taskId - ID của công việc
-   * @param {string} state - Trạng thái mới (PENDING, IN_PROGRESS, SUCCESS, CANCEL)
+   * @param {string} state - Trạng thái mới (PENDING, IN_PROGRESS, DONE, CANCELLED)
    * @param {number} enterpriseId - ID doanh nghiệp (optional, sẽ lấy từ localStorage nếu không truyền)
    * @param {number} userId - ID người dùng (optional, sẽ lấy từ localStorage nếu không truyền)
    * @returns {Promise} Công việc đã cập nhật

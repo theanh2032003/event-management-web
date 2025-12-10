@@ -724,15 +724,15 @@ export default function EventOverview({
               <SectionTitle>Thông tin bổ sung</SectionTitle>
 
               {/* Group Task Type */}
-                            backgroundColor: state.color,
+                            {/* backgroundColor: state.color,
                             color: '#fff',
-                            fontWeight: 600,
+                            fontWeight: 600, */}
               {/* Group Task Type */}
               {currentEventData.groupTaskType && (
                 <Box>
                   <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1.5 }}>
                     <Typography variant="caption" sx={{ color: '#000000ff', fontWeight: 600, fontSize: '0.95rem', minWidth: 100 }}>
-                      Nhóm công việc:
+                      Nhóm loại công việc:
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#000000ff', fontSize: '0.95rem' }}>
                       {currentEventData.groupTaskType.name}

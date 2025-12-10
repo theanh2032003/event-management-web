@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Drawer,
   Box,
@@ -36,6 +36,7 @@ import {
   Image as ImageIcon,
 } from "@mui/icons-material";
 import { formatDateTime } from "../../../shared/utils/dateFormatter";
+import taskApi from "../api/task.api";
 
 // Styled Components
 const DrawerHeader = styled(Box)(({ theme }) => ({
@@ -151,6 +152,39 @@ export default function TaskDetailDrawer({
   const [editFormOpen, setEditFormOpen] = useState(false);
   const [editFormData, setEditFormData] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  
+  // State for task detail
+  const [taskDetail, setTaskDetail] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [detailError, setDetailError] = useState(null);
+
+  // Fetch task detail when task changes
+  useEffect(() => {
+    if (open && task?.id) {
+      fetchTaskDetail(task.id);
+    } else {
+      setTaskDetail(null);
+      setDetailError(null);
+    }
+  }, [open, task?.id]);
+
+  const fetchTaskDetail = async (taskId) => {
+    setLoadingDetail(true);
+    setDetailError(null);
+    try {
+      const response = await taskApi.getById(taskId);
+      const detail = response.data || response.data?.data || response;
+      console.log("📋 Task detail fetched:", detail);
+      setTaskDetail(detail);
+    } catch (err) {
+      console.error("❌ Error fetching task detail:", err);
+      setDetailError("Không thể tải chi tiết công việc");
+      // Fallback to task from props if fetch fails
+      setTaskDetail(task);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
 
   // Reset states khi drawer đóng
   const handleDrawerClose = () => {
@@ -159,12 +193,14 @@ export default function TaskDetailDrawer({
     setDeleteConfirmOpen(false);
     setEditFormOpen(false);
     setEditFormData(null);
+    setTaskDetail(null);
+    setDetailError(null);
     onClose();
   };
 
-  // Task status options
+  // Task status options - PENDING, IN_PROGRESS, DONE, CANCELED
   const taskStatusOptions = [
-    { value: 'PENDING', label: 'Chưa bắt đầu' },
+    { value: 'PENDING', label: 'Chờ xử lý' },
     { value: 'IN_PROGRESS', label: 'Đang thực hiện' },
     { value: 'DONE', label: 'Hoàn thành' },
     { value: 'CANCELLED', label: 'Hủy bỏ' },
@@ -173,21 +209,26 @@ export default function TaskDetailDrawer({
   // Update task status
   const updateTaskStatus = async (taskId, newStatus) => {
     if (onChangeStatus) {
-      await onChangeStatus(task, newStatus);
+      await onChangeStatus(taskDetail || task, newStatus);
+      // Refresh task detail after status update
+      if (taskId) {
+        fetchTaskDetail(taskId);
+      }
     }
   };
 
   // Initialize edit form data
   const handleOpenEditForm = () => {
+    const currentTask = taskDetail || task;
     setEditFormData({
-      name: task?.name || "",
-      description: task?.description || "",
-      taskTypeId: task?.taskTypeId || "",
-      stateId: task?.state?.id || "",
-      implementerIds: task?.implementers?.map((p) => p.id) || [],
-      supporterIds: task?.supporters?.map((p) => p.id) || [],
-      testerIds: task?.testers?.map((p) => p.id) || [],
-      supplierId: task?.supplier?.id || "",
+      name: currentTask?.name || "",
+      description: currentTask?.description || "",
+      taskTypeId: currentTask?.taskTypeId || "",
+      stateId: currentTask?.state?.id || "",
+      implementerIds: currentTask?.implementers?.map((p) => p.id) || [],
+      supporterIds: currentTask?.supporters?.map((p) => p.id) || [],
+      testerIds: currentTask?.testers?.map((p) => p.id) || [],
+      supplierId: currentTask?.supplier?.id || "",
     });
     setEditFormOpen(true);
     setMenuAnchor(null);
@@ -201,6 +242,10 @@ export default function TaskDetailDrawer({
       await onEdit(task, editFormData);
       setEditFormOpen(false);
       setEditFormData(null);
+      // Refresh task detail after edit
+      if (task.id) {
+        fetchTaskDetail(task.id);
+      }
       onClose();
     } catch (err) {
       console.error("Error updating task:", err);
@@ -217,8 +262,11 @@ export default function TaskDetailDrawer({
 
   if (!task) return null;
 
+  // Use taskDetail if loaded, otherwise fallback to task from props
+  const displayTask = taskDetail || task;
+
   // Get supplier info
-  const supplierName = task.supplier?.name || "Chưa chỉ định";
+  const supplierName = displayTask.supplier?.name || "Chưa chỉ định";
 
   return (
     <>
@@ -281,21 +329,34 @@ export default function TaskDetailDrawer({
 
         {/* Content */}
         <DrawerContent sx={{ pt: 0 }}>
+          {loadingDetail ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
+              <CircularProgress />
+            </Box>
+          ) : detailError ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography color="error" variant="body2">{detailError}</Typography>
+              <Button onClick={() => fetchTaskDetail(task.id)} sx={{ mt: 2 }}>
+                Thử lại
+              </Button>
+            </Box>
+          ) : (
+            <>
           <Box sx={{ mb: 3, pb: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
               <Typography variant="h4" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                {task.name}
+                {displayTask.name}
               </Typography>
 
               {/* Dropdown chuyển trạng thái */}
               <FormControl size="small" sx={{ minWidth: 150 }}>
                 <Select
-                  value={statusDropdownValue || (typeof task.state === 'string' ? task.state : (task.state?.code || ''))}
+                  value={statusDropdownValue || (typeof displayTask.state === 'string' ? displayTask.state : (displayTask.state?.code || ''))}
                   onChange={async (e) => {
                     const newStatus = e.target.value;
                     setStatusDropdownValue(newStatus);
                     // gọi API update trạng thái
-                    await updateTaskStatus(task.id, newStatus);
+                    await updateTaskStatus(displayTask.id, newStatus);
                   }}
                   MenuProps={{
                     sx: { zIndex: 1605 },
@@ -315,7 +376,7 @@ export default function TaskDetailDrawer({
 
             <Stack spacing={0.5} mt={1}>
               <Typography variant="subtitle2" fontWeight={600} fontSize="0.9rem">
-                Loại công việc: {task.taskType?.name || "-"}
+                Loại công việc: {displayTask.taskType?.name || "-"}
               </Typography>
               <Typography variant="subtitle2" fontWeight={600} fontSize="0.9rem">
                 Giai đoạn: {stageName || "-"}
@@ -331,7 +392,7 @@ export default function TaskDetailDrawer({
                   NGÀY TẠO
                 </Typography>
                 <Typography variant="subtitle2" fontWeight={600} fontSize="0.95rem" mt={0.5}>
-                  {formatDateTime(task.createdAt) || "-"}
+                  {formatDateTime(displayTask.createdAt) || "-"}
                 </Typography>
               </Box>
               <Box>
@@ -339,7 +400,7 @@ export default function TaskDetailDrawer({
                   NGÀY SỬA
                 </Typography>
                 <Typography variant="subtitle2" fontWeight={600} fontSize="0.95rem" mt={0.5}>
-                  {formatDateTime(task.updatedAt) || "-"}
+                  {formatDateTime(displayTask.updatedAt) || "-"}
                 </Typography>
               </Box>
             </Box>
@@ -349,7 +410,7 @@ export default function TaskDetailDrawer({
                   NGÀY BẮT ĐẦU
                 </Typography>
                 <Typography variant="subtitle2" fontWeight={600} fontSize="0.95rem" mt={0.5}>
-                  {formatDateTime(task.startedAt) || "-"}
+                  {formatDateTime(displayTask.startedAt) || "-"}
                 </Typography>
               </Box>
               <Box>
@@ -357,21 +418,21 @@ export default function TaskDetailDrawer({
                   HẠN CHÓT
                 </Typography>
                 <Typography variant="subtitle2" fontWeight={600} fontSize="0.95rem" mt={0.5}>
-                  {formatDateTime(task.endedAt) || "-"}
+                  {formatDateTime(displayTask.endedAt) || "-"}
                 </Typography>
               </Box>
             </Box>
           </Box>
 
           {/* Personnel */}
-          {(task.implementers?.length > 0 || task.supporters?.length > 0 || task.testers?.length > 0) && (
+          {(displayTask.implementers?.length > 0 || displayTask.supporters?.length > 0 || displayTask.testers?.length > 0) && (
             <Box sx={{ mb: 2 }}>
               {/* Implementers */}
-              {task.implementers?.length > 0 && (
+              {displayTask.implementers?.length > 0 && (
                 <FieldBox sx={{ borderBottom: 'none', mb: 1 }}>
                   <Label sx={{ fontSize: "0.9rem", fontWeight: 600 }}>Người thực hiện</Label>
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {task.implementers.map((person) => (
+                    {displayTask.implementers.map((person) => (
                       <Box
                         key={person.id}
                         sx={{
@@ -398,11 +459,11 @@ export default function TaskDetailDrawer({
               )}
 
               {/* Supporters */}
-              {task.supporters?.length > 0 && (
+              {displayTask.supporters?.length > 0 && (
                 <FieldBox sx={{ borderBottom: 'none', mb: 1 }}>
-                  <Label sx={{ fontSize: "0.9rem", fontWeight: 600 }}>Người hỗ trợ</Label>
+                  <Label sx={{ fontSize: "0.9rem", fontWeight: 600 }}>Đồng tác viên</Label>
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {task.supporters.map((person) => (
+                    {displayTask.supporters.map((person) => (
                       <Box
                         key={person.id}
                         sx={{
@@ -429,11 +490,11 @@ export default function TaskDetailDrawer({
               )}
 
               {/* Testers */}
-              {task.testers?.length > 0 && (
+              {displayTask.testers?.length > 0 && (
                 <FieldBox sx={{ mb: 1 }}>
                   <Label sx={{ fontSize: "0.9rem", fontWeight: 600 }}>Người kiểm tra</Label>
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {task.testers.map((person) => (
+                    {displayTask.testers.map((person) => (
                       <Box
                         key={person.id}
                         sx={{
@@ -470,19 +531,21 @@ export default function TaskDetailDrawer({
           {/* Description */}
           <Box sx={{ mb: 2 }}>
             <SectionTitle sx={{ fontSize: "0.9rem", fontWeight: 600, mb: 1 }}>Mô tả công việc</SectionTitle>
-            <Value sx={{ fontSize: "0.875rem", whiteSpace: "pre-line" }}>{task.description || ""}</Value>
+            <Value sx={{ fontSize: "0.875rem", whiteSpace: "pre-line" }}>{displayTask.description || ""}</Value>
           </Box>
 
           {/* Attachments */}
-          {task.images?.length > 0 && (
+          {displayTask.images?.length > 0 && (
             <Box sx={{ mb: 2 }}>
               <SectionTitle sx={{ fontSize: "0.9rem", fontWeight: 600, mb: 1 }}>Tệp đính kèm</SectionTitle>
               <ImageGrid>
-                {task.images.map((image, idx) => (
+                {displayTask.images.map((image, idx) => (
                   <ImageThumbnail key={idx} src={image.url || image} alt={`Attachment ${idx + 1}`} />
                 ))}
               </ImageGrid>
             </Box>
+          )}
+            </>
           )}
 
         </DrawerContent>

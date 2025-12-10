@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -17,6 +17,9 @@ import {
   TableHead,
   TableRow,
   Paper,
+  FormControl,
+  InputLabel,
+  Tooltip,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -28,6 +31,8 @@ import {
   Cancel as CancelIcon,
   HourglassEmpty as HourglassEmptyIcon,
   PlayArrow as PlayArrowIcon,
+  FilterList as FilterListIcon,
+  Clear as ClearIcon,
 } from '@mui/icons-material';
 
 const StageContainer = styled(Card)(({ theme }) => ({
@@ -94,20 +99,30 @@ const AddTaskButton = styled(Box)(({ theme }) => ({
   },
 }));
 
-// Stage status options
+const FilterBar = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  padding: theme.spacing(1.5, 2),
+  backgroundColor: alpha(theme.palette.background.paper, 0.8),
+  borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+  flexWrap: 'wrap',
+}));
+
+// Stage status options - PENDING, IN_PROGRESS, SUCCESS, CANCELED
 const stageStatusOptions = [
-  { value: 'PENDING', label: 'Đang chờ', color: '#FFA726', icon: HourglassEmptyIcon },
+  { value: 'PENDING', label: 'Chờ xử lý', color: '#FFA726', icon: HourglassEmptyIcon },
   { value: 'IN_PROGRESS', label: 'Đang thực hiện', color: '#42A5F5', icon: PlayArrowIcon },
   { value: 'SUCCESS', label: 'Hoàn thành', color: '#66BB6A', icon: CheckCircleIcon },
   { value: 'CANCELED', label: 'Hủy bỏ', color: '#EF5350', icon: CancelIcon },
 ];
 
-// Task status options
+// Task status options - PENDING, IN_PROGRESS, DONE, CANCELLED
 const taskStatusOptions = [
-  { value: 'PENDING', label: 'Đang chờ', color: '#FFA726', icon: HourglassEmptyIcon },
+  { value: 'PENDING', label: 'Chờ xử lý', color: '#FFA726', icon: HourglassEmptyIcon },
   { value: 'IN_PROGRESS', label: 'Đang thực hiện', color: '#42A5F5', icon: PlayArrowIcon },
-  { value: 'SUCCESS', label: 'Hoàn thành', color: '#66BB6A', icon: CheckCircleIcon },
-  { value: 'CANCELED', label: 'Hủy bỏ', color: '#EF5350', icon: CancelIcon },
+  { value: 'DONE', label: 'Hoàn thành', color: '#66BB6A', icon: CheckCircleIcon },
+  { value: 'CANCELLED', label: 'Hủy bỏ', color: '#EF5350', icon: CancelIcon },
 ];
 
 const getStageStatusInfo = (status) => {
@@ -136,6 +151,8 @@ export default function StageTreeView({
   loading = false,
 }) {
   const [expandedStages, setExpandedStages] = useState({});
+  // Filter state for each stage: { [stageId]: { status: '', typeId: '' } }
+  const [stageFilters, setStageFilters] = useState({});
 
   const toggleStage = (stage) => {
     const stageId = stage.id;
@@ -161,6 +178,52 @@ export default function StageTreeView({
     return type?.color || '#757575';
   };
 
+  // Handle filter change for a stage
+  const handleFilterChange = (stageId, filterType, value) => {
+    setStageFilters(prev => ({
+      ...prev,
+      [stageId]: {
+        ...prev[stageId],
+        [filterType]: value,
+      }
+    }));
+  };
+
+  // Clear all filters for a stage
+  const clearFilters = (stageId) => {
+    setStageFilters(prev => ({
+      ...prev,
+      [stageId]: { status: '', typeId: '' }
+    }));
+  };
+
+  // Get filtered tasks for a stage
+  const getFilteredTasks = (stageId, tasks) => {
+    const filters = stageFilters[stageId] || {};
+    let filtered = [...tasks];
+
+    // Filter by status
+    if (filters.status) {
+      filtered = filtered.filter(task => task.state === filters.status);
+    }
+
+    // Filter by task type
+    if (filters.typeId) {
+      filtered = filtered.filter(task => {
+        const taskTypeId = task.taskTypeId || task.taskType?.id;
+        return taskTypeId === filters.typeId;
+      });
+    }
+
+    return filtered;
+  };
+
+  // Check if any filter is active for a stage
+  const hasActiveFilters = (stageId) => {
+    const filters = stageFilters[stageId] || {};
+    return !!(filters.status || filters.typeId);
+  };
+
   if (loading) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -183,6 +246,8 @@ export default function StageTreeView({
         const isExpanded = expandedStages[stage.id] || false;
         const tasks = stage.tasks || [];
         const hasError = stage.error;
+        const filteredTasks = getFilteredTasks(stage.id, tasks);
+        const currentFilters = stageFilters[stage.id] || {};
 
         return (
           <StageContainer key={stage.id}>
@@ -213,15 +278,15 @@ export default function StageTreeView({
 
               {/* Stage Status Select */}
               <Select
-                size="small"
+                  size="small"
                 value={stage.status || 'PENDING'}
                 onChange={(e) => {
                   e.stopPropagation();
                   onChangeStageStatus?.(stage, e.target.value);
                 }}
                 onClick={(e) => e.stopPropagation()}
-                variant="outlined"
-                sx={{
+                  variant="outlined"
+                  sx={{
                   minWidth: 160,
                   height: 36,
                   '& .MuiOutlinedInput-input': {
@@ -310,7 +375,98 @@ export default function StageTreeView({
                   </AddTaskButton>
                 ) : (
                   <>
-                    <StyledTableContainer component={Paper}>
+                    {/* Filter Bar */}
+                    <FilterBar>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <FilterListIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                        <Typography variant="body2" fontWeight={600} color="text.secondary">
+                          Lọc:
+                        </Typography>
+                      </Box>
+
+                      {/* Status Filter */}
+                      <FormControl size="small" sx={{ minWidth: 160 }}>
+                        <InputLabel>Trạng thái</InputLabel>
+                        <Select
+                          value={currentFilters.status || ''}
+                          onChange={(e) => handleFilterChange(stage.id, 'status', e.target.value)}
+                          label="Trạng thái"
+                          sx={{
+                            '& .MuiSelect-select': {
+                              display: 'flex',
+                              alignItems: 'center',
+                            },
+                          }}
+                        >
+                          <MenuItem value="">
+                            <Typography color="text.secondary">Tất cả trạng thái</Typography>
+                          </MenuItem>
+                          {taskStatusOptions.map((option) => {
+                            const OptionIcon = option.icon;
+                            return (
+                              <MenuItem key={option.value} value={option.value}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <OptionIcon sx={{ fontSize: 18, color: option.color }} />
+                                  <Typography sx={{ color: option.color }}>{option.label}</Typography>
+                                </Box>
+                              </MenuItem>
+                            );
+                          })}
+                        </Select>
+                      </FormControl>
+
+                      {/* Task Type Filter */}
+                      <FormControl size="small" sx={{ minWidth: 160 }}>
+                        <InputLabel>Phân loại</InputLabel>
+                        <Select
+                          value={currentFilters.typeId || ''}
+                          onChange={(e) => handleFilterChange(stage.id, 'typeId', e.target.value)}
+                          label="Phân loại"
+                        >
+                          <MenuItem value="">
+                            <Typography color="text.secondary">Tất cả phân loại</Typography>
+                          </MenuItem>
+                          {taskTypes.map((type) => (
+                            <MenuItem key={type.id} value={type.id}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box
+                                  sx={{
+                                    width: 12,
+                                    height: 12,
+                                    borderRadius: '50%',
+                                    backgroundColor: type.color || '#757575',
+                                  }}
+                                />
+                                <Typography>{type.name}</Typography>
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+
+                      {/* Clear Filters Button */}
+                      {hasActiveFilters(stage.id) && (
+                        <Tooltip title="Xóa bộ lọc">
+                          <IconButton
+                            size="small"
+                            onClick={() => clearFilters(stage.id)}
+                            sx={{
+                              color: 'error.main',
+                              '&:hover': { bgcolor: alpha('#D32F2F', 0.1) },
+                            }}
+                          >
+                            <ClearIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+
+                      {/* Filter Result Count */}
+                      <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
+                        Hiển thị {filteredTasks.length}/{tasks.length} công việc
+                      </Typography>
+                    </FilterBar>
+
+                    <StyledTableContainer component={Paper} sx={{ mt: 1 }}>
                       <Table size="small">
                         <StyledTableHead>
                           <TableRow>
@@ -320,8 +476,17 @@ export default function StageTreeView({
                           </TableRow>
                         </StyledTableHead>
                         <TableBody>
-                          {tasks.map((task) => {
-                            const statusInfo = getTaskStatusInfo(task.state || 'PENDING');
+                          {filteredTasks.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
+                                <Typography color="text.secondary" variant="body2">
+                                  Không có công việc nào phù hợp với bộ lọc
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filteredTasks.map((task) => {
+                              const statusInfo = getTaskStatusInfo(task.state || 'PENDING');
                             const taskTypeColor = getTaskTypeColor(task.taskTypeId || task.taskType?.id);
                             
                             return (
@@ -369,32 +534,32 @@ export default function StageTreeView({
                                       value={task.state || 'PENDING'}
                                       onChange={(e) => {
                                         e.stopPropagation();
-                                        onChangeTaskStatus?.(task, e.target.value);
+                                          onChangeTaskStatus?.(task, e.target.value);
                                       }}
                                       onClick={(e) => e.stopPropagation()}
                                       variant="outlined"
                                       sx={{
-                                        minWidth: 160,
+                                          minWidth: 160,
                                         height: 32,
                                         '& .MuiOutlinedInput-input': {
                                           padding: '6px 12px',
                                           fontSize: '0.875rem',
                                         },
                                       }}
-                                      renderValue={(value) => {
-                                        const info = getTaskStatusInfo(value);
-                                        const StatusIcon = info.icon;
-                                        return (
-                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <StatusIcon sx={{ fontSize: 16, color: info.color }} />
-                                            <Typography variant="body2" sx={{ color: info.color, fontWeight: 500 }}>
-                                              {info.label}
-                                            </Typography>
-                                          </Box>
-                                        );
-                                      }}
-                                    >
-                                      {taskStatusOptions.map((option) => {
+                                        renderValue={(value) => {
+                                          const info = getTaskStatusInfo(value);
+                                          const StatusIcon = info.icon;
+                                          return (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                              <StatusIcon sx={{ fontSize: 16, color: info.color }} />
+                                              <Typography variant="body2" sx={{ color: info.color, fontWeight: 500 }}>
+                                                {info.label}
+                                              </Typography>
+                                            </Box>
+                                          );
+                                        }}
+                                      >
+                                        {taskStatusOptions.map((option) => {
                                         const OptionIcon = option.icon;
                                         return (
                                           <MenuItem key={option.value} value={option.value}>
@@ -410,7 +575,8 @@ export default function StageTreeView({
                                 </TableCell>
                               </StyledTableRow>
                             );
-                          })}
+                            })
+                          )}
                         </TableBody>
                       </Table>
                     </StyledTableContainer>

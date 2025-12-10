@@ -170,7 +170,7 @@ export default function EnterpriseSettings() {
   const tabFullConfig = useMemo(() => [
  
     {
-      label: "Phân loại công việc",
+      label: "Nhóm mảng công việc",
       icon: <CategoryIcon />,
       component: TaskCategoryManagement,
       requiredPermission: PERMISSION_CODES.TASK_TYPE_MANAGE,

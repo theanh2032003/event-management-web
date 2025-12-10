@@ -171,9 +171,11 @@ export default function EventDetail() {
     { label: "Công việc", icon: <EventNoteIcon /> },
     { label: "Lịch trình", icon: <ScheduleIcon /> },
     { label: "Cài đặt vé", icon: <LocalOfferIcon /> },
-    { label: "Người tham gia", icon: <PeopleIcon /> },
+    { label: "Nhân sự", icon: <PeopleIcon /> },
     { label: "Phân quyền", icon: <LockIcon /> },
     { label: "Đánh giá", icon: <StarIcon /> },
+    { label: "Lịch sửa check-in", icon: <LocalOfferIcon /> },
+
   ];
 
   return (

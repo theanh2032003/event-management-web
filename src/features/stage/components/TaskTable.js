@@ -71,17 +71,16 @@ const TaskTable = ({ tasks, onEdit, onDelete, onRowClick, onChangeStatus, taskSt
       }}
     >
       <Table size="small" stickyHeader>
-        <TableHead sx={{ bgcolor: "grey.100" }}>
+        {/* <TableHead sx={{ bgcolor: "grey.100" }}>
           <TableRow>
             <TableCell sx={{ fontWeight: "bold" }}>Tên công việc</TableCell>
             <TableCell sx={{ fontWeight: "bold" }}>Trạng thái</TableCell>
-            {/* <TableCell sx={{ fontWeight: "bold" }}>Bắt đầu</TableCell>
-            <TableCell sx={{ fontWeight: "bold" }}>Kết thúc</TableCell> */}
+
             <TableCell sx={{ fontWeight: "bold" }}>Loại công việc</TableCell>
 
             <TableCell align="center" sx={{ fontWeight: "bold" }}>Hành động</TableCell>
           </TableRow>
-        </TableHead>
+        </TableHead> */}
         <TableBody>
           {tasks.map((task) => {
             // console.log("🔍 Rendering task:", task);

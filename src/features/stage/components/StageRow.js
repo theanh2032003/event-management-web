@@ -207,8 +207,8 @@ const StageRow = ({ stage, onEdit, onDelete, onChangeStatus, projectId, enterpri
 
   const handleChangeTaskStatus = async (task, newStateId) => {
     try {
-      // UpdateStatus: taskId, stateId, enterpriseId, userId
-      await taskApi.updateStatus(task.id, newStateId, enterpriseId);
+      // UpdateStatus: taskId, state
+      await taskApi.updateStatus(task.id, newStateId);
       fetchTasks(); // Refresh task list
     } catch (error) {
       console.error("Failed to update task status", error);

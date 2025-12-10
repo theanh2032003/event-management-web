@@ -343,10 +343,10 @@ export default function EventUserPermission({ eventData, enterpriseId, eventId }
       handleCloseAddUserDialog();
       fetchUsers();
       setTimeout(() => {
-        toast.success("Thêm người dùng thành công!");
+        toast.success("Thêm nhân sự thành công!");
       }, 500);
     } catch (err) {
-      const message = err?.response?.data?.message || err.message || "Không thể thêm người dùng";
+      const message = err?.response?.data?.message || err.message || "Không thể thêm nhân sự";
       setTimeout(() => {
         toast.error(message);
       }, 300);

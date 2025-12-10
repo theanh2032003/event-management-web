@@ -1,12 +1,12 @@
 /**
  * Fixed Task States - Trạng thái công việc cố định
  * Sử dụng cho mọi công việc, mọi sự kiện
- * Values: PENDING, IN_PROGRESS, SUCCESS, CANCELED
+ * Values: PENDING, IN_PROGRESS, DONE, CANCELED
  */
 export const TASK_STATES = [
   {
     id: 'PENDING',
-    name: 'Đang chờ',
+    name: 'Chờ xử lý',
     color: '#FFA726', // Orange
     description: 'Công việc đang chờ được xử lý'
   },
@@ -17,13 +17,13 @@ export const TASK_STATES = [
     description: 'Công việc đang được thực hiện'
   },
   {
-    id: 'SUCCESS',
+    id: 'DONE',
     name: 'Hoàn thành',
     color: '#66BB6A', // Green
     description: 'Công việc đã hoàn thành thành công'
   },
   {
-    id: 'CANCEL',
+    id: 'CANCELLED',
     name: 'Hủy bỏ',
     color: '#EF5350', // Red
     description: 'Công việc đã bị hủy'

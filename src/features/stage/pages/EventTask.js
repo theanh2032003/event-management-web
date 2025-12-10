@@ -169,6 +169,9 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       
       const taskList = tasksResponse.data?.data || tasksResponse.data?.content || tasksResponse.data || [];
       
+      console.log("📋 Fetched tasks for stage:", stageId);
+      console.log("📋 Task list sample:", taskList.slice(0, 2)); // Log first 2 tasks to see structure
+      
       // Update stage with tasks
       setStages(prev => 
         prev.map(s => s.id === stageId ? { ...s, tasks: taskList, tasksLoading: false } : s)
@@ -339,11 +342,20 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
    * Handle change task status - update task status only (separate from stage status)
    */
   const handleChangeTaskStatus = async (task, newStatus) => {
+    console.log("🔄 handleChangeTaskStatus called with:", { task, newStatus, taskId: task?.id });
+    
+    if (!task || !task.id) {
+      console.error("❌ Task or task.id is undefined:", task);
+      showSnackbar("Lỗi: Không xác định được công việc", "error");
+      return;
+    }
+    
     if (task.state === newStatus || task.status === newStatus) {
       return;
     }
 
     const oldStatus = task.state || task.status;
+    console.log("🔄 Changing task status:", { taskId: task.id, from: oldStatus, to: newStatus });
 
     try {
       // Update task status only in local state immediately
@@ -369,8 +381,13 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
 
       // Call API in background to update task status only
       await taskApi.updateStatus(task.id, newStatus);
+      console.log("✅ Task status updated successfully");
       showSnackbar("Cập nhật trạng thái công việc thành công", "success");
     } catch (err) {
+      console.error("❌ Error updating task status:", err);
+      console.error("❌ Error response:", err.response?.data);
+      console.error("❌ Error status:", err.response?.status);
+      
       // Revert task status on error
       setStages(prev =>
         prev.map(stage =>
@@ -390,7 +407,9 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
             : stage
         )
       );
-      showSnackbar(err.message || "Không thể cập nhật trạng thái", "error");
+      
+      const errorMessage = err.response?.data?.message || err.message || "Không thể cập nhật trạng thái công việc";
+      showSnackbar(errorMessage, "error");
     }
   };
 
