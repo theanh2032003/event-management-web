@@ -23,8 +23,8 @@ const taskApi = {
     const url = `/task`;
     // Build params object with all query parameters
     const params = {
-      projectId: queryParams.projectId,
-      stageId: queryParams.stageId,
+      ...(queryParams.projectId !== undefined && { projectId: queryParams.projectId }),
+      ...(queryParams.stageId !== undefined && { stageId: queryParams.stageId }),
       ...(queryParams.typeId !== undefined && { typeId: queryParams.typeId }),
       ...(queryParams.states !== undefined && { states: queryParams.states }),
       ...(queryParams.keyword && { keyword: queryParams.keyword }),
@@ -33,7 +33,7 @@ const taskApi = {
       ...(queryParams.sort && { sort: queryParams.sort }),
     };
     
-    return axiosClient.get(url);
+    return axiosClient.get(url, { params });
   },
 
   /**

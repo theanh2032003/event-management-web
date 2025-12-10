@@ -558,7 +558,7 @@ const TaskDialog = ({ open, onClose, onSave, task, stageId, projectId, enterpris
                   </Grid>
 
                   {/* Task State */}
-                  <Grid item xs={12} sm={6}>
+                  {/* <Grid item xs={12} sm={6}>
                     <FormControl fullWidth required error={!!validationErrors.stateId}>
                       <InputLabel>Trạng thái</InputLabel>
                       <Select
@@ -612,7 +612,7 @@ const TaskDialog = ({ open, onClose, onSave, task, stageId, projectId, enterpris
                       <FormHelperText>{validationErrors.stateId}</FormHelperText>
                     )}
                   </FormControl>
-                </Grid>
+                </Grid> */}
               </Grid>
               </StyledPaper>
 
