@@ -26,7 +26,7 @@ const taskApi = {
       projectId: queryParams.projectId,
       stageId: queryParams.stageId,
       ...(queryParams.typeId !== undefined && { typeId: queryParams.typeId }),
-      ...(queryParams.stateId !== undefined && { stateId: queryParams.stateId }),
+      ...(queryParams.states !== undefined && { states: queryParams.states }),
       ...(queryParams.keyword && { keyword: queryParams.keyword }),
       ...(queryParams.page !== undefined && { page: queryParams.page }),
       ...(queryParams.size !== undefined && { size: queryParams.size }),
@@ -82,20 +82,8 @@ const taskApi = {
    * @param {number} userId - ID người dùng (optional, sẽ lấy từ localStorage nếu không truyền)
    * @returns {Promise} Công việc đã cập nhật
    */
-  update: (taskId, data, enterpriseId = null, userId = null) => {
+  update: (taskId, data) => {
     const url = `/task/${taskId}`;
-
-    console.log("🔧 UPDATE Task - Data Fields:", {
-      name: data.name,
-      description: data.description,
-      stateId: data.stateId,
-      typeId: data.typeId,
-      implementerIds: data.implementerIds,
-      testerIds: data.testerIds,
-      supporterIds: data.supporterIds,
-      images: data.images,
-      hasStageId: 'stageId' in data
-    });
 
     return axiosClient.put(url, data
     ).then(response => {
@@ -128,13 +116,10 @@ const taskApi = {
    * @param {number} userId - ID người dùng (optional, sẽ lấy từ localStorage nếu không truyền)
    * @returns {Promise} Công việc đã cập nhật
    */
-  updateStatus: (taskId, stateId, enterpriseId = null, userId = null) => {
+  updateStatus: (taskId, state) => {
     const url = `/task/${taskId}`;
 
-    // Ensure stateId is a number
-    const numericStateId = typeof stateId === 'string' ? parseInt(stateId, 10) : stateId;
-
-    return axiosClient.patch(url, { id: numericStateId }).then(response => {
+    return axiosClient.patch(url, { state }).then(response => {
       return response;
     }).catch(error => {
       throw error;

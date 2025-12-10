@@ -26,9 +26,11 @@ import stageApi from "../api/stage.api";
 import projectApi from "../../project/api/project.api";
 import groupTaskStateApi from "../../state_setting/api/groupTaskStateApi";
 import groupTaskTypeApi from "../../type_setting/api/groupTaskTypeApi";
-import StageTable from "../components/StageTable";
+import StageTreeView from "../components/StageTreeView";
 import StageDialog from "../components/StageDialog";
+import TaskDetailDrawer from "../components/TaskDetailDrawer";
 import { parseDateTimeLocal } from "../../../shared/utils/dateFormatter";
+import taskApi from "../api/task.api";
 
 // Styled Components
 const HeaderBox = styled(Paper)(({ theme }) => ({
@@ -99,45 +101,44 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
     severity: "success",
   });
 
-  // Pagination state
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalData, setTotalData] = useState(0);
+  // Dialog states
+  const [editingTask, setEditingTask] = useState(null);
+  const [submittingTask, setSubmittingTask] = useState(false);
+  
+  // Task detail drawer state
+  const [taskDetailOpen, setTaskDetailOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
 
   // Fetch stages on mount - Tab "Công việc" không cần check quyền
   useEffect(() => {
     if (eventId) {
       fetchStages();
-      fetchTaskStates();
       fetchTaskTypes();
     }
   }, [eventId]);
 
   /**
-   * Fetch all stages with pagination
+   * Fetch all stages (without tasks initially)
    */
-  const fetchStages = async (currentPage = page, currentPageSize = pageSize) => {
+  const fetchStages = async () => {
     setLoading(true);
     setError("");
     try {
-      // console.log("📡 Fetching stages for eventId:", eventId);
       const response = await stageApi.getAll(eventId, {
-        page: currentPage,
-        size: currentPageSize,
+        page: 0,
+        size: 10000,
       });
-      // console.log("🔍 API Stage Response:", response);
       
-      // Handle response structure
       const stageList = response.data?.data || response.data?.content || response.data || [];
-      const total = response.data?.totalElements || response.data?.total || stageList.length;
-      const pages = response.data?.totalPages || Math.ceil(total / currentPageSize);
       
-      setStages(stageList);
-      setTotalData(total);
-      setTotalPages(pages);
+      // Initialize stages without tasks
+      const stagesData = stageList.map(stage => ({
+        ...stage,
+        tasks: null, // null = not loaded yet
+        tasksLoading: false,
+      }));
       
-      // console.log("📊 Loaded stages:", stageList.length);
+      setStages(stagesData);
     } catch (err) {
       console.error("❌ Error fetching stages:", err);
       setError(err.message || "Không thể tải danh sách giai đoạn");
@@ -148,12 +149,42 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   };
 
   /**
+   * Fetch tasks for a specific stage
+   */
+  const fetchTasksForStage = async (stageId) => {
+    try {
+      // Mark as loading
+      setStages(prev => 
+        prev.map(s => s.id === stageId ? { ...s, tasksLoading: true } : s)
+      );
+
+      const tasksResponse = await taskApi.getAll({
+        projectId: eventId,
+        stageId: stageId,
+        page: 0,
+        size: 1000,
+      });
+      
+      const taskList = tasksResponse.data?.data || tasksResponse.data?.content || tasksResponse.data || [];
+      
+      // Update stage with tasks
+      setStages(prev => 
+        prev.map(s => s.id === stageId ? { ...s, tasks: taskList, tasksLoading: false } : s)
+      );
+    } catch (err) {
+      console.error(`Error fetching tasks for stage ${stageId}:`, err);
+      // Mark as error
+      setStages(prev => 
+        prev.map(s => s.id === stageId ? { ...s, tasks: [], tasksLoading: false, error: 'Không thể tải công việc' } : s)
+      );
+    }
+  };
+
+  /**
    * Fetch task states from project
    */
   const fetchTaskStates = async () => {
     try {
-      console.log("🔍 Fetching task states for projectId:", eventId, "enterpriseId:", enterpriseId);
-      
       const response = await groupTaskStateApi.filter(
         {
           projectId: eventId,
@@ -167,23 +198,12 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
         enterpriseId
       );
 
-      console.log("🔍 Full Response:", response);
-      console.log("🔍 Response.data:", response.data);
-
       const groups = response.data || [];
-      console.log("🔍 Groups:", groups);
-
       // Flatten list of all states from all groups
       const allStates = groups.flatMap(group => group.states || []);
       
-      console.log("🔍 All Task States:", allStates);
-      console.log("🔍 Task States length:", allStates.length);
-      
       setTaskStates(allStates);
     } catch (err) {
-      console.error("❌ Error fetching task states:", err);
-      console.error("❌ Error response:", err.response?.data);
-      console.error("❌ Error status:", err.response?.status);
     }
   };
    /**
@@ -192,8 +212,6 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   
   const fetchTaskTypes = async () => {
     try {
-      console.log("🔍 Fetching task types for projectId:", eventId, "enterpriseId:", enterpriseId);
-      
       const response = await groupTaskTypeApi.filter(
         {
           projectId: eventId,
@@ -207,22 +225,13 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
         enterpriseId
       );
 
-      console.log("🔍 Types Full Response:", response);
-
       const groups = response.data || [];
-      console.log("🔍 Groups types:", groups);
 
       // Flatten list of all types from all groups
       const allTypes = groups.flatMap(group => group.types || []);
       
-      console.log("🔍 All Task types:", allTypes);
-      console.log("🔍 Task types length:", allTypes.length);
-      
       setTaskTypes(allTypes);
     } catch (err) {
-      console.error("❌ Error fetching task type:", err);
-      console.error("❌ Error response:", err.response?.data);
-      console.error("❌ Error status:", err.response?.status);
     }
   };
 
@@ -271,10 +280,6 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
         payload.locationId = stageForm.locationId;
       }
 
-      // console.log("📤 Sending stage to API:", payload);
-      // console.log("📍 Using eventId:", eventId);
-      // console.log("👤 User IDs:", payload.userIds);
-
       if (stageId) {
         // Update
         await stageApi.update(eventId, stageId, payload);
@@ -289,7 +294,6 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       setSelectedStage(null);
       fetchStages();
     } catch (err) {
-      console.error("❌ Error saving stage:", err);
       showSnackbar(
         err.message || "Không thể lưu giai đoạn",
         "error"
@@ -312,7 +316,6 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       showSnackbar("Xóa giai đoạn thành công", "success");
       fetchStages();
     } catch (err) {
-      console.error("❌ Error deleting stage:", err);
       // Check for specific error message from backend
       const errorMessage = err.response?.data?.message || "Không thể xóa giai đoạn";
       showSnackbar(errorMessage, "error");
@@ -320,20 +323,61 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   };
 
   /**
-   * Handle change stage status
+   * Handle change task status - update task status only (separate from stage status)
    */
-  const handleChangeStatus = async (stage, newStatus) => {
-    if (stage.status === newStatus) {
+  const handleChangeTaskStatus = async (task, newStatus) => {
+    if (task.state?.code === newStatus || task.status === newStatus) {
       showSnackbar("Trạng thái không thay đổi", "info");
       return;
     }
 
+    const oldStatus = task.status || task.state?.code;
+
     try {
-      await stageApi.updateStatus(eventId, stage.id, newStatus);
-      showSnackbar("Cập nhật trạng thái thành công", "success");
-      fetchStages();
+      // Update task status only in local state immediately
+      setStages(prev =>
+        prev.map(stage =>
+          stage.tasks
+            ? {
+                ...stage,
+                // Only update task status, keep stage status unchanged
+                tasks: stage.tasks.map(t =>
+                  t.id === task.id 
+                    ? { 
+                        ...t, 
+                        status: newStatus,
+                        state: { ...t.state, code: newStatus }
+                      } 
+                    : t
+                ),
+              }
+            : stage
+        )
+      );
+
+      // Call API in background to update task status only
+      await taskApi.updateStatus(task.id, newStatus);
+      showSnackbar("Cập nhật trạng thái công việc thành công", "success");
     } catch (err) {
-      console.error("❌ Error updating status:", err);
+      // Revert task status on error
+      setStages(prev =>
+        prev.map(stage =>
+          stage.tasks
+            ? {
+                ...stage,
+                tasks: stage.tasks.map(t =>
+                  t.id === task.id 
+                    ? { 
+                        ...t, 
+                        status: oldStatus,
+                        state: { ...t.state, code: oldStatus }
+                      } 
+                    : t
+                ),
+              }
+            : stage
+        )
+      );
       showSnackbar(err.message || "Không thể cập nhật trạng thái", "error");
     }
   };
@@ -352,6 +396,110 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   const handleEditStage = (stage) => {
     setSelectedStage(stage);
     setDialogOpen(true);
+  };
+
+  /**
+   * Handle create task - add to local state without refetch
+   */
+  const handleCreateTask = async (stageId, taskData) => {
+    try {
+      const taskResponse = await taskApi.create(taskData);
+      const newTask = taskResponse.data || taskResponse.data?.data || taskData;
+
+      // Add new task to local state
+      setStages(prev =>
+        prev.map(stage =>
+          stage.id === stageId && stage.tasks
+            ? {
+                ...stage,
+                tasks: [...stage.tasks, newTask],
+              }
+            : stage
+        )
+      );
+
+      showSnackbar("Tạo công việc thành công", "success");
+      return newTask;
+    } catch (err) {
+      console.error("❌ Error creating task:", err);
+      showSnackbar(err.message || "Không thể tạo công việc", "error");
+      throw err;
+    }
+  };
+
+  /**
+   * Handle edit task - update local state only
+   */
+  const handleEditTask = async (task, updatedData) => {
+    if (!task || !updatedData) return;
+
+    const oldTask = task;
+
+    try {
+      // Update local state immediately
+      setStages(prev =>
+        prev.map(stage =>
+          stage.tasks
+            ? {
+                ...stage,
+                tasks: stage.tasks.map(t =>
+                  t.id === task.id 
+                    ? { 
+                        ...t, 
+                        name: updatedData.name,
+                        description: updatedData.description,
+                        taskTypeId: updatedData.taskTypeId,
+                      } 
+                    : t
+                ),
+              }
+            : stage
+        )
+      );
+
+      // Call API in background
+      await taskApi.update(task.id, updatedData);
+      showSnackbar("Cập nhật công việc thành công", "success");
+    } catch (err) {
+      // Revert on error - refetch for this stage
+      const stageId = stages.find(s => s.tasks?.some(t => t.id === task.id))?.id;
+      if (stageId) {
+        fetchTasksForStage(stageId);
+      }
+      showSnackbar(err.message || "Không thể cập nhật công việc", "error");
+    }
+  };
+
+  /**
+   * Handle delete task - remove from local state only
+   */
+  const handleDeleteTask = async (task) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa công việc "${task.name}"?`)) {
+      return;
+    }
+
+    try {
+      // Remove from local state immediately
+      setStages(prev =>
+        prev.map(stage =>
+          stage.tasks
+            ? {
+                ...stage,
+                tasks: stage.tasks.filter(t => t.id !== task.id),
+              }
+            : stage
+        )
+      );
+
+      // Call API in background
+      await taskApi.delete(task.id);
+      showSnackbar("Xóa công việc thành công", "success");
+    } catch (err) {
+      // Revert on error
+      fetchTasksForStage(task.stageId || stages.find(s => s.tasks?.some(t => t.id === task.id))?.id);
+      console.error("❌ Error deleting task:", err);
+      showSnackbar(err.message || "Không thể xóa công việc", "error");
+    }
   };
 
   /**
@@ -406,155 +554,20 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
               Đang tải giai đoạn...
             </Typography>
           </Box>
-        ) : stages.length === 0 ? (
-          <EmptyStateBox>
-            <InboxIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
-            <Typography variant="h6" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
-              Chưa có giai đoạn nào
-            </Typography>
-          </EmptyStateBox>
         ) : (
-          /* Stage Table */
-          <>
-            <StageTable
-              stages={stages}
-              onEdit={handleEditStage}
-              onDelete={handleDeleteStage}
-              onChangeStatus={handleChangeStatus}
-              projectId={projectId}
-              enterpriseId={enterpriseId}
-              taskStates={taskStates}
-              taskTypes={taskTypes}
-            />
-
-            {/* Pagination */}
-            {totalData > 0 && (
-              <Box
-                sx={{
-                  mt: 2,
-                  p: 2,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: 2,
-                  borderRadius: 2,
-                  bgcolor: "background.paper",
-                  border: 1,
-                  borderColor: "divider",
-                }}
-              >
-                {/* Page Size Selector */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Select
-                    size="small"
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(e.target.value);
-                      setPage(0);
-                      fetchStages(0, e.target.value);
-                    }}
-                    sx={{ minWidth: 70 }}
-                  >
-                    <MenuItem value={5}>5</MenuItem>
-                    <MenuItem value={10}>10</MenuItem>
-                    <MenuItem value={20}>20</MenuItem>
-                    <MenuItem value={50}>50</MenuItem>
-                  </Select>
-                  <Typography variant="body2" color="text.secondary">
-                    Trên tổng {totalData} giai đoạn
-                  </Typography>
-                </Box>
-
-                {/* Page Numbers Navigation */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                  {/* Previous Arrow */}
-                  <IconButton
-                    size="small"
-                    disabled={page === 0}
-                    onClick={() => {
-                      const newPage = Math.max(0, page - 1);
-                      setPage(newPage);
-                      fetchStages(newPage, pageSize);
-                    }}
-                    sx={{ p: 0.5 }}
-                  >
-                    <Typography sx={{ fontSize: 16 }}>‹</Typography>
-                  </IconButton>
-
-                  {/* Generate Page Numbers */}
-                  {(() => {
-                    const pages = [];
-                    const currentPage = page + 1;
-
-                    // If total pages <= 5, show all pages
-                    if (totalPages <= 5) {
-                      for (let i = 1; i <= totalPages; i++) {
-                        pages.push(i);
-                      }
-                    } else {
-                      // Show first 2 pages
-                      pages.push(1, 2);
-
-                      // Add ellipsis
-                      pages.push("...");
-
-                      // Show last 2 pages
-                      pages.push(totalPages - 1, totalPages);
-                    }
-
-                    return pages.map((pageNum, idx) => {
-                      if (pageNum === "...") {
-                        return (
-                          <Typography key={`ellipsis-${idx}`} sx={{ px: 0.5, color: "text.secondary" }}>
-                            ...
-                          </Typography>
-                        );
-                      }
-
-                      const isCurrentPage = pageNum === currentPage;
-                      return (
-                        <Button
-                          key={pageNum}
-                          size="small"
-                          onClick={() => {
-                            setPage(pageNum - 1);
-                            fetchStages(pageNum - 1, pageSize);
-                          }}
-                          sx={{
-                            minWidth: 32,
-                            p: 0.5,
-                            fontWeight: isCurrentPage ? "bold" : "normal",
-                            bgcolor: isCurrentPage ? "primary.main" : "transparent",
-                            color: isCurrentPage ? "primary.contrastText" : "text.primary",
-                            "&:hover": {
-                              bgcolor: isCurrentPage ? "primary.dark" : "action.hover",
-                            },
-                          }}
-                        >
-                          {pageNum}
-                        </Button>
-                      );
-                    });
-                  })()}
-
-                  {/* Next Arrow */}
-                  <IconButton
-                    size="small"
-                    disabled={page >= totalPages - 1}
-                    onClick={() => {
-                      const newPage = Math.min(totalPages - 1, page + 1);
-                      setPage(newPage);
-                      fetchStages(newPage, pageSize);
-                    }}
-                    sx={{ p: 0.5 }}
-                  >
-                    <Typography sx={{ fontSize: 16 }}>›</Typography>
-                  </IconButton>
-                </Box>
-              </Box>
-            )}
-          </>
+          /* Stage Tree View */
+          <StageTreeView
+            stages={stages}
+            onEditStage={handleEditStage}
+            onDeleteStage={handleDeleteStage}
+            onChangeStatus={handleChangeTaskStatus}
+            onSelectTask={(task) => {
+              setSelectedTask(task);
+              setTaskDetailOpen(true);
+            }}
+            onToggleStage={fetchTasksForStage}
+            loading={loading}
+          />
         )}
 
         {/* Stage Dialog */}
@@ -570,6 +583,23 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           isMobile={isMobile}
           projectId={projectId}
           enterpriseId={enterpriseId}
+        />
+
+        {/* Task Detail Drawer */}
+        <TaskDetailDrawer
+          open={taskDetailOpen}
+          onClose={() => {
+            setTaskDetailOpen(false);
+            setSelectedTask(null);
+          }}
+          stageName={stages.find(s => s.tasks?.some(t => t.id === selectedTask?.id))?.name || ""}
+          task={selectedTask}
+          onEdit={handleEditTask}
+          onDelete={handleDeleteTask}
+          onChangeStatus={handleChangeTaskStatus}
+          users={[]}
+          taskTypes={taskTypes}
+          taskStates={taskStates}
         />
 
         {/* Snackbar */}
