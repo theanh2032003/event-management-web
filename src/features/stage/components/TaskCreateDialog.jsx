@@ -366,8 +366,8 @@ export default function TaskCreateDialog({
                 <FormControl fullWidth required>
                   <InputLabel>Trạng thái</InputLabel>
                   <Select
-                    value={formData.stateId}
-                    onChange={(e) => setFormData({ ...formData, stateId: e.target.value })}
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                     label="Trạng thái"
                     disabled={submitting}
                   >

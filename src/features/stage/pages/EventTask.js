@@ -299,15 +299,51 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   };
 
   /**
-   * Handle change task status - update task status only (separate from stage status)
+   * Handle change stage status - call API to update stage status
    */
-  const handleChangeTaskStatus = async (task, newStatus) => {
-    if (task.state?.code === newStatus || task.status === newStatus) {
-      showSnackbar("Trạng thái không thay đổi", "info");
+  const handleChangeStageStatus = async (stage, newStatus) => {
+    if (stage.status === newStatus) {
       return;
     }
 
-    const oldStatus = task.status || task.state?.code;
+    const oldStatus = stage.status;
+
+    try {
+      // Update local state immediately for responsive UI
+      setStages(prev =>
+        prev.map(s =>
+          s.id === stage.id
+            ? { ...s, status: newStatus }
+            : s
+        )
+      );
+
+      // Call API to update stage status
+      await stageApi.updateStatus(eventId, stage.id, newStatus);
+      showSnackbar("Cập nhật trạng thái giai đoạn thành công", "success");
+    } catch (err) {
+      // Revert on error
+      setStages(prev =>
+        prev.map(s =>
+          s.id === stage.id
+            ? { ...s, status: oldStatus }
+            : s
+        )
+      );
+      const errorMessage = err.response?.data?.message || "Không thể cập nhật trạng thái giai đoạn";
+      showSnackbar(errorMessage, "error");
+    }
+  };
+
+  /**
+   * Handle change task status - update task status only (separate from stage status)
+   */
+  const handleChangeTaskStatus = async (task, newStatus) => {
+    if (task.state === newStatus || task.status === newStatus) {
+      return;
+    }
+
+    const oldStatus = task.state || task.status;
 
     try {
       // Update task status only in local state immediately
@@ -321,8 +357,8 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
                   t.id === task.id 
                     ? { 
                         ...t, 
+                        state: newStatus,
                         status: newStatus,
-                        state: { ...t.state, code: newStatus }
                       } 
                     : t
                 ),
@@ -345,8 +381,8 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
                   t.id === task.id 
                     ? { 
                         ...t, 
+                        state: oldStatus,
                         status: oldStatus,
-                        state: { ...t.state, code: oldStatus }
                       } 
                     : t
                 ),
@@ -542,7 +578,8 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
             taskTypes={taskTypes}
             onEditStage={handleEditStage}
             onDeleteStage={handleDeleteStage}
-            onChangeStatus={handleChangeTaskStatus}
+            onChangeStageStatus={handleChangeStageStatus}
+            onChangeTaskStatus={handleChangeTaskStatus}
             onSelectTask={(task) => {
               setSelectedTask(task);
               setTaskDetailOpen(true);

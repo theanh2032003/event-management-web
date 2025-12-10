@@ -94,16 +94,30 @@ const AddTaskButton = styled(Box)(({ theme }) => ({
   },
 }));
 
-const statusOptions = [
-  { value: 'PENDING', label: 'Chưa bắt đầu', color: '#FFA726', icon: HourglassEmptyIcon },
+// Stage status options
+const stageStatusOptions = [
+  { value: 'PENDING', label: 'Đang chờ', color: '#FFA726', icon: HourglassEmptyIcon },
   { value: 'IN_PROGRESS', label: 'Đang thực hiện', color: '#42A5F5', icon: PlayArrowIcon },
   { value: 'SUCCESS', label: 'Hoàn thành', color: '#66BB6A', icon: CheckCircleIcon },
-  { value: 'CANCEL', label: 'Hủy bỏ', color: '#EF5350', icon: CancelIcon },
+  { value: 'CANCELED', label: 'Hủy bỏ', color: '#EF5350', icon: CancelIcon },
 ];
 
-const getStatusInfo = (status) => {
-  const found = statusOptions.find(s => s.value === status);
-  return found || { label: status, color: '#757575', icon: HourglassEmptyIcon };
+// Task status options
+const taskStatusOptions = [
+  { value: 'PENDING', label: 'Đang chờ', color: '#FFA726', icon: HourglassEmptyIcon },
+  { value: 'IN_PROGRESS', label: 'Đang thực hiện', color: '#42A5F5', icon: PlayArrowIcon },
+  { value: 'SUCCESS', label: 'Hoàn thành', color: '#66BB6A', icon: CheckCircleIcon },
+  { value: 'CANCELED', label: 'Hủy bỏ', color: '#EF5350', icon: CancelIcon },
+];
+
+const getStageStatusInfo = (status) => {
+  const found = stageStatusOptions.find(s => s.value === status);
+  return found || { label: status || 'Đang chờ', color: '#757575', icon: HourglassEmptyIcon };
+};
+
+const getTaskStatusInfo = (status) => {
+  const found = taskStatusOptions.find(s => s.value === status);
+  return found || { label: status || 'Đang chờ', color: '#757575', icon: HourglassEmptyIcon };
 };
 
 /**
@@ -114,7 +128,8 @@ export default function StageTreeView({
   taskTypes = [],
   onEditStage,
   onDeleteStage,
-  onChangeStatus,
+  onChangeStageStatus,
+  onChangeTaskStatus,
   onSelectTask,
   onToggleStage,
   onAddTask,
@@ -196,29 +211,53 @@ export default function StageTreeView({
                 )}
               </Box>
 
-              {stage.status && (
-                <Chip
-                  label={stage.status}
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    backgroundColor: alpha(
-                      stage.status === 'COMPLETED' ? '#4CAF50' : 
-                      stage.status === 'IN_PROGRESS' ? '#2196F3' : 
-                      stage.status === 'PENDING' ? '#FFC107' : '#F44336',
-                      0.1
-                    ),
-                    borderColor: 
-                      stage.status === 'COMPLETED' ? '#4CAF50' : 
-                      stage.status === 'IN_PROGRESS' ? '#2196F3' : 
-                      stage.status === 'PENDING' ? '#FFC107' : '#F44336',
-                    color: 
-                      stage.status === 'COMPLETED' ? '#4CAF50' : 
-                      stage.status === 'IN_PROGRESS' ? '#2196F3' : 
-                      stage.status === 'PENDING' ? '#FFC107' : '#F44336',
-                  }}
-                />
-              )}
+              {/* Stage Status Select */}
+              <Select
+                size="small"
+                value={stage.status || 'PENDING'}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onChangeStageStatus?.(stage, e.target.value);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                variant="outlined"
+                sx={{
+                  minWidth: 160,
+                  height: 36,
+                  '& .MuiOutlinedInput-input': {
+                    padding: '6px 12px',
+                    fontSize: '0.875rem',
+                  },
+                  '& .MuiSelect-select': {
+                    display: 'flex',
+                    alignItems: 'center',
+                  },
+                }}
+                renderValue={(value) => {
+                  const statusInfo = getStageStatusInfo(value);
+                  const StatusIcon = statusInfo.icon;
+                  return (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <StatusIcon sx={{ fontSize: 18, color: statusInfo.color }} />
+                      <Typography variant="body2" sx={{ color: statusInfo.color, fontWeight: 600 }}>
+                        {statusInfo.label}
+                      </Typography>
+                    </Box>
+                  );
+                }}
+              >
+                {stageStatusOptions.map((option) => {
+                  const OptionIcon = option.icon;
+                  return (
+                    <MenuItem key={option.value} value={option.value}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <OptionIcon sx={{ fontSize: 18, color: option.color }} />
+                        <Typography sx={{ color: option.color }}>{option.label}</Typography>
+                      </Box>
+                    </MenuItem>
+                  );
+                })}
+              </Select>
 
               <Box sx={{ display: 'flex', gap: 0.5 }}>
                 <IconButton
@@ -282,8 +321,7 @@ export default function StageTreeView({
                         </StyledTableHead>
                         <TableBody>
                           {tasks.map((task) => {
-                            const statusInfo = getStatusInfo(task.state || 'PENDING');
-                            const StatusIcon = statusInfo.icon;
+                            const statusInfo = getTaskStatusInfo(task.state || 'PENDING');
                             const taskTypeColor = getTaskTypeColor(task.taskTypeId || task.taskType?.id);
                             
                             return (
@@ -326,31 +364,37 @@ export default function StageTreeView({
                                       gap: 1,
                                     }}
                                   >
-                                    {/* <StatusIcon 
-                                      sx={{ 
-                                        fontSize: 20, 
-                                        color: statusInfo.color,
-                                      }} 
-                                    /> */}
                                     <Select
                                       size="small"
                                       value={task.state || 'PENDING'}
                                       onChange={(e) => {
                                         e.stopPropagation();
-                                        onChangeStatus?.(task, e.target.value);
+                                        onChangeTaskStatus?.(task, e.target.value);
                                       }}
                                       onClick={(e) => e.stopPropagation()}
                                       variant="outlined"
                                       sx={{
-                                        minWidth: 140,
+                                        minWidth: 160,
                                         height: 32,
                                         '& .MuiOutlinedInput-input': {
                                           padding: '6px 12px',
                                           fontSize: '0.875rem',
                                         },
                                       }}
+                                      renderValue={(value) => {
+                                        const info = getTaskStatusInfo(value);
+                                        const StatusIcon = info.icon;
+                                        return (
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <StatusIcon sx={{ fontSize: 16, color: info.color }} />
+                                            <Typography variant="body2" sx={{ color: info.color, fontWeight: 500 }}>
+                                              {info.label}
+                                            </Typography>
+                                          </Box>
+                                        );
+                                      }}
                                     >
-                                      {statusOptions.map((option) => {
+                                      {taskStatusOptions.map((option) => {
                                         const OptionIcon = option.icon;
                                         return (
                                           <MenuItem key={option.value} value={option.value}>
@@ -364,8 +408,6 @@ export default function StageTreeView({
                                     </Select>
                                   </Box>
                                 </TableCell>
-
-                                
                               </StyledTableRow>
                             );
                           })}
