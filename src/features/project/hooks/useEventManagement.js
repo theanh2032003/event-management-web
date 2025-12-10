@@ -17,7 +17,6 @@ export const useEventManagement = () => {
   const [error, setError] = useState("");
 
   // Dropdown data
-  const [groupTaskStates, setGroupTaskStates] = useState([]);
   const [groupTaskTypes, setGroupTaskTypes] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
@@ -79,12 +78,6 @@ export const useEventManagement = () => {
         Authorization: `Bearer ${token}`,
         "enterprise-id": enterpriseId,
       };
-
-      // Fetch group task states
-      const statesResponse = await axiosClient.get("/group-task-state", { headers });
-      const statesData = statesResponse.data || statesResponse;
-      const statesArray = Array.isArray(statesData) ? statesData : [];
-      setGroupTaskStates(statesArray);
 
       // Fetch group task types
       const typesResponse = await axiosClient.get("/group-task-type", { headers });
@@ -246,10 +239,6 @@ export const useEventManagement = () => {
         throw new Error("Vui lòng nhập tên sự kiện");
       }
 
-      if (!eventForm.groupTaskStateId) {
-        throw new Error("Vui lòng chọn nhóm trạng thái công việc");
-      }
-
       if (!eventForm.groupTaskTypeId) {
         throw new Error("Vui lòng chọn nhóm loại công việc");
       }
@@ -322,7 +311,6 @@ export const useEventManagement = () => {
         feeType: eventForm.feeType,
         startedAt: toISOStringLocal(eventForm.startedAt),
         endedAt: toISOStringLocal(eventForm.endedAt),
-        groupTaskStateId: parseInt(eventForm.groupTaskStateId),
         groupTaskTypeId: parseInt(eventForm.groupTaskTypeId),
         category: eventForm.category,
       };
@@ -414,7 +402,6 @@ export const useEventManagement = () => {
     enterpriseId,
 
     // Dropdown data
-    groupTaskStates,
     groupTaskTypes,
     locations,
     loadingDropdowns,

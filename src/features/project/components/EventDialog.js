@@ -151,7 +151,6 @@ const EventDialog = ({
   open,
   onClose,
   event,
-  groupTaskStates,
   groupTaskTypes,
   locations = [],
   loadingDropdowns,
@@ -173,7 +172,6 @@ const EventDialog = ({
     accessType: "OPEN",
     startedAt: getCurrentDateTimeLocal(),
     endedAt: getCurrentDateTimeLocal(),
-    groupTaskStateId: "",
     groupTaskTypeId: "",
     locationId: "",
     images: [],
@@ -185,13 +183,6 @@ const EventDialog = ({
   const [imagePreviews, setImagePreviews] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  // Set default dropdown values khi data available
-  useEffect(() => {
-    if (!loadingDropdowns && groupTaskStates.length > 0 && !eventForm.groupTaskStateId) {
-      setEventForm((prev) => ({ ...prev, groupTaskStateId: groupTaskStates[0].id }));
-    }
-  }, [loadingDropdowns, groupTaskStates, eventForm.groupTaskStateId]);
 
   useEffect(() => {
     if (!loadingDropdowns && groupTaskTypes.length > 0 && !eventForm.groupTaskTypeId) {
@@ -226,7 +217,6 @@ const EventDialog = ({
         accessType: event.accessType || "OPEN",
         startedAt: event.startedAt ? formatDateTimeLocal(event.startedAt) : getCurrentDateTimeLocal(),
         endedAt: event.endedAt ? formatDateTimeLocal(event.endedAt) : getCurrentDateTimeLocal(),
-        groupTaskStateId: event.groupTaskStateId || "",
         groupTaskTypeId: event.groupTaskTypeId || "",
         locationId: event.locationId || event.location?.id || "",
         images: event.images || [],
@@ -255,7 +245,6 @@ const EventDialog = ({
         accessType: "OPEN",
         startedAt: getCurrentDateTimeLocal(),
         endedAt: getCurrentDateTimeLocal(),
-        groupTaskStateId: groupTaskStates.length > 0 ? groupTaskStates[0].id : "",
         groupTaskTypeId: groupTaskTypes.length > 0 ? groupTaskTypes[0].id : "",
         locationId: "",
         images: [],
@@ -263,7 +252,7 @@ const EventDialog = ({
       setAvatarPreview(null);
       setError("");
     }
-  }, [event, open, groupTaskStates, groupTaskTypes, formatDateTimeLocal, getCurrentDateTimeLocal]);
+  }, [event, open, groupTaskTypes, formatDateTimeLocal, getCurrentDateTimeLocal]);
 
   // Avatar upload handler
   const handleAvatarUpload = async (event) => {
@@ -434,11 +423,6 @@ const EventDialog = ({
 
     if (new Date(eventForm.startedAt) >= new Date(eventForm.endedAt)) {
       setError("Thời gian kết thúc phải sau thời gian bắt đầu");
-      return;
-    }
-
-    if (!eventForm.groupTaskStateId) {
-      setError("Nhóm trạng thái công việc là bắt buộc");
       return;
     }
 
@@ -704,31 +688,6 @@ const EventDialog = ({
                 InputLabelProps={{ shrink: true }}
                 helperText="Chọn ngày và giờ kết thúc sự kiện"
               />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required>
-                <InputLabel>Nhóm trạng thái công việc</InputLabel>
-                <Select
-                  value={eventForm.groupTaskStateId}
-                  label="Nhóm trạng thái công việc"
-                  onChange={(e) => setEventForm({ ...eventForm, groupTaskStateId: e.target.value })}
-                  disabled={submitting || loadingDropdowns}
-                  required
-                >
-                  {groupTaskStates.map((state) => (
-                    <MenuItem key={state.id} value={state.id}>
-                      {state.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {loadingDropdowns && (
-                  <FormHelperText>Đang tải dữ liệu...</FormHelperText>
-                )}
-                {!loadingDropdowns && groupTaskStates.length === 0 && (
-                  <FormHelperText error>Không có dữ liệu</FormHelperText>
-                )}
-              </FormControl>
             </Grid>
 
             <Grid item xs={12} sm={6}>

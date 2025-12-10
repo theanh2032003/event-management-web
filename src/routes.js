@@ -25,7 +25,6 @@ import EnterpriseEventDetail from './features/project/pages/EventDetail';
 import EnterpriseEventManagement from './features/project/pages/EventManagement';
 import EnterpriseStatistics from './features/statistic/pages/EnterpriseStatistics';
 import EnterpriseSettings from './features/setting/pages/Settings';
-import GroupTaskStateDetail from './features/state_setting/pages/GroupTaskStateDetail';
 import GroupTaskTypeDetail from './features/type_setting/pages/GroupTaskTypeDetail';
 import EnterpriseMarketplace from './features/product/pages/MarketplaceEnterprise';
 import EnterpriseProductDetail from './features/product/pages/ProductDetail';
@@ -86,8 +85,6 @@ function EnterpriseRoutes() {
 
       {/* Settings & Profile */}
       <Route path="settings" element={<EnterpriseSettings />} />
-      <Route path="settings/group-task-states" element={<EnterpriseSettings />} />
-      <Route path="settings/group-task-states/:groupId" element={<GroupTaskStateDetail />} />
       <Route path="settings/group-task-types" element={<EnterpriseSettings />} />
       <Route path="settings/group-task-types/:groupId" element={<GroupTaskTypeDetail />} />
       <Route path="settings/roles" element={<EnterpriseSettings />} />

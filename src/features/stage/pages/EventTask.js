@@ -24,13 +24,13 @@ import {
 import { useParams } from "react-router-dom";
 import stageApi from "../api/stage.api";
 import projectApi from "../../project/api/project.api";
-import groupTaskStateApi from "../../state_setting/api/groupTaskStateApi";
 import groupTaskTypeApi from "../../type_setting/api/groupTaskTypeApi";
 import StageTreeView from "../components/StageTreeView";
 import StageDialog from "../components/StageDialog";
 import TaskDetailDrawer from "../components/TaskDetailDrawer";
 import { parseDateTimeLocal } from "../../../shared/utils/dateFormatter";
 import taskApi from "../api/task.api";
+import { TASK_STATES } from "../../../shared/constants/taskStates";
 
 // Styled Components
 const HeaderBox = styled(Paper)(({ theme }) => ({
@@ -88,7 +88,6 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
 
   // State
   const [stages, setStages] = useState([]);
-  const [taskStates, setTaskStates] = useState([]);
   const [taskTypes, setTaskTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -180,32 +179,6 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
     }
   };
 
-  /**
-   * Fetch task states from project
-   */
-  const fetchTaskStates = async () => {
-    try {
-      const response = await groupTaskStateApi.filter(
-        {
-          projectId: eventId,
-          keyword: "",
-          pageable: {
-            page: 0,
-            size: 100,
-            sort: []
-          }
-        },
-        enterpriseId
-      );
-
-      const groups = response.data || [];
-      // Flatten list of all states from all groups
-      const allStates = groups.flatMap(group => group.states || []);
-      
-      setTaskStates(allStates);
-    } catch (err) {
-    }
-  };
    /**
    * Fetch task types from project
    */
@@ -599,7 +572,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           onChangeStatus={handleChangeTaskStatus}
           users={[]}
           taskTypes={taskTypes}
-          taskStates={taskStates}
+          taskStates={TASK_STATES}
         />
 
         {/* Snackbar */}

@@ -314,7 +314,6 @@ export default function EventOverview({
         visibility: editingEvent.visibility,
         accessType: editingEvent.accessType,
         locationId: editingEvent.locationId,
-        groupTaskStateId: editingEvent.groupTaskStateId,
         groupTaskTypeId: editingEvent.groupTaskTypeId,
       };
 
@@ -719,42 +718,15 @@ export default function EventOverview({
             </Box>
           )}
 
-          {/* Task State & Type Section */}
-          {(currentEventData.groupTaskState || currentEventData.groupTaskType) && !editingEvent && (
+          {/* Task Type Section */}
+          {currentEventData.groupTaskType && !editingEvent && (
             <Box>
               <SectionTitle>Thông tin bổ sung</SectionTitle>
 
-              {/* Group Task State */}
-              {currentEventData.groupTaskState && (
-                <Box sx={{ mb: 3 }}>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1.5 }}>
-                    <Typography variant="caption" sx={{ color: '#000000ff', fontWeight: 600, fontSize: '0.95rem', minWidth: 100 }}>
-                      Nhóm tiến trình:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#000000ff', fontSize: '0.95rem' }}>
-                      {currentEventData.groupTaskState.name}
-                    </Typography>
-                  </Box>
-                  {currentEventData.groupTaskState.states?.length > 0 && (
-                    <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                      {currentEventData.groupTaskState.states.map((state) => (
-                        <Chip
-                          key={state.id}
-                          icon={<CircleIcon sx={{ fontSize: 12 }} />}
-                          label={state.name}
-                          size="small"
-                          sx={{
+              {/* Group Task Type */}
                             backgroundColor: state.color,
                             color: '#fff',
                             fontWeight: 600,
-                          }}
-                        />
-                      ))}
-                    </Stack>
-                  )}
-                </Box>
-              )}
-
               {/* Group Task Type */}
               {currentEventData.groupTaskType && (
                 <Box>
