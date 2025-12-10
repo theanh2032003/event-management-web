@@ -28,6 +28,7 @@ import groupTaskTypeApi from "../../type_setting/api/groupTaskTypeApi";
 import StageTreeView from "../components/StageTreeView";
 import StageDialog from "../components/StageDialog";
 import TaskDetailDrawer from "../components/TaskDetailDrawer";
+import TaskCreateDialog from "../components/TaskCreateDialog";
 import { parseDateTimeLocal } from "../../../shared/utils/dateFormatter";
 import taskApi from "../api/task.api";
 import { TASK_STATES } from "../../../shared/constants/taskStates";
@@ -102,6 +103,8 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
 
   // Dialog states
   const [editingTask, setEditingTask] = useState(null);
+  const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
+  const [newTaskData, setNewTaskData] = useState({ stageId: null, taskTypeId: null, stageName: '' });
   const [submittingTask, setSubmittingTask] = useState(false);
   
   // Task detail drawer state
@@ -130,10 +133,10 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       
       const stageList = response.data?.data || response.data?.content || response.data || [];
       
-      // Initialize stages without tasks
+      // Initialize stages without tasks - explicitly remove any tasks from backend
       const stagesData = stageList.map(stage => ({
         ...stage,
-        tasks: null, // null = not loaded yet
+        tasks: null, // null = not loaded yet, explicitly override any tasks from backend
         tasksLoading: false,
       }));
       
@@ -375,6 +378,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
    * Handle create task - add to local state without refetch
    */
   const handleCreateTask = async (stageId, taskData) => {
+    setSubmittingTask(true);
     try {
       const taskResponse = await taskApi.create(taskData);
       const newTask = taskResponse.data || taskResponse.data?.data || taskData;
@@ -392,11 +396,15 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       );
 
       showSnackbar("Tạo công việc thành công", "success");
+      setCreateTaskDialogOpen(false);
+      setNewTaskData({ stageId: null, taskTypeId: null, stageName: '' });
       return newTask;
     } catch (err) {
       console.error("❌ Error creating task:", err);
       showSnackbar(err.message || "Không thể tạo công việc", "error");
       throw err;
+    } finally {
+      setSubmittingTask(false);
     }
   };
 
@@ -531,6 +539,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           /* Stage Tree View */
           <StageTreeView
             stages={stages}
+            taskTypes={taskTypes}
             onEditStage={handleEditStage}
             onDeleteStage={handleDeleteStage}
             onChangeStatus={handleChangeTaskStatus}
@@ -539,6 +548,16 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
               setTaskDetailOpen(true);
             }}
             onToggleStage={fetchTasksForStage}
+            onAddTask={(stageId, taskTypeId) => {
+              // Open task create dialog with pre-filled stage and task type
+              const stage = stages.find(s => s.id === stageId);
+              setNewTaskData({
+                stageId: stageId,
+                taskTypeId: taskTypeId,
+                stageName: stage?.name || '',
+              });
+              setCreateTaskDialogOpen(true);
+            }}
             loading={loading}
           />
         )}
@@ -556,6 +575,22 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           isMobile={isMobile}
           projectId={projectId}
           enterpriseId={enterpriseId}
+        />
+
+        {/* Task Create Dialog */}
+        <TaskCreateDialog
+          open={createTaskDialogOpen}
+          onClose={() => {
+            setCreateTaskDialogOpen(false);
+            setNewTaskData({ stageId: null, taskTypeId: null, stageName: '' });
+          }}
+          stageId={newTaskData.stageId}
+          stageName={newTaskData.stageName}
+          taskTypeId={newTaskData.taskTypeId}
+          taskTypes={taskTypes}
+          users={[]}
+          onCreate={handleCreateTask}
+          submitting={submittingTask}
         />
 
         {/* Task Detail Drawer */}
