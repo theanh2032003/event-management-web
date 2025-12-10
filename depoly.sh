@@ -5,7 +5,7 @@ set -e  # Exit on error
 SERVER_USER="root"
 SERVER_IP="31.97.70.3"
 SERVER_PATH="/opt/event/web"
-SERVICE_PATH="${SERVER_PATH}"
+SERVICE_PATH="${SERVER_PATH}/web"
 COMPOSE_PATH="${SERVER_PATH}/docker-compose.yaml"
 IMAGE_NAME="event-management-web"
 GIT_REPO="git@github.com:theanh2032003/event-management-web.git"
