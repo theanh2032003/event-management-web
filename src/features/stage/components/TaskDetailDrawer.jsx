@@ -149,8 +149,6 @@ export default function TaskDetailDrawer({
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [statusDropdownValue, setStatusDropdownValue] = useState('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [editFormOpen, setEditFormOpen] = useState(false);
-  const [editFormData, setEditFormData] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   
   // State for task detail
@@ -191,8 +189,6 @@ export default function TaskDetailDrawer({
     setMenuAnchor(null);
     setStatusDropdownValue('');
     setDeleteConfirmOpen(false);
-    setEditFormOpen(false);
-    setEditFormData(null);
     setTaskDetail(null);
     setDetailError(null);
     onClose();
@@ -217,47 +213,23 @@ export default function TaskDetailDrawer({
     }
   };
 
-  // Initialize edit form data
-  const handleOpenEditForm = () => {
-    const currentTask = taskDetail || task;
-    setEditFormData({
-      name: currentTask?.name || "",
-      description: currentTask?.description || "",
-      taskTypeId: currentTask?.taskTypeId || "",
-      stateId: currentTask?.state?.id || "",
-      implementerIds: currentTask?.implementers?.map((p) => p.id) || [],
-      supporterIds: currentTask?.supporters?.map((p) => p.id) || [],
-      testerIds: currentTask?.testers?.map((p) => p.id) || [],
-      supplierId: currentTask?.supplier?.id || "",
-    });
-    setEditFormOpen(true);
-    setMenuAnchor(null);
-  };
 
-  const handleSaveEdit = async () => {
-    if (!editFormData || !task) return;
 
-    setSubmitting(true);
-    try {
-      await onEdit(task, editFormData);
-      setEditFormOpen(false);
-      setEditFormData(null);
-      // Refresh task detail after edit
-      if (task.id) {
-        fetchTaskDetail(task.id);
-      }
-      onClose();
-    } catch (err) {
-      console.error("Error updating task:", err);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+  // Confirm delete
   const handleConfirmDelete = async () => {
-    setDeleteConfirmOpen(false);
-    setMenuAnchor(null);
-    await onDelete(task);
+    if (onDelete) {
+      setSubmitting(true);
+      try {
+        await onDelete(task);
+        setDeleteConfirmOpen(false);
+        setMenuAnchor(null);
+        onClose();
+      } catch (err) {
+        console.error("Error deleting task:", err);
+      } finally {
+        setSubmitting(false);
+      }
+    }
   };
 
   if (!task) return null;
@@ -312,7 +284,12 @@ export default function TaskDetailDrawer({
             },
           }}
         >
-          <MenuItem onClick={handleOpenEditForm}>
+          <MenuItem onClick={() => {
+            if (onEdit) {
+              onEdit(taskDetail || task);
+            }
+            setMenuAnchor(null);
+          }}>
             <EditIcon fontSize="small" sx={{ mr: 1.5 }} /> Sửa
           </MenuItem>
           <Divider sx={{ my: 0.5 }} />
@@ -351,7 +328,7 @@ export default function TaskDetailDrawer({
               {/* Dropdown chuyển trạng thái */}
               <FormControl size="small" sx={{ minWidth: 150 }}>
                 <Select
-                  value={statusDropdownValue || (typeof displayTask.state === 'string' ? displayTask.state : (displayTask.state?.code || ''))}
+                  value={statusDropdownValue || displayTask.state || 'PENDING'}
                   onChange={async (e) => {
                     const newStatus = e.target.value;
                     setStatusDropdownValue(newStatus);
@@ -461,7 +438,7 @@ export default function TaskDetailDrawer({
               {/* Supporters */}
               {displayTask.supporters?.length > 0 && (
                 <FieldBox sx={{ borderBottom: 'none', mb: 1 }}>
-                  <Label sx={{ fontSize: "0.9rem", fontWeight: 600 }}>Đồng tác viên</Label>
+                  <Label sx={{ fontSize: "0.9rem", fontWeight: 600 }}>Người hỗ trợ</Label>
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                     {displayTask.supporters.map((person) => (
                       <Box
@@ -540,7 +517,11 @@ export default function TaskDetailDrawer({
               <SectionTitle sx={{ fontSize: "0.9rem", fontWeight: 600, mb: 1 }}>Tệp đính kèm</SectionTitle>
               <ImageGrid>
                 {displayTask.images.map((image, idx) => (
-                  <ImageThumbnail key={idx} src={image.url || image} alt={`Attachment ${idx + 1}`} />
+                  <ImageThumbnail 
+                    key={idx} 
+                    src={typeof image === 'string' ? image : (image.url || image)} 
+                    alt={`Attachment ${idx + 1}`} 
+                  />
                 ))}
               </ImageGrid>
             </Box>
@@ -580,149 +561,6 @@ export default function TaskDetailDrawer({
             disabled={submitting}
           >
             {submitting ? <CircularProgress size={20} /> : "Xóa"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Edit Form Dialog */}
-      <Dialog 
-        open={editFormOpen} 
-        onClose={() => setEditFormOpen(false)} 
-        maxWidth="sm" 
-        fullWidth
-        sx={{
-          zIndex: 9999,
-        }}
-        BackdropProps={{
-          sx: { zIndex: 9998 }
-        }}
-        PaperProps={{
-          sx: { zIndex: 9999 }
-        }}
-      >
-        <DialogTitle>Chỉnh sửa công việc</DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          {editFormData && (
-            <Stack spacing={2}>
-              {/* Name */}
-              <TextField
-                label="Tên công việc"
-                fullWidth
-                value={editFormData.name}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, name: e.target.value })
-                }
-                variant="outlined"
-                size="small"
-              />
-
-              {/* Description */}
-              <TextField
-                label="Mô tả"
-                fullWidth
-                multiline
-                rows={3}
-                value={editFormData.description}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, description: e.target.value })
-                }
-                variant="outlined"
-                size="small"
-              />
-
-              {/* Task Type */}
-              <Autocomplete
-                options={taskTypes}
-                getOptionLabel={(option) => option.name}
-                value={taskTypes.find((t) => t.id === editFormData.taskTypeId) || null}
-                onChange={(e, value) =>
-                  setEditFormData({
-                    ...editFormData,
-                    taskTypeId: value?.id || "",
-                  })
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Loại công việc" size="small" />
-                )}
-              />
-
-              {/* State */}
-              <Autocomplete
-                options={taskStates}
-                getOptionLabel={(option) => option.name}
-                value={taskStates.find((s) => s.id === editFormData.stateId) || null}
-                onChange={(e, value) =>
-                  setEditFormData({
-                    ...editFormData,
-                    stateId: value?.id || "",
-                  })
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Trạng thái" size="small" />
-                )}
-              />
-
-              {/* Implementers */}
-              <Autocomplete
-                multiple
-                options={users}
-                getOptionLabel={(option) => option.name}
-                value={users.filter((u) => editFormData.implementerIds?.includes(u.id)) || []}
-                onChange={(e, value) =>
-                  setEditFormData({
-                    ...editFormData,
-                    implementerIds: value.map((v) => v.id),
-                  })
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Người thực hiện" size="small" />
-                )}
-              />
-
-              {/* Supporters */}
-              <Autocomplete
-                multiple
-                options={users}
-                getOptionLabel={(option) => option.name}
-                value={users.filter((u) => editFormData.supporterIds?.includes(u.id)) || []}
-                onChange={(e, value) =>
-                  setEditFormData({
-                    ...editFormData,
-                    supporterIds: value.map((v) => v.id),
-                  })
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Người hỗ trợ" size="small" />
-                )}
-              />
-
-              {/* Testers */}
-              <Autocomplete
-                multiple
-                options={users}
-                getOptionLabel={(option) => option.name}
-                value={users.filter((u) => editFormData.testerIds?.includes(u.id)) || []}
-                onChange={(e, value) =>
-                  setEditFormData({
-                    ...editFormData,
-                    testerIds: value.map((v) => v.id),
-                  })
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Người kiểm tra" size="small" />
-                )}
-              />
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditFormOpen(false)}>Hủy</Button>
-          <Button
-            onClick={handleSaveEdit}
-            variant="contained"
-            disabled={submitting}
-          >
-            {submitting ? <CircularProgress size={20} /> : "Lưu"}
           </Button>
         </DialogActions>
       </Dialog>

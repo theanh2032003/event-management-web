@@ -34,6 +34,7 @@ import {
 import { formatDateTimeLocal, parseDateTimeLocal } from '../../../shared/utils/dateFormatter';
 import { TASK_STATES } from '../../../shared/constants/taskStates';
 import projectApi from '../../project/api/project.api';
+import supplierApi from '../../supplier/api/supplier.api';
 
 // Styled Components
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -94,6 +95,7 @@ export default function TaskCreateDialog({
     endedAt: '',
     state: 'PENDING',
     taskTypeId: taskTypeId || '',
+    supplierId: '',
     implementerIds: [],
     supporterIds: [],
     testerIds: [],
@@ -102,11 +104,16 @@ export default function TaskCreateDialog({
   const [validationErrors, setValidationErrors] = useState({});
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(false);
 
-  // Fetch users when dialog opens
+  // Fetch users and suppliers when dialog opens
   useEffect(() => {
-    if (open && projectId) {
-      fetchUsers();
+    if (open) {
+      if (projectId) {
+        fetchUsers();
+      }
+      fetchSuppliers();
     }
   }, [open, projectId]);
 
@@ -120,6 +127,19 @@ export default function TaskCreateDialog({
       setUsers([]);
     } finally {
       setLoadingUsers(false);
+    }
+  };
+
+  const fetchSuppliers = async () => {
+    setLoadingSuppliers(true);
+    try {
+      const response = await supplierApi.getSuppliers('', 0, 100, projectId);
+      setSuppliers(response.data || response || []);
+    } catch (err) {
+      console.error("Error fetching suppliers:", err);
+      setSuppliers([]);
+    } finally {
+      setLoadingSuppliers(false);
     }
   };
 
@@ -139,6 +159,7 @@ export default function TaskCreateDialog({
           endedAt: formatDateTimeLocal(task.endedAt),
           state: task.state || task.stateId || task.taskState?.id || 'PENDING',
           taskTypeId: task.taskTypeId || task.typeId || task.taskType?.id || '',
+          supplierId: task.supplierId || task.supplier?.id || '',
           implementerIds: implementerIds,
           supporterIds: supporterIds,
           testerIds: testerIds,
@@ -152,6 +173,7 @@ export default function TaskCreateDialog({
           endedAt: formatDateTimeLocal(new Date(Date.now() + 24 * 60 * 60 * 1000)), // +1 day
           state: 'PENDING',
           taskTypeId: taskTypeId || (taskTypes.length > 0 ? taskTypes[0].id : ''),
+          supplierId: '',
           implementerIds: [],
           supporterIds: [],
           testerIds: [],
@@ -206,14 +228,16 @@ export default function TaskCreateDialog({
         state: formData.state,
         taskTypeId: parseInt(formData.taskTypeId),
         typeId: parseInt(formData.taskTypeId),
+        supplierId: formData.supplierId ? parseInt(formData.supplierId) : null,
         implementerIds: formData.implementerIds,
         supporterIds: formData.supporterIds,
         testerIds: formData.testerIds,
         stageId: stageId,
       };
 
+
       if (isEditMode && onEdit) {
-        await onEdit(task, taskData);
+        await onEdit(taskData);
       } else {
         await onCreate(stageId, taskData);
       }
@@ -366,8 +390,8 @@ export default function TaskCreateDialog({
                 <FormControl fullWidth required>
                   <InputLabel>Trạng thái</InputLabel>
                   <Select
-                    value={formData.stateId}
-                    onChange={(e) => setFormData({ ...formData, stateId: e.target.value })}
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                     label="Trạng thái"
                     disabled={submitting}
                   >
@@ -421,6 +445,8 @@ export default function TaskCreateDialog({
                   helperText={validationErrors.endedAt}
                 />
               </Grid>
+
+             
             </Grid>
           </StyledPaper>
 
@@ -588,7 +614,51 @@ export default function TaskCreateDialog({
               </>
             )}
           </StyledPaper>
+          <StyledPaper elevation={0}>
+            <SectionTitle>
+              <PeopleIcon fontSize="small" />
+              Hợp tác với nhà cung cấp
+               <Chip 
+                label={formData.implementerIds.length + formData.supporterIds.length + formData.testerIds.length} 
+                size="small" 
+                color="primary"
+                sx={{ ml: 1, fontWeight: 700 }}
+              />
+            </SectionTitle>
+
+            {loadingUsers ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress size={32} />
+              </Box>
+            ) : (
+              <>
+               {/* Supplier */}
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel>Nhà cung cấp</InputLabel>
+                    <Select
+                      value={formData.supplierId}
+                      onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
+                      label="Nhà cung cấp"
+                      disabled={submitting || loadingSuppliers}
+                    >
+                      <MenuItem value="">
+                        <em>Cần ký hợp đồng với nhà cung cấp</em>
+                      </MenuItem>
+                      {suppliers.map((supplier) => (
+                        <MenuItem key={supplier.id} value={supplier.id}>
+                          {supplier.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                </>
+            )}
+          </StyledPaper>
+
         </Box>
+        
       </DialogContent>
 
       <DialogActions

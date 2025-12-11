@@ -504,9 +504,7 @@ export default function SupplierInfo() {
                 </UploadOverlay>
               )}
             </AvatarWrapper>
-            <Typography sx={{ textAlign: 'center', fontWeight: 500 }}>
-              Logo nhà cung cấp
-            </Typography>
+        
             {uploadingLogo && (
               <Typography variant="caption" sx={{ color: 'info.main' }}>
                 Đang tải...

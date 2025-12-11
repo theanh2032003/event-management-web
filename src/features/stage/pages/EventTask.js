@@ -436,7 +436,21 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
     setSubmittingTask(true);
     try {
       const taskResponse = await taskApi.create(taskData);
-      const newTask = taskResponse.data || taskResponse.data?.data || taskData;
+      const responseData = taskResponse.data || taskResponse.data?.data || {};
+
+     
+      
+      // Merge response with original taskData to ensure all fields are present
+      const newTask = {
+        ...taskData,
+        ...responseData,
+        // Ensure startedAt/endedAt are preserved if missing from response
+        startedAt: responseData.startedAt || taskData.startedAt || taskData.startAt,
+        endedAt: responseData.endedAt || taskData.endedAt || taskData.endAt,
+        // Ensure supplier data is preserved
+        supplierId: responseData.supplierId || taskData.supplierId,
+        supplier: responseData.supplier || (taskData.supplierId ? { id: taskData.supplierId } : null),
+      };
 
       // Add new task to local state
       setStages(prev =>
@@ -464,14 +478,45 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   };
 
   /**
-   * Handle edit task - update local state only
+   * Handle open edit task dialog
    */
-  const handleEditTask = async (task, updatedData) => {
-    if (!task || !updatedData) return;
+  const handleEditTask = (task) => {
+    if (!task) return;
+    
+    // Find stage of this task
+    const stage = stages.find(s => s.tasks?.some(t => t.id === task.id));
+    
+    // Set task data for editing
+    setNewTaskData({
+      stageId: task.stageId || stage?.id,
+      taskTypeId: task.typeId || task.taskType?.id,
+      stageName: stage?.name || '',
+    });
+    setEditingTask(task);
+    setCreateTaskDialogOpen(true);
+    setTaskDetailOpen(false); // Close drawer when opening edit dialog
+  };
 
-    const oldTask = task;
+  /**
+   * Handle save edited task
+   */
+  const handleSaveEditTask = async (taskData) => {
+    if (!editingTask) return;
 
     try {
+  
+      // Merge updated data with existing task to preserve all fields
+      const updatedTask = {
+        ...editingTask,
+        ...taskData,
+        // Ensure startedAt/endedAt are preserved
+        startedAt: taskData.startedAt || taskData.startAt || editingTask.startedAt,
+        endedAt: taskData.endedAt || taskData.endAt || editingTask.endedAt,
+        // Ensure supplier data is preserved
+        supplierId: taskData.supplierId !== undefined ? taskData.supplierId : editingTask.supplierId,
+        supplier: taskData.supplierId ? { id: taskData.supplierId, ...(editingTask.supplier || {}) } : editingTask.supplier,
+      };
+      
       // Update local state immediately
       setStages(prev =>
         prev.map(stage =>
@@ -479,13 +524,8 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
             ? {
                 ...stage,
                 tasks: stage.tasks.map(t =>
-                  t.id === task.id 
-                    ? { 
-                        ...t, 
-                        name: updatedData.name,
-                        description: updatedData.description,
-                        taskTypeId: updatedData.taskTypeId,
-                      } 
+                  t.id === editingTask.id 
+                    ? updatedTask
                     : t
                 ),
               }
@@ -494,15 +534,18 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       );
 
       // Call API in background
-      await taskApi.update(task.id, updatedData);
+      const updateResponse = await taskApi.update(editingTask.id, taskData);
+      
+      
       showSnackbar("Cập nhật công việc thành công", "success");
     } catch (err) {
       // Revert on error - refetch for this stage
-      const stageId = stages.find(s => s.tasks?.some(t => t.id === task.id))?.id;
-      if (stageId) {
-        fetchTasksForStage(stageId);
+      const taskStageId = stages.find(s => s.tasks?.some(t => t.id === editingTask.id))?.id;
+      if (taskStageId) {
+        fetchTasksForStage(taskStageId);
       }
       showSnackbar(err.message || "Không thể cập nhật công việc", "error");
+      throw err;
     }
   };
 
@@ -633,18 +676,21 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           enterpriseId={enterpriseId}
         />
 
-        {/* Task Create Dialog */}
+        {/* Task Create/Edit Dialog */}
         <TaskCreateDialog
           open={createTaskDialogOpen}
           onClose={() => {
             setCreateTaskDialogOpen(false);
             setNewTaskData({ stageId: null, taskTypeId: null, stageName: '' });
+            setEditingTask(null);
           }}
           stageId={newTaskData.stageId}
           stageName={newTaskData.stageName}
           taskTypeId={newTaskData.taskTypeId}
           taskTypes={taskTypes}
           onCreate={handleCreateTask}
+          onEdit={handleSaveEditTask}
+          task={editingTask}
           submitting={submittingTask}
           projectId={projectId}
         />
