@@ -98,19 +98,22 @@ export const formatTime = (dateString) => {
 
 /**
  * Format date time for datetime-local input
+ * Converts server datetime to local timezone for display in input
  * Format: yyyy-MM-ddTHH:mm
- * @param {string|Date} dateString - Date string or Date object
+ * @param {string|Date} dateString - Date string or Date object from server
  * @returns {string} Formatted string for datetime-local input
  */
 export const formatDateTimeLocal = (dateString) => {
   if (!dateString) return "";
   
   try {
-    const date = dayjs.utc(dateString);
-    if (!date.isValid()) return "";
+    // Parse the date and convert to Asia/Ho_Chi_Minh timezone
+    const localDate = dayjs(dateString).tz('Asia/Ho_Chi_Minh');
     
+    if (!localDate.isValid()) return "";
     
-    return date.format('YYYY-MM-DDTHH:mm');
+    // Format for datetime-local input
+    return localDate.format('YYYY-MM-DDTHH:mm');
   } catch (e) {
     console.error('Error formatting datetime-local:', e);
     return "";
@@ -236,19 +239,26 @@ export const isWithinRange = (date, startDate, endDate) => {
 };
 
 /**
- * Parse datetime-local input value to ISO string with +00:00 timezone
- * (Backend expects local time with +00:00 suffix)
- * @param {string} dateTimeLocalValue - Value from datetime-local input
- * @returns {string} ISO string with +00:00 timezone
+ * Parse datetime-local input value to ISO string
+ * Preserves the local time value as-is without timezone conversion
+ * @param {string} dateTimeLocalValue - Value from datetime-local input (format: yyyy-MM-ddTHH:mm)
+ * @returns {string} ISO string in format YYYY-MM-DDTHH:mm:ss
  */
 export const parseDateTimeLocal = (dateTimeLocalValue) => {
   if (!dateTimeLocalValue) return "";
   
   try {
-    // Parse as local time and convert to ISO string with +00:00 suffix
-    const isoString = dayjs(dateTimeLocalValue).toISOString();
-    // Replace Z with +00:00 to match backend expectation
-    return isoString.replace('Z', '+00:00');
+    // Parse the datetime-local value as local time in Asia/Ho_Chi_Minh timezone
+    // This preserves the exact time the user entered
+    const localDate = dayjs.tz(dateTimeLocalValue, 'Asia/Ho_Chi_Minh');
+    
+    if (!localDate.isValid()) {
+      console.error('Invalid datetime-local value:', dateTimeLocalValue);
+      return "";
+    }
+    
+    // Format as ISO string without timezone and milliseconds: YYYY-MM-DDTHH:mm:ss
+    return localDate.format('YYYY-MM-DDTHH:mm:ss');
   } catch (e) {
     console.error('Error parsing datetime-local:', e);
     return "";

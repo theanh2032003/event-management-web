@@ -23,8 +23,7 @@ export const useTaskFormData = (projectId, enterpriseId) => {
     error: projectError,
   } = useFetchWithRetry(() => projectApi.getById(projectId, enterpriseId), [projectId, enterpriseId]);
 
-  // Extract task states and types from project data
-  const taskStates = projectData?.groupTaskState?.states || [];
+  // Extract task types from project data, task states are now fixed constants
   const taskTypes = projectData?.groupTaskType?.types || [];
   const users = usersData || [];
 

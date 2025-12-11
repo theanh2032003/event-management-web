@@ -55,7 +55,7 @@ export const FEATURE_PERMISSIONS = {
   USER_MANAGEMENT: {
     code: PERMISSION_CODES.ENTERPRISE_USER_MANAGE,
     type: PERMISSION_TYPES.ENTERPRISE,
-    label: 'Quản lý người dùng',
+    label: 'Quản lý nhân sự doanh nghiệp',
   },
   STATISTICS: {
     code: PERMISSION_CODES.STATISTICAL_VIEW,
@@ -75,7 +75,7 @@ export const FEATURE_PERMISSIONS = {
   PROJECT_USER_MANAGEMENT: {
     code: PERMISSION_CODES.PROJECT_USER_MANAGE,
     type: PERMISSION_TYPES.PROJECT,
-    label: 'Quản lý người dùng',
+    label: 'Quản lý nhân sự sự kiện',
   },
   PROJECT_ROLE_MANAGEMENT: {
     code: PERMISSION_CODES.PROJECT_ROLE_MANAGE,

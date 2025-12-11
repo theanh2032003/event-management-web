@@ -139,7 +139,6 @@ const EventManagement = ({ hasPermission = true }) => {
     setError,
     enterpriseId,
     // Dropdown data
-    groupTaskStates,
     groupTaskTypes,
     locations,
     loadingDropdowns,
@@ -535,7 +534,6 @@ const EventManagement = ({ hasPermission = true }) => {
         open={dialogOpen}
         onClose={handleCloseDialog}
         event={editingEvent}
-        groupTaskStates={groupTaskStates}
         groupTaskTypes={groupTaskTypes}
         locations={locations}
         loadingDropdowns={loadingDropdowns}

@@ -84,7 +84,7 @@ const TaskDialog = ({ open, onClose, onSave, task, stageId, projectId, enterpris
     supporterIds: [],
     testerIds: [],
     implementerIds: [],
-    stateId: null,
+    state: null,
     typeId: null,
   });
   const [error, setError] = useState("");
@@ -121,7 +121,7 @@ const TaskDialog = ({ open, onClose, onSave, task, stageId, projectId, enterpris
           supporterIds: [],
           testerIds: [],
           implementerIds: [],
-          stateId: null,
+          state: null,
           typeId: null,
         });
         setImageUrls([]);
@@ -131,15 +131,15 @@ const TaskDialog = ({ open, onClose, onSave, task, stageId, projectId, enterpris
     }
   }, [task, open]);
 
-  // Set default stateId and typeId when data is loaded (only once)
+  // Set default state and typeId when data is loaded (only once)
   useEffect(() => {
     if (open && !task && taskStates.length > 0 && taskTypes.length > 0) {
       setFormState((prev) => {
         // Only update if not already set
-        if (prev.stateId === null && prev.typeId === null) {
+        if (prev.state === null && prev.typeId === null) {
           return {
             ...prev,
-            stateId: taskStates[0].id,
+            state: taskStates[0].id,
             typeId: taskTypes[0].id,
           };
         }
@@ -204,8 +204,8 @@ const TaskDialog = ({ open, onClose, onSave, task, stageId, projectId, enterpris
     console.log("📝 Form state details:", {
       name: formState.name,
       description: formState.description,
-      stateId: formState.stateId,
-      stateIdType: typeof formState.stateId,
+      state: formState.state,
+      stateType: typeof formState.state,
       typeId: formState.typeId,
       typeIdType: typeof formState.typeId,
       implementerIds: formState.implementerIds,
@@ -225,8 +225,8 @@ const TaskDialog = ({ open, onClose, onSave, task, stageId, projectId, enterpris
     if (!formState.name.trim()) {
       errors.name = "Tên công việc không được để trống";
     }
-    if (!formState.stateId) {
-      errors.stateId = "Vui lòng chọn trạng thái công việc";
+    if (!formState.state) {
+      errors.state = "Vui lòng chọn trạng thái công việc";
     }
     if (!formState.typeId) {
       errors.typeId = "Vui lòng chọn loại công việc";
@@ -558,12 +558,12 @@ const TaskDialog = ({ open, onClose, onSave, task, stageId, projectId, enterpris
                   </Grid>
 
                   {/* Task State */}
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth required error={!!validationErrors.stateId}>
+                  {/* <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth required error={!!validationErrors.state}>
                       <InputLabel>Trạng thái</InputLabel>
                       <Select
-                        name="stateId"
-                        value={formState.stateId || ""}
+                        name="state"
+                        value={formState.state || ""}
                         onChange={handleChange}
                         label="Trạng thái"
                         disabled={submitting || taskStates.length === 0}
@@ -608,11 +608,11 @@ const TaskDialog = ({ open, onClose, onSave, task, stageId, projectId, enterpris
                         </MenuItem>
                       ))}
                     </Select>
-                    {validationErrors.stateId && (
-                      <FormHelperText>{validationErrors.stateId}</FormHelperText>
+                    {validationErrors.state && (
+                      <FormHelperText>{validationErrors.state}</FormHelperText>
                     )}
                   </FormControl>
-                </Grid>
+                </Grid> */}
               </Grid>
               </StyledPaper>
 

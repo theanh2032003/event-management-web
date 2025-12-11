@@ -3,7 +3,7 @@ import axiosClient from '../../../app/axios/axiosClient';
 
 const supplierApi = {
   // Get all suppliers for the current user
-  getSuppliers: async (keyword = '', page = 0, size = 10) => {
+  getSuppliers: async (keyword = '', page = 0, size = 10, projectId = null) => {
     try {
       const raw = localStorage.getItem('user');
       const user = raw ? JSON.parse(raw) : {};
@@ -16,12 +16,19 @@ const supplierApi = {
         throw new Error('User ID not found. Please login again.');
       }
 
+      const params = {
+        keyword: keyword,
+        page: page,
+        size: size
+      };
+
+      // Add projectId if provided
+      if (projectId) {
+        params.projectId = projectId;
+      }
+
       const response = await axiosClient.get('/api/suppliers', {
-        params: {
-            keyword: keyword,
-            page: page,
-            size: size
-        }
+        params: params
       });
       
       return response?.data || response;

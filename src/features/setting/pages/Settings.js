@@ -25,7 +25,6 @@ import {
 
 // Import các component con
 import TaskCategoryManagement from "../../type_setting/pages/TaskTypeManagement";
-import TaskStateManagement from "../../state_setting/pages/TaskStateManagement";
 import RoleManagement from "../../permission/pages/RoleManagement";
 import UserPermissionManagement from "../../permission/pages/UserPermissionManagement";
 import LocationManagement from "../../location/pages/LocationManagement";
@@ -169,14 +168,9 @@ export default function EnterpriseSettings() {
   } = useEnterpriseUserPermissions(userId);
 
   const tabFullConfig = useMemo(() => [
+ 
     {
-      label: "Trạng thái công việc",
-      icon: <AssignmentIcon />,
-      component: TaskStateManagement,
-      requiredPermission: PERMISSION_CODES.TASK_STATE_MANAGE,
-    },
-    {
-      label: "Phân loại công việc",
+      label: "Nhóm mảng công việc",
       icon: <CategoryIcon />,
       component: TaskCategoryManagement,
       requiredPermission: PERMISSION_CODES.TASK_TYPE_MANAGE,

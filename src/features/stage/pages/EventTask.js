@@ -24,13 +24,14 @@ import {
 import { useParams } from "react-router-dom";
 import stageApi from "../api/stage.api";
 import projectApi from "../../project/api/project.api";
-import groupTaskStateApi from "../../state_setting/api/groupTaskStateApi";
 import groupTaskTypeApi from "../../type_setting/api/groupTaskTypeApi";
 import StageTreeView from "../components/StageTreeView";
 import StageDialog from "../components/StageDialog";
 import TaskDetailDrawer from "../components/TaskDetailDrawer";
+import TaskCreateDialog from "../components/TaskCreateDialog";
 import { parseDateTimeLocal } from "../../../shared/utils/dateFormatter";
 import taskApi from "../api/task.api";
+import { TASK_STATES } from "../../../shared/constants/taskStates";
 
 // Styled Components
 const HeaderBox = styled(Paper)(({ theme }) => ({
@@ -88,7 +89,6 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
 
   // State
   const [stages, setStages] = useState([]);
-  const [taskStates, setTaskStates] = useState([]);
   const [taskTypes, setTaskTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -103,6 +103,8 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
 
   // Dialog states
   const [editingTask, setEditingTask] = useState(null);
+  const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
+  const [newTaskData, setNewTaskData] = useState({ stageId: null, taskTypeId: null, stageName: '' });
   const [submittingTask, setSubmittingTask] = useState(false);
   
   // Task detail drawer state
@@ -131,10 +133,10 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       
       const stageList = response.data?.data || response.data?.content || response.data || [];
       
-      // Initialize stages without tasks
+      // Initialize stages without tasks - explicitly remove any tasks from backend
       const stagesData = stageList.map(stage => ({
         ...stage,
-        tasks: null, // null = not loaded yet
+        tasks: null, // null = not loaded yet, explicitly override any tasks from backend
         tasksLoading: false,
       }));
       
@@ -167,6 +169,9 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       
       const taskList = tasksResponse.data?.data || tasksResponse.data?.content || tasksResponse.data || [];
       
+      console.log("📋 Fetched tasks for stage:", stageId);
+      console.log("📋 Task list sample:", taskList.slice(0, 2)); // Log first 2 tasks to see structure
+      
       // Update stage with tasks
       setStages(prev => 
         prev.map(s => s.id === stageId ? { ...s, tasks: taskList, tasksLoading: false } : s)
@@ -180,32 +185,6 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
     }
   };
 
-  /**
-   * Fetch task states from project
-   */
-  const fetchTaskStates = async () => {
-    try {
-      const response = await groupTaskStateApi.filter(
-        {
-          projectId: eventId,
-          keyword: "",
-          pageable: {
-            page: 0,
-            size: 100,
-            sort: []
-          }
-        },
-        enterpriseId
-      );
-
-      const groups = response.data || [];
-      // Flatten list of all states from all groups
-      const allStates = groups.flatMap(group => group.states || []);
-      
-      setTaskStates(allStates);
-    } catch (err) {
-    }
-  };
    /**
    * Fetch task types from project
    */
@@ -323,15 +302,60 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   };
 
   /**
-   * Handle change task status - update task status only (separate from stage status)
+   * Handle change stage status - call API to update stage status
    */
-  const handleChangeTaskStatus = async (task, newStatus) => {
-    if (task.state?.code === newStatus || task.status === newStatus) {
-      showSnackbar("Trạng thái không thay đổi", "info");
+  const handleChangeStageStatus = async (stage, newStatus) => {
+    if (stage.status === newStatus) {
       return;
     }
 
-    const oldStatus = task.status || task.state?.code;
+    const oldStatus = stage.status;
+
+    try {
+      // Update local state immediately for responsive UI
+      setStages(prev =>
+        prev.map(s =>
+          s.id === stage.id
+            ? { ...s, status: newStatus }
+            : s
+        )
+      );
+
+      // Call API to update stage status
+      await stageApi.updateStatus(eventId, stage.id, newStatus);
+      showSnackbar("Cập nhật trạng thái giai đoạn thành công", "success");
+    } catch (err) {
+      // Revert on error
+      setStages(prev =>
+        prev.map(s =>
+          s.id === stage.id
+            ? { ...s, status: oldStatus }
+            : s
+        )
+      );
+      const errorMessage = err.response?.data?.message || "Không thể cập nhật trạng thái giai đoạn";
+      showSnackbar(errorMessage, "error");
+    }
+  };
+
+  /**
+   * Handle change task status - update task status only (separate from stage status)
+   */
+  const handleChangeTaskStatus = async (task, newStatus) => {
+    console.log("🔄 handleChangeTaskStatus called with:", { task, newStatus, taskId: task?.id });
+    
+    if (!task || !task.id) {
+      console.error("❌ Task or task.id is undefined:", task);
+      showSnackbar("Lỗi: Không xác định được công việc", "error");
+      return;
+    }
+    
+    if (task.state === newStatus || task.status === newStatus) {
+      return;
+    }
+
+    const oldStatus = task.state || task.status;
+    console.log("🔄 Changing task status:", { taskId: task.id, from: oldStatus, to: newStatus });
 
     try {
       // Update task status only in local state immediately
@@ -345,8 +369,8 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
                   t.id === task.id 
                     ? { 
                         ...t, 
+                        state: newStatus,
                         status: newStatus,
-                        state: { ...t.state, code: newStatus }
                       } 
                     : t
                 ),
@@ -357,8 +381,13 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
 
       // Call API in background to update task status only
       await taskApi.updateStatus(task.id, newStatus);
+      console.log("✅ Task status updated successfully");
       showSnackbar("Cập nhật trạng thái công việc thành công", "success");
     } catch (err) {
+      console.error("❌ Error updating task status:", err);
+      console.error("❌ Error response:", err.response?.data);
+      console.error("❌ Error status:", err.response?.status);
+      
       // Revert task status on error
       setStages(prev =>
         prev.map(stage =>
@@ -369,8 +398,8 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
                   t.id === task.id 
                     ? { 
                         ...t, 
+                        state: oldStatus,
                         status: oldStatus,
-                        state: { ...t.state, code: oldStatus }
                       } 
                     : t
                 ),
@@ -378,7 +407,9 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
             : stage
         )
       );
-      showSnackbar(err.message || "Không thể cập nhật trạng thái", "error");
+      
+      const errorMessage = err.response?.data?.message || err.message || "Không thể cập nhật trạng thái công việc";
+      showSnackbar(errorMessage, "error");
     }
   };
 
@@ -402,9 +433,24 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
    * Handle create task - add to local state without refetch
    */
   const handleCreateTask = async (stageId, taskData) => {
+    setSubmittingTask(true);
     try {
       const taskResponse = await taskApi.create(taskData);
-      const newTask = taskResponse.data || taskResponse.data?.data || taskData;
+      const responseData = taskResponse.data || taskResponse.data?.data || {};
+
+     
+      
+      // Merge response with original taskData to ensure all fields are present
+      const newTask = {
+        ...taskData,
+        ...responseData,
+        // Ensure startedAt/endedAt are preserved if missing from response
+        startedAt: responseData.startedAt || taskData.startedAt || taskData.startAt,
+        endedAt: responseData.endedAt || taskData.endedAt || taskData.endAt,
+        // Ensure supplier data is preserved
+        supplierId: responseData.supplierId || taskData.supplierId,
+        supplier: responseData.supplier || (taskData.supplierId ? { id: taskData.supplierId } : null),
+      };
 
       // Add new task to local state
       setStages(prev =>
@@ -419,23 +465,58 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       );
 
       showSnackbar("Tạo công việc thành công", "success");
+      setCreateTaskDialogOpen(false);
+      setNewTaskData({ stageId: null, taskTypeId: null, stageName: '' });
       return newTask;
     } catch (err) {
       console.error("❌ Error creating task:", err);
       showSnackbar(err.message || "Không thể tạo công việc", "error");
       throw err;
+    } finally {
+      setSubmittingTask(false);
     }
   };
 
   /**
-   * Handle edit task - update local state only
+   * Handle open edit task dialog
    */
-  const handleEditTask = async (task, updatedData) => {
-    if (!task || !updatedData) return;
+  const handleEditTask = (task) => {
+    if (!task) return;
+    
+    // Find stage of this task
+    const stage = stages.find(s => s.tasks?.some(t => t.id === task.id));
+    
+    // Set task data for editing
+    setNewTaskData({
+      stageId: task.stageId || stage?.id,
+      taskTypeId: task.typeId || task.taskType?.id,
+      stageName: stage?.name || '',
+    });
+    setEditingTask(task);
+    setCreateTaskDialogOpen(true);
+    setTaskDetailOpen(false); // Close drawer when opening edit dialog
+  };
 
-    const oldTask = task;
+  /**
+   * Handle save edited task
+   */
+  const handleSaveEditTask = async (taskData) => {
+    if (!editingTask) return;
 
     try {
+  
+      // Merge updated data with existing task to preserve all fields
+      const updatedTask = {
+        ...editingTask,
+        ...taskData,
+        // Ensure startedAt/endedAt are preserved
+        startedAt: taskData.startedAt || taskData.startAt || editingTask.startedAt,
+        endedAt: taskData.endedAt || taskData.endAt || editingTask.endedAt,
+        // Ensure supplier data is preserved
+        supplierId: taskData.supplierId !== undefined ? taskData.supplierId : editingTask.supplierId,
+        supplier: taskData.supplierId ? { id: taskData.supplierId, ...(editingTask.supplier || {}) } : editingTask.supplier,
+      };
+      
       // Update local state immediately
       setStages(prev =>
         prev.map(stage =>
@@ -443,13 +524,8 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
             ? {
                 ...stage,
                 tasks: stage.tasks.map(t =>
-                  t.id === task.id 
-                    ? { 
-                        ...t, 
-                        name: updatedData.name,
-                        description: updatedData.description,
-                        taskTypeId: updatedData.taskTypeId,
-                      } 
+                  t.id === editingTask.id 
+                    ? updatedTask
                     : t
                 ),
               }
@@ -458,15 +534,18 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       );
 
       // Call API in background
-      await taskApi.update(task.id, updatedData);
+      const updateResponse = await taskApi.update(editingTask.id, taskData);
+      
+      
       showSnackbar("Cập nhật công việc thành công", "success");
     } catch (err) {
       // Revert on error - refetch for this stage
-      const stageId = stages.find(s => s.tasks?.some(t => t.id === task.id))?.id;
-      if (stageId) {
-        fetchTasksForStage(stageId);
+      const taskStageId = stages.find(s => s.tasks?.some(t => t.id === editingTask.id))?.id;
+      if (taskStageId) {
+        fetchTasksForStage(taskStageId);
       }
       showSnackbar(err.message || "Không thể cập nhật công việc", "error");
+      throw err;
     }
   };
 
@@ -558,14 +637,26 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           /* Stage Tree View */
           <StageTreeView
             stages={stages}
+            taskTypes={taskTypes}
             onEditStage={handleEditStage}
             onDeleteStage={handleDeleteStage}
-            onChangeStatus={handleChangeTaskStatus}
+            onChangeStageStatus={handleChangeStageStatus}
+            onChangeTaskStatus={handleChangeTaskStatus}
             onSelectTask={(task) => {
               setSelectedTask(task);
               setTaskDetailOpen(true);
             }}
             onToggleStage={fetchTasksForStage}
+            onAddTask={(stageId, taskTypeId) => {
+              // Open task create dialog with pre-filled stage and task type
+              const stage = stages.find(s => s.id === stageId);
+              setNewTaskData({
+                stageId: stageId,
+                taskTypeId: taskTypeId,
+                stageName: stage?.name || '',
+              });
+              setCreateTaskDialogOpen(true);
+            }}
             loading={loading}
           />
         )}
@@ -585,6 +676,25 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           enterpriseId={enterpriseId}
         />
 
+        {/* Task Create/Edit Dialog */}
+        <TaskCreateDialog
+          open={createTaskDialogOpen}
+          onClose={() => {
+            setCreateTaskDialogOpen(false);
+            setNewTaskData({ stageId: null, taskTypeId: null, stageName: '' });
+            setEditingTask(null);
+          }}
+          stageId={newTaskData.stageId}
+          stageName={newTaskData.stageName}
+          taskTypeId={newTaskData.taskTypeId}
+          taskTypes={taskTypes}
+          onCreate={handleCreateTask}
+          onEdit={handleSaveEditTask}
+          task={editingTask}
+          submitting={submittingTask}
+          projectId={projectId}
+        />
+
         {/* Task Detail Drawer */}
         <TaskDetailDrawer
           open={taskDetailOpen}
@@ -599,7 +709,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           onChangeStatus={handleChangeTaskStatus}
           users={[]}
           taskTypes={taskTypes}
-          taskStates={taskStates}
+          taskStates={TASK_STATES}
         />
 
         {/* Snackbar */}

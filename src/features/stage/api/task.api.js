@@ -23,8 +23,8 @@ const taskApi = {
     const url = `/task`;
     // Build params object with all query parameters
     const params = {
-      projectId: queryParams.projectId,
-      stageId: queryParams.stageId,
+      ...(queryParams.projectId !== undefined && { projectId: queryParams.projectId }),
+      ...(queryParams.stageId !== undefined && { stageId: queryParams.stageId }),
       ...(queryParams.typeId !== undefined && { typeId: queryParams.typeId }),
       ...(queryParams.states !== undefined && { states: queryParams.states }),
       ...(queryParams.keyword && { keyword: queryParams.keyword }),
@@ -33,7 +33,7 @@ const taskApi = {
       ...(queryParams.sort && { sort: queryParams.sort }),
     };
     
-    return axiosClient.get(url);
+    return axiosClient.get(url, { params });
   },
 
   /**
@@ -62,7 +62,7 @@ const taskApi = {
   /**
    * Tạo công việc mới
    * POST /task
-   * @param {object} data - Dữ liệu công việc (name, description, images, supporterIds, testerIds, implementerIds, stateId, typeId, stageId)
+   * @param {object} data - Dữ liệu công việc (name, description, images, supporterIds, testerIds, implementerIds, state, typeId, stageId)
    * @param {number} enterpriseId - ID doanh nghiệp (optional, sẽ lấy từ localStorage nếu không truyền)
    * @param {number} userId - ID người dùng (optional, sẽ lấy từ localStorage nếu không truyền)
    * @returns {Promise} Công việc đã tạo
@@ -77,7 +77,7 @@ const taskApi = {
    * Cập nhật công việc
    * PUT /task/{id}
    * @param {number} taskId - ID của công việc
-   * @param {object} data - Dữ liệu công việc (name, description, images, supporterIds, testerIds, implementerIds, stateId, typeId)
+   * @param {object} data - Dữ liệu công việc (name, description, images, supporterIds, testerIds, implementerIds, state, typeId)
    * @param {number} enterpriseId - ID doanh nghiệp (optional, sẽ lấy từ localStorage nếu không truyền)
    * @param {number} userId - ID người dùng (optional, sẽ lấy từ localStorage nếu không truyền)
    * @returns {Promise} Công việc đã cập nhật
@@ -111,7 +111,7 @@ const taskApi = {
    * Cập nhật trạng thái công việc
    * PATCH /task/{id}
    * @param {number} taskId - ID của công việc
-   * @param {number} stateId - ID trạng thái mới
+   * @param {string} state - Trạng thái mới (PENDING, IN_PROGRESS, DONE, CANCELLED)
    * @param {number} enterpriseId - ID doanh nghiệp (optional, sẽ lấy từ localStorage nếu không truyền)
    * @param {number} userId - ID người dùng (optional, sẽ lấy từ localStorage nếu không truyền)
    * @returns {Promise} Công việc đã cập nhật

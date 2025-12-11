@@ -50,7 +50,7 @@ import roleApi from "../api/role.api";
 import userApi from "../../user/api/user.api";
 
 /**
- * UserPermissionManagement - Quản lý người dùng và gán vai trò
+ * UserPermissionManagement - Quản lý nhân sự và gán vai trò
  * API: POST /enterprise/user - Thêm user vào enterprise
  * API: GET /enterprise/user - Lấy danh sách users
  * API: GET /api/user/{userId}/permission - Lấy roles và permissions của user
@@ -358,7 +358,7 @@ export default function UserPermissionManagement({
   return (
     <PermissionGate 
       hasPermission={hasAccessPermission}
-      featureName="quản lý người dùng"
+      featureName="quản lý nhân sự"
     >
       <Box>
       <Box sx={{display: 'flex', justifyContent: 'flex-end', m: 2}}>
@@ -369,7 +369,7 @@ export default function UserPermissionManagement({
           disabled={loading}
           size="large"
         >
-          Thêm người dùng
+          Thêm nhân sự
         </StyledButton>
       </Box>
 
@@ -677,7 +677,7 @@ export default function UserPermissionManagement({
             disabled={submittingAddUser || !emailInput.trim() || !!emailError}
             startIcon={submittingAddUser ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
           >
-            {submittingAddUser ? "Đang thêm..." : "Thêm người dùng"}
+            {submittingAddUser ? "Đang thêm..." : "Thêm nhân sự"}
           </StyledButton>
         </DialogActions>
       </Dialog>
