@@ -558,7 +558,7 @@ export default function Marketplace() {
           <Box sx={{ display: "flex", gap: 2, alignItems: "center", marginBottom: 2 }}>
             {/* Keyword Search */}
             <TextField
-              placeholder="Tìm kiếm sản phẩm ..."
+              placeholder="Tìm kiếm"
               size="medium"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -709,7 +709,7 @@ export default function Marketplace() {
                 fullWidth
                 sx={{ height: 40 }}
               >
-                Tạo Sản Phẩm
+                Tạo dịch vụ
               </StyledButton>
             </Box>
           </Box>
@@ -721,7 +721,7 @@ export default function Marketplace() {
         <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", py: 8, gap: 2 }}>
           <CircularProgress size={50} thickness={4} />
           <Typography variant="body2" color="text.secondary">
-            Đang tải sản phẩm...
+            Đang tải...
           </Typography>
         </Box>
       ) : products.length === 0 ? (
@@ -760,7 +760,7 @@ export default function Marketplace() {
             },
             {
               field: 'name',
-              headerName: 'Tên sản phẩm',
+              headerName: 'Tên dịch vụ',
               flex: 1.5,
               render: (value) => (
                 <Typography variant="body2" color="text.primary">
@@ -768,27 +768,7 @@ export default function Marketplace() {
                 </Typography>
               ),
             },
-            {
-              field: 'code',
-              headerName: 'Mã sản phẩm',
-              width: 130,
-              render: (value) => (
-                <Typography 
-                  variant="body2" 
-                  color="text.primary"
-                  sx={{ 
-                    fontFamily: 'monospace',
-                    backgroundColor: alpha(theme.palette.grey[200], 0.5),
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    display: 'inline-block',
-                  }}
-                >
-                  {value || 'N/A'}
-                </Typography>
-              ),
-            },
+            
             {
               field: 'categoryId',
               headerName: 'Danh mục',
@@ -886,7 +866,7 @@ export default function Marketplace() {
             setRowsPerPage(newPageSize);
             setPage(0);
           }}
-          emptyMessage="Không có sản phẩm nào"
+          emptyMessage="Không có dịch vụ nào"
           maxHeight={600}
           minHeight={600}
         />
@@ -912,11 +892,11 @@ export default function Marketplace() {
          aria-describedby="delete-dialog-description"
        >
          <DialogTitle id="delete-dialog-title" sx={{ fontWeight: 600 }}>
-           Xác nhận xóa sản phẩm
+           Xác nhận xóa dịch vụ
          </DialogTitle>
          <DialogContent>
            <DialogContentText id="delete-dialog-description">
-             Bạn có chắc chắn muốn xóa sản phẩm <strong>"{deleteDialog.productName}"</strong>?
+             Bạn có chắc chắn muốn xóa dịch vụ <strong>"{deleteDialog.productName}"</strong>?
              <br />
              Hành động này không thể hoàn tác.
            </DialogContentText>
@@ -1106,7 +1086,7 @@ export default function Marketplace() {
 
                      {/* Product Name */}
                      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-                       {detailDialog.product.name || 'Tên sản phẩm'}
+                       {detailDialog.product.name || 'Tên dịch vụ'}
                      </Typography>
 
                      {/* Product Code */}
@@ -1151,7 +1131,7 @@ export default function Marketplace() {
                          overflow: 'hidden',
                        }}
                      >
-                       {detailDialog.product.description || 'Mô tả sản phẩm...'}
+                       {detailDialog.product.description || 'Mô tả ...'}
                      </Typography>
 
                      {/* Price Box */}
@@ -1223,29 +1203,7 @@ export default function Marketplace() {
                            </Box>
                          </Grid>
 
-                         {/* Mã sản phẩm */}
-                         <Grid item xs={12} sm={6}>
-                           <Box
-                             sx={{
-                               p: 2,
-                               borderRadius: 1.5,
-                               backgroundColor: alpha(theme.palette.background.default, 0.5),
-                               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                             }}
-                           >
-                             <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
-                               Mã sản phẩm
-                             </Typography>
-                             <Typography 
-                               variant="body1" 
-                               sx={{ 
-                                 fontFamily: 'monospace',
-                               }}
-                             >
-                               {detailDialog.product.code || 'N/A'}
-                             </Typography>
-                           </Box>
-                         </Grid>
+                         
 
                          {/* Mô tả */}
                          <Grid item xs={12}>
@@ -1332,27 +1290,7 @@ export default function Marketplace() {
                            </Box>
                          </Grid>
 
-                         {/* Trạng thái */}
-                         <Grid item xs={12} sm={6}>
-                           <Box
-                             sx={{
-                               p: 2,
-                               borderRadius: 1.5,
-                               backgroundColor: alpha(theme.palette.background.default, 0.5),
-                               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                             }}
-                           >
-                             <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
-                               Trạng thái
-                             </Typography>
-                             <Chip
-                               label={detailDialog.product.isActive !== false ? 'Đang bán' : 'Tạm dừng'}
-                               size="small"
-                               color={detailDialog.product.isActive !== false ? 'success' : 'default'}
-                               sx={{ fontWeight: 600 }}
-                             />
-                           </Box>
-                         </Grid>
+                         
 
                          {/* Hình ảnh */}
                          <Grid item xs={12}>

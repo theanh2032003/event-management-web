@@ -247,7 +247,7 @@ export default function ProductSummaryCard({
           {/* Product Name & Category */}
           <Box>
             <BadgeRow>
-              <Chip
+              {/* <Chip
                 label={product.category}
                 sx={(theme) => ({
                   borderRadius: "999px",
@@ -257,12 +257,8 @@ export default function ProductSummaryCard({
                   borderColor: alpha(theme.palette.primary.main, 0.2),
                 })}
                 variant="outlined"
-              />
-              <Chip
-                label="Sẵn sàng báo giá"
-                color="success"
-                sx={{ borderRadius: "999px", fontWeight: 600 }}
-              />
+              /> */}
+             
             </BadgeRow>
             <Typography
               variant="h4"
@@ -281,13 +277,7 @@ export default function ProductSummaryCard({
                 mt: 0.5,
               })}
             >
-              Mã sản phẩm •{" "}
-              <Typography
-                component="span"
-                sx={{ fontFamily: "monospace", fontWeight: 700 }}
-              >
-                {product.code}
-              </Typography>
+              
             </Typography>
           </Box>
 
@@ -307,18 +297,11 @@ export default function ProductSummaryCard({
             </Typography>
             <PriceTag>
               {product.price.toLocaleString("vi-VN")}
-              <Typography component="span" variant="subtitle2">
+              <Typography component="span"  sx={{ fontSize: 20 }} >
                 ₫ / {product.unit}
               </Typography>
             </PriceTag>
-            <Typography variant="body2" color="text.secondary">
-              Cập nhật ngày{" "}
-              {new Date(product.createdAt).toLocaleDateString("vi-VN", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })}
-            </Typography>
+          
           </PricePanel>
 
           <Divider flexItem sx={{ borderStyle: "dashed", opacity: 0.5 }} />
@@ -335,47 +318,21 @@ export default function ProductSummaryCard({
               <InfoLabel>Loại sản phẩm</InfoLabel>
               <InfoValue>{product.category}</InfoValue>
             </StatBadge>
-            <StatBadge>
+            {/* <StatBadge>
               <InfoLabel>Đơn vị</InfoLabel>
               <InfoValue>{product.unit}</InfoValue>
-            </StatBadge>
-            <StatBadge>
-              <InfoLabel>Hình ảnh</InfoLabel>
-              <InfoValue>{product.images.length} ảnh</InfoValue>
-            </StatBadge>
+            </StatBadge> */}
+           
           </Box>
 
-          {/* Additional Info */}
-          <Box>
-            <InfoRow>
-              <InfoLabel>Ngày đăng</InfoLabel>
-              <InfoValue>
-                {new Date(product.createdAt).toLocaleDateString("vi-VN", {
-                  weekday: "short",
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })}
-              </InfoValue>
-            </InfoRow>
-          </Box>
+        
 
           {/* Quote Button */}
           <Box sx={{ mt: "auto" }}>
             <GradientButton fullWidth onClick={onRequestQuote}>
               Gửi yêu cầu báo giá
             </GradientButton>
-            <Typography
-              variant="caption"
-              sx={{
-                display: "block",
-                textAlign: "center",
-                color: "text.secondary",
-                mt: 1.5,
-              }}
-            >
-              Phản hồi trong vòng 24h làm việc
-            </Typography>
+           
           </Box>
         </Stack>
       </Box>

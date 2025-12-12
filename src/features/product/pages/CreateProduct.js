@@ -654,18 +654,7 @@ export default function CreateProduct() {
                     />
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
-                    <StyledTextField
-                      fullWidth
-                      size="small"
-                      label="Mã sản phẩm"
-                      value={formData.code}
-                      onChange={handleChange('code')}
-                      error={!!errors.code}
-                      helperText={errors.code || 'Bắt buộc'}
-                      disabled={loading}
-                    />
-                  </Grid>
+                 
 
                   <Grid item xs={12} sm={6}>
                     <StyledFormControl fullWidth size="small" required error={!!errors.categoryId} disabled={loading}>
@@ -772,7 +761,7 @@ export default function CreateProduct() {
                       value={formData.unit}
                       onChange={handleChange('unit')}
                       placeholder="VNĐ, giờ, ngày..."
-                      helperText="Ví dụ: VNĐ, giờ, ngày"
+                      helperText="Ví dụ: giờ, ngày"
                       disabled={loading}
                     />
                   </Grid>

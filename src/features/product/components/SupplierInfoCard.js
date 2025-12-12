@@ -52,6 +52,12 @@ const SupplierAvatar = styled(Box)(({ theme }) => ({
   fontWeight: 700,
   color: theme.palette.primary.main,
   border: `3px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+  overflow: "hidden",
+  "& img": {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  },
 }));
 
 const InfoLabel = styled(Typography)(({ theme }) => ({
@@ -126,7 +132,11 @@ export default function SupplierInfoCard({ supplierInfo, loading }) {
             }}
           >
             <SupplierAvatar>
-              {supplierInfo.name?.charAt(0)?.toUpperCase() || "S"}
+              {supplierInfo.avatar ? (
+                <img src={supplierInfo.avatar} alt={supplierInfo.name} />
+              ) : (
+                supplierInfo.name?.charAt(0)?.toUpperCase() || "S"
+              )}
             </SupplierAvatar>
             <Box sx={{ flex: 1 }}>
               <Typography
@@ -139,25 +149,9 @@ export default function SupplierInfoCard({ supplierInfo, loading }) {
               >
                 {supplierInfo.name || "Không xác định"}
               </Typography>
-              <Chip
-                size="small"
-                label="Đối tác được xác minh"
-                color="primary"
-                variant="outlined"
-                sx={{ fontWeight: 600 }}
-              />
+             
             </Box>
-            <StatsPill>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                Trạng thái
-              </Typography>
-              <Typography
-                variant="subtitle2"
-                sx={{ fontWeight: 700, color: "success.main" }}
-              >
-                Sẵn sàng báo giá
-              </Typography>
-            </StatsPill>
+           
           </Box>
 
           <Divider
