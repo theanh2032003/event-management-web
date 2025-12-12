@@ -821,7 +821,7 @@ export default function Marketplace() {
                 const productId = row.id || row._id;
                 return (
                   <Box display="flex" gap={1} justifyContent="center">
-                    <Tooltip title="Xem chi tiết">
+                    {/* <Tooltip title="Xem chi tiết">
                       <ActionButton
                         size="small"
                         color="info"
@@ -830,15 +830,15 @@ export default function Marketplace() {
                       >
                         <InfoIcon fontSize="small" />
                       </ActionButton>
-                    </Tooltip>
-                    <Tooltip title="Sửa">
+                    </Tooltip> */}
+                    <Tooltip title="Chi tiết">
                       <ActionButton
                         size="small"
                         color="primary"
                         onClick={() => handleEditProduct(row)}
                         disabled={!productId || loading}
                       >
-                        <EditIcon fontSize="small" />
+                        <InfoIcon fontSize="small" />
                       </ActionButton>
                     </Tooltip>
                     <Tooltip title="Xóa">
@@ -1000,176 +1000,7 @@ export default function Marketplace() {
                </Box>
 
                <Grid container spacing={3}>
-                 {/* Preview Section - Left Side (giống EditProduct) */}
-                 <Grid item xs={12} md={4}>
-                   <Paper
-                     sx={{
-                       borderRadius: 2.5,
-                       boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.12)}`,
-                       border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-                       background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha('#ff6b9d', 0.02)} 100%)`,
-                       p: 3,
-                       position: 'sticky',
-                       top: 24,
-                     }}
-                   >
-                     <Typography 
-                       variant="h6" 
-                       gutterBottom 
-                       fontWeight={700}
-                       sx={{
-                         mb: 2,
-                         background: `linear-gradient(135deg, ${theme.palette.primary.main}, #ff6b9d)`,
-                         backgroundClip: 'text',
-                         WebkitBackgroundClip: 'text',
-                         WebkitTextFillColor: 'transparent',
-                       }}
-                     >
-                       Xem trước 
-                     </Typography>
-                     
-                     {/* Main Image */}
-                     {detailDialog.product.images && detailDialog.product.images.length > 0 ? (
-                       <Box
-                         sx={{
-                           width: '100%',
-                           height: 320,
-                           borderRadius: 2.5,
-                           overflow: 'hidden',
-                           mb: 2.5,
-                           bgcolor: 'grey.100',
-                           boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.12)}`,
-                           border: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                         }}
-                       >
-                         <img
-                           src={detailDialog.product.images[0]}
-                           alt="Preview"
-                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                         />
-                       </Box>
-                     ) : (
-                       <Box
-                         sx={{
-                           width: '100%',
-                           height: 320,
-                           borderRadius: 2.5,
-                           mb: 2.5,
-                           bgcolor: alpha(theme.palette.grey[100], 0.5),
-                           display: 'flex',
-                           flexDirection: 'column',
-                           alignItems: 'center',
-                           justifyContent: 'center',
-                           border: `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
-                           background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha('#ff6b9d', 0.02)} 100%)`,
-                         }}
-                       >
-                         <Box
-                           sx={{
-                             width: 64,
-                             height: 64,
-                             borderRadius: '50%',
-                             bgcolor: alpha(theme.palette.primary.main, 0.1),
-                             display: 'flex',
-                             alignItems: 'center',
-                             justifyContent: 'center',
-                             mb: 2,
-                           }}
-                         >
-                           <StorefrontIcon sx={{ fontSize: 32, color: theme.palette.primary.main }} />
-                         </Box>
-                         <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                           Chưa có hình ảnh
-                         </Typography>
-                       </Box>
-                     )}
-
-                     {/* Product Name */}
-                     <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-                       {detailDialog.product.name || 'Tên dịch vụ'}
-                     </Typography>
-
-                     {/* Product Code */}
-                     {detailDialog.product.code && (
-                       <Typography 
-                         variant="caption" 
-                         color="text.secondary" 
-                         sx={{ 
-                           display: 'block', 
-                           mb: 1,
-                           fontFamily: 'monospace',
-                           backgroundColor: alpha(theme.palette.grey[200], 0.5),
-                           px: 1,
-                           py: 0.5,
-                           borderRadius: 1,
-                           width: 'fit-content',
-                         }}
-                       >
-                         Mã: {detailDialog.product.code}
-                       </Typography>
-                     )}
-
-                     {/* Category Chip */}
-                     <Chip
-                       label={detailDialog.product.category?.name || getCategoryName(detailDialog.product.categoryId)}
-                       size="small"
-                       color="primary"
-                       variant="outlined"
-                       sx={{ mb: 2, display: 'block', width: 'fit-content' }}
-                     />
-
-                     {/* Description Preview */}
-                     <Typography 
-                       variant="body2" 
-                       color="text.secondary" 
-                       sx={{ 
-                         my: 2,
-                         minHeight: 60,
-                         display: '-webkit-box',
-                         WebkitLineClamp: 3,
-                         WebkitBoxOrient: 'vertical',
-                         overflow: 'hidden',
-                       }}
-                     >
-                       {detailDialog.product.description || 'Mô tả ...'}
-                     </Typography>
-
-                     {/* Price Box */}
-                     <Box
-                       sx={{
-                         mt: 3,
-                         p: 2.5,
-                         borderRadius: 2.5,
-                         background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha('#ff6b9d', 0.1)} 100%)`,
-                         border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                         boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.15)}`,
-                       }}
-                     >
-                       <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', fontWeight: 600 }}>
-                         Giá bán
-                       </Typography>
-                       <Typography variant="h5" fontWeight={700} sx={{
-                         background: `linear-gradient(135deg, ${theme.palette.primary.main}, #ff6b9d)`,
-                         backgroundClip: 'text',
-                         WebkitBackgroundClip: 'text',
-                         WebkitTextFillColor: 'transparent',
-                       }}>
-                         {detailDialog.product.price
-                           ? new Intl.NumberFormat('vi-VN', {
-                               style: 'currency',
-                               currency: 'VND',
-                               maximumFractionDigits: 0,
-                             }).format(parseFloat(detailDialog.product.price))
-                           : '0 VNĐ'}
-                         {detailDialog.product.unit && (
-                           <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 500 }}>
-                             / {detailDialog.product.unit}
-                           </Typography>
-                         )}
-                       </Typography>
-                     </Box>
-                   </Paper>
-                 </Grid>
+                
 
                  {/* Detail Section - Right Side (giống EditProduct nhưng chỉ hiển thị) */}
                  <Grid item xs={12} md={8}>
@@ -1349,45 +1180,7 @@ export default function Marketplace() {
                            </Box>
                          </Grid>
 
-                         {/* Timestamps */}
-                         <Grid item xs={12}>
-                           <Box
-                             sx={{
-                               display: 'flex',
-                               gap: 3,
-                               pt: 2,
-                               borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                               flexWrap: 'wrap',
-                             }}
-                           >
-                             {detailDialog.product.createdAt && (
-                               <Box>
-                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                                   <CalendarIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                                     Ngày tạo
-                                   </Typography>
-                                 </Box>
-                                 <Typography variant="body2">
-                                   {new Date(detailDialog.product.createdAt).toLocaleString('vi-VN')}
-                                 </Typography>
-                               </Box>
-                             )}
-                             {detailDialog.product.updatedAt && (
-                               <Box>
-                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                                   <CalendarIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                                     Cập nhật lần cuối
-                                   </Typography>
-                                 </Box>
-                                 <Typography variant="body2">
-                                   {new Date(detailDialog.product.updatedAt).toLocaleString('vi-VN')}
-                                 </Typography>
-                               </Box>
-                             )}
-                           </Box>
-                         </Grid>
+                        
                        </Grid>
                      </Box>
                    </Paper>

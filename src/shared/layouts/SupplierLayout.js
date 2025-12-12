@@ -149,7 +149,7 @@ export default function SupplierLayout({ children }) {
       path: `/supplier/${supplierId}/contracts`,
     },
     {
-      text: 'Quản lý sản phẩm',
+      text: 'Quản lý dịch vụ',
       icon: <StoreIcon />,
       path: `/supplier/${supplierId}/marketplace`,
     },

@@ -235,8 +235,8 @@ export default function CreateProduct() {
       if (!supplierId) return;
       
       try {
-        const response = await locationApi.getSupplierLocationsSimple(supplierId);
-        const data = response?.content || response?.data || response || [];
+        const response = await locationApi.getLocations(supplierId);
+        const data = Array.isArray(response) ? response : response?.data || [];
         setLocations(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching locations:', error);
@@ -248,8 +248,9 @@ export default function CreateProduct() {
       }
     };
 
-    // Chỉ fetch locations khi category ID = 3
-    if (formData.categoryId === 3 || formData.categoryId === '3') {
+    // Chỉ fetch locations khi category có isLocationCategory === true
+    const selectedCategory = categories.find(cat => cat.id === formData.categoryId || cat.id === Number(formData.categoryId));
+    if (selectedCategory?.isLocationCategory === true) {
       fetchLocations();
     } else {
       setLocations([]);
@@ -258,7 +259,7 @@ export default function CreateProduct() {
         setFormData(prev => ({ ...prev, locationId: '' }));
       }
     }
-  }, [supplierId, formData.categoryId]);
+  }, [supplierId, formData.categoryId, categories]);
 
   const handleChange = (field) => (event) => {
     setFormData({ ...formData, [field]: event.target.value });
@@ -286,7 +287,7 @@ export default function CreateProduct() {
 
     try {
       // Call API to get full location details
-      const response = await locationApi.getLocationById(locationId);
+      const response = await locationApi.getLocationDetails(locationId);
       const locationDetail = response?.data || response;
       
       if (locationDetail) {
@@ -460,9 +461,7 @@ export default function CreateProduct() {
           >
             Tạo sản phẩm/Dịch vụ mới
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Thêm sản phẩm hoặc dịch vụ mới vào marketplace của bạn
-          </Typography>
+        
         </TitleBox>
         <Button
           variant="outlined"
@@ -684,8 +683,8 @@ export default function CreateProduct() {
                     </StyledFormControl>
                   </Grid>
 
-                  {/* Location dropdown - chỉ hiển thị khi category ID = 3 */}
-                  {(formData.categoryId === 3 || formData.categoryId === '3') && (
+                  {/* Location dropdown - chỉ hiển thị khi category có isLocationCategory = true */}
+                  {categories.find(cat => cat.id === formData.categoryId || cat.id === Number(formData.categoryId))?.isLocationCategory === true && (
                     <Grid item xs={12} sm={6}>
                       <StyledFormControl fullWidth size="small" error={!!errors.locationId} disabled={loading}>
                         <InputLabel>Chọn địa điểm</InputLabel>

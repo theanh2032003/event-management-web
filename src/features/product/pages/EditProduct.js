@@ -22,7 +22,6 @@ import {
   Snackbar,
   CircularProgress,
   IconButton,
-  Chip,
 } from '@mui/material';
 import {
   Storefront as StorefrontIcon,
@@ -71,12 +70,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
   '&:hover': {
     boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.12)}`,
   },
-}));
-
-const PreviewCard = styled(StyledCard)(({ theme }) => ({
-  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha('#ff6b9d', 0.02)} 100%)`,
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-  boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.12)}`,
 }));
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
@@ -184,11 +177,31 @@ const ImagePreviewBox = styled(Box)(({ theme }) => ({
   },
 }));
 
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '0.875rem',
+  fontWeight: 700,
+  color: theme.palette.text.secondary,
+  textTransform: 'uppercase',
+  letterSpacing: '0.8px',
+  marginBottom: theme.spacing(1.5),
+}));
+
+const InfoValue = styled(Typography)(({ theme }) => ({
+  fontSize: '1.05rem',
+  fontWeight: 500,
+  color: theme.palette.text.primary,
+  wordBreak: 'break-word',
+  lineHeight: 1.6,
+  padding: theme.spacing(1.5, 0),
+}));
+
 export default function EditProduct() {
   const theme = useTheme();
   const { id: supplierId, productId } = useParams();
   const navigate = useNavigate();
 
+  const [product, setProduct] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -224,10 +237,10 @@ export default function EditProduct() {
 
         // Fetch product
         const productResponse = await productApi.getProductById(productId);
-        // axiosClient đã return response.data, nên productResponse là product object trực tiếp
         const product = productResponse;
         
         if (product) {
+          setProduct(product);
           setFormData({
             name: product.name || '',
             code: product.code || '',
@@ -261,8 +274,8 @@ export default function EditProduct() {
       if (!supplierId) return;
       
       try {
-        const response = await locationApi.getSupplierLocationsSimple(supplierId);
-        const data = response?.content || response?.data || response || [];
+        const response = await locationApi.getLocations(supplierId);
+        const data = Array.isArray(response) ? response : response?.data || [];
         setLocations(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching locations:', error);
@@ -274,19 +287,42 @@ export default function EditProduct() {
       }
     };
 
-    // Chỉ fetch locations khi category ID = 3
-    if (formData.categoryId === 3 || formData.categoryId === '3') {
+    // Chỉ fetch locations khi category có isLocationCategory === true
+    const selectedCategory = categories.find(cat => cat.id === formData.categoryId || cat.id === Number(formData.categoryId));
+    if (selectedCategory?.isLocationCategory === true) {
       fetchLocations();
     } else {
       setLocations([]);
     }
-  }, [supplierId, formData.categoryId]);
+  }, [supplierId, formData.categoryId, categories]);
 
   const handleChange = (field) => (event) => {
     setFormData({ ...formData, [field]: event.target.value });
     if (errors[field]) {
       setErrors({ ...errors, [field]: '' });
     }
+  };
+
+  const handleEditClick = () => {
+    setIsEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    // Reset form data to original product data
+    if (product) {
+      setFormData({
+        name: product.name || '',
+        code: product.code || '',
+        description: product.description || '',
+        categoryId: product.categoryId || product.category?.id || '',
+        price: product.price || '',
+        unit: product.unit || '',
+        images: product.images || [],
+        locationId: product.locationId || '',
+      });
+    }
+    setErrors({});
+    setIsEditMode(false);
   };
 
   const handleLocationChange = async (event) => {
@@ -430,16 +466,17 @@ export default function EditProduct() {
 
       await productApi.updateProduct(productId, productData);
       
+      // Refresh product data
+      const updatedProduct = await productApi.getProductById(productId);
+      setProduct(updatedProduct);
+      
       setSnackbar({
         open: true,
         message: 'Cập nhật sản phẩm thành công!',
         severity: 'success',
       });
 
-      // Redirect after success
-      setTimeout(() => {
-        navigate(`/supplier/${supplierId}/marketplace`);
-      }, 1000);
+      setIsEditMode(false);
     } catch (error) {
       console.error('Error updating product:', error);
       setSnackbar({
@@ -471,10 +508,17 @@ export default function EditProduct() {
     <Box>
       {/* Header */}
       <HeaderBox>
-        <IconBox>
-          <StorefrontIcon sx={{ fontSize: 32, color: 'white' }} />
-        </IconBox>
-        <TitleBox>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <IconButton
+            onClick={handleCancel}
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+              },
+            }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
           <Typography 
             variant="h4" 
             component="h1"
@@ -484,215 +528,91 @@ export default function EditProduct() {
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              mb: 0.5,
             }}
           >
-            Chỉnh sửa sản phẩm
+            {isEditMode ? 'Chỉnh sửa sản phẩm' : 'Chi tiết sản phẩm'}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Cập nhật thông tin sản phẩm/dịch vụ
-          </Typography>
-        </TitleBox>
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
-          onClick={handleCancel}
-          disabled={submitting}
-          sx={{
-            textTransform: 'none',
-            fontWeight: 600,
-            borderRadius: theme.spacing(1.5),
-          }}
-        >
-          Quay lại
-        </Button>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {!isEditMode ? (
+            <Button
+              variant="contained"
+              onClick={handleEditClick}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                borderRadius: 1.5,
+              }}
+            >
+              Chỉnh sửa
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="outlined"
+                onClick={handleCancelEdit}
+                disabled={submitting}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderRadius: 1.5,
+                }}
+              >
+                Hủy
+              </Button>
+              <GradientButton
+                onClick={handleSubmit}
+                disabled={submitting || uploadingImages}
+                startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : null}
+              >
+                {submitting ? 'Đang lưu...' : 'Lưu'}
+              </GradientButton>
+            </>
+          )}
+        </Box>
       </HeaderBox>
 
-      <Grid container spacing={3}>
-        {/* Preview Section - Left Side */}
-        <Grid item xs={12} md={4} order={{ xs: 2, md: 1 }}>
-          <PreviewCard sx={{ position: 'sticky', top: 24 }}>
-            <CardContent sx={{ p: 3 }}>
-              <Typography 
-                variant="h6" 
-                gutterBottom 
-                fontWeight={700}
-                sx={{
-                  mb: 2,
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, #ff6b9d)`,
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Xem trước
-              </Typography>
-              {formData.images.length > 0 ? (
-                <Box
-                  sx={{
-                    width: '100%',
-                    height: 320,
-                    borderRadius: 2.5,
-                    overflow: 'hidden',
-                    mb: 2.5,
-                    bgcolor: 'grey.100',
-                    boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.12)}`,
-                    border: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                    position: 'relative',
-                  }}
-                >
-                  <img
-                    src={formData.images[0]}
-                    alt="Preview"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                </Box>
-              ) : (
-                <Box
-                  sx={{
-                    width: '100%',
-                    height: 320,
-                    borderRadius: 2.5,
-                    mb: 2.5,
-                    bgcolor: alpha(theme.palette.grey[100], 0.5),
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
-                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha('#ff6b9d', 0.02)} 100%)`,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: '50%',
-                      bgcolor: alpha(theme.palette.primary.main, 0.1),
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mb: 2,
-                    }}
-                  >
-                    <StorefrontIcon sx={{ fontSize: 32, color: theme.palette.primary.main }} />
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                    Chưa có hình ảnh
-                  </Typography>
-                </Box>
-              )}
-              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-                {formData.name || 'Tên sản phẩm'}
-              </Typography>
-              {formData.code && (
-                <Typography 
-                  variant="caption" 
-                  color="text.secondary" 
-                  sx={{ 
-                    display: 'block', 
-                    mb: 1,
-                    fontFamily: 'monospace',
-                    backgroundColor: alpha(theme.palette.grey[200], 0.5),
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    width: 'fit-content',
-                  }}
-                >
-                  Mã: {formData.code}
-                </Typography>
-              )}
-              {formData.categoryId && (
-                <Chip
-                  label={categories.find(c => (c.id || c._id) === formData.categoryId)?.name || 'Danh mục'}
-                  size="small"
-                  color="primary"
-                  variant="outlined"
-                  sx={{ mb: 2, display: 'block', width: 'fit-content' }}
-                />
-              )}
-              <Typography 
-                variant="body2" 
-                color="text.secondary" 
-                sx={{ 
-                  my: 2,
-                  minHeight: 60,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}
-              >
-                {formData.description || 'Mô tả sản phẩm...'}
-              </Typography>
-              <Box
-                sx={{
-                  mt: 3,
-                  p: 2.5,
-                  borderRadius: 2.5,
-                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha('#ff6b9d', 0.1)} 100%)`,
-                  border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                  boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.15)}`,
-                }}
-              >
-                <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', fontWeight: 600 }}>
-                  Giá bán
-                </Typography>
-                <Typography variant="h5" fontWeight={700} sx={{
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, #ff6b9d)`,
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}>
-                  {formData.price
-                    ? new Intl.NumberFormat('vi-VN', {
-                        style: 'currency',
-                        currency: 'VND',
-                        maximumFractionDigits: 0,
-                      }).format(parseFloat(formData.price))
-                    : '0 VNĐ'}
-                  {formData.unit && (
-                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 500 }}>
-                      / {formData.unit}
-                    </Typography>
-                  )}
-                </Typography>
-              </Box>
-            </CardContent>
-          </PreviewCard>
-        </Grid>
-
-        {/* Form Section - Right Side */}
-        <Grid item xs={12} md={8} order={{ xs: 1, md: 2 }}>
-          <StyledCard>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ maxWidth: 700, ml: 'auto' }}>
-                <Grid container spacing={2.5}>
-                  <Grid item xs={12} sm={6}>
-                    <StyledTextField
-                      fullWidth
-                      size="small"
-                      label="Tên sản phẩm/Dịch vụ"
-                      value={formData.name}
-                      onChange={handleChange('name')}
-                      error={!!errors.name}
-                      helperText={errors.name}
-                      required
-                      disabled={submitting}
-                    />
+      {/* Form Section - Full Width */}
+      <Box>
+        <StyledCard>
+          <CardContent sx={{ p: { xs: 2.5, sm: 3.5, md: 4.5 } }}>
+                <Grid container spacing={3}>
+                  {/* Tên sản phẩm */}
+                  <Grid item xs={12}>
+                    <SectionTitle>Tên sản phẩm/Dịch vụ *</SectionTitle>
+                    {!isEditMode ? (
+                      <InfoValue>{product?.name || 'Chưa có tên'}</InfoValue>
+                    ) : (
+                      <StyledTextField
+                        fullWidth
+                        size="medium"
+                        value={formData.name}
+                        onChange={handleChange('name')}
+                        error={!!errors.name}
+                        helperText={errors.name}
+                        disabled={submitting}
+                        placeholder="Nhập tên sản phẩm/dịch vụ"
+                      />
+                    )}
                   </Grid>
 
-                 
-
-                  <Grid item xs={12} sm={6}>
-                    <StyledFormControl fullWidth size="small" required error={!!errors.categoryId} disabled={submitting}>
-                      <InputLabel>Danh mục</InputLabel>
-                      <Select
-                        value={formData.categoryId}
-                        onChange={handleChange('categoryId')}
-                        label="Danh mục"
-                      >
+                  {/* Danh mục */}
+                  <Grid item xs={12}>
+                    <SectionTitle>Danh mục *</SectionTitle>
+                    {!isEditMode ? (
+                      <InfoValue>
+                        {product?.category ? 
+                          (typeof product.category === 'object' ? product.category.name : product.category) 
+                          : 'Chưa chọn danh mục'}
+                      </InfoValue>
+                    ) : (
+                      <StyledFormControl fullWidth size="medium" required error={!!errors.categoryId} disabled={submitting}>
+                        {/* <InputLabel>Chọn danh mục</InputLabel> */}
+                        <Select
+                          value={formData.categoryId}
+                          onChange={handleChange('categoryId')}
+                          label="Chọn danh mục"
+                        >
                         <MenuItem value="">
                           <em>Chọn danh mục</em>
                         </MenuItem>
@@ -702,26 +622,24 @@ export default function EditProduct() {
                           </MenuItem>
                         ))}
                       </Select>
-                      {errors.categoryId && (
-                        <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
-                          {errors.categoryId}
-                        </Typography>
-                      )}
-                    </StyledFormControl>
-                  </Grid>
+                        {errors.categoryId && (
+                          <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+                            {errors.categoryId}
+                          </Typography>
+                        )}
+                      </StyledFormControl>
+                    )}                </Grid>
 
-                  {/* Location dropdown - chỉ hiển thị khi category ID = 3 */}
-                  {(formData.categoryId === 3 || formData.categoryId === '3') && (
-                    <Grid item xs={12} sm={6}>
-                      <StyledFormControl fullWidth size="small" error={!!errors.locationId} disabled={submitting}>
+                  {/* Location dropdown - chỉ hiển thị khi category có isLocationCategory = true và đang ở edit mode */}
+                  {isEditMode && categories.find(cat => cat.id === formData.categoryId || cat.id === Number(formData.categoryId))?.isLocationCategory === true && (
+                    <Grid item xs={12}>
+                      <SectionTitle>Địa điểm</SectionTitle>
+                      <StyledFormControl fullWidth size="medium" error={!!errors.locationId} disabled={submitting}>
                         <InputLabel>Chọn địa điểm</InputLabel>
                         <Select
                           value={formData.locationId}
                           onChange={handleLocationChange}
                           label="Chọn địa điểm"
-                          sx={{
-                            minWidth: 140,
-                          }}
                         >
                           <MenuItem value="">
                             <em>-- Chọn địa điểm --</em>
@@ -741,62 +659,88 @@ export default function EditProduct() {
                     </Grid>
                   )}
 
+                 
+
+                  {/* Giá */}
                   <Grid item xs={12}>
-                    <StyledTextField
-                      fullWidth
-                      size="small"
-                      label="Mô tả"
-                      value={formData.description}
-                      onChange={handleChange('description')}
-                      error={!!errors.description}
-                      helperText={errors.description}
-                      multiline
-                      rows={3}
-                      disabled={submitting}
-                      InputProps={{
-                        sx: {
-                          alignItems: 'flex-start',
-                        }
-                      }}
-                    />
+                    <SectionTitle>Giá *</SectionTitle>
+                    {!isEditMode ? (
+                      <InfoValue>
+                        {new Intl.NumberFormat('vi-VN', {
+                          style: 'currency',
+                          currency: 'VND',
+                          maximumFractionDigits: 0,
+                        }).format(product?.price || 0)}
+                      </InfoValue>
+                    ) : (
+                      <StyledTextField
+                        fullWidth
+                        size="medium"
+                        type="number"
+                        value={formData.price}
+                        onChange={handleChange('price')}
+                        error={!!errors.price}
+                        helperText={errors.price}
+                        InputProps={{
+                          inputProps: { min: 0, step: 1000 },
+                        }}
+                        disabled={submitting}
+                        placeholder="Nhập giá"
+                      />
+                    )}
                   </Grid>
 
-                  <Grid item xs={12} sm={3}>
-                    <StyledTextField
-                      fullWidth
-                      size="small"
-                      label="Giá"
-                      type="number"
-                      value={formData.price}
-                      onChange={handleChange('price')}
-                      error={!!errors.price}
-                      helperText={errors.price}
-                      InputProps={{
-                        inputProps: { min: 0, step: 1000 },
-                      }}
-                      required
-                      disabled={submitting}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} sm={3}>
-                    <StyledTextField
-                      fullWidth
-                      size="small"
-                      label="Đơn vị"
-                      value={formData.unit}
-                      onChange={handleChange('unit')}
-                      placeholder="VNĐ, giờ, ngày..."
-                      helperText="giờ, ngày"
-                      disabled={submitting}
-                    />
-                  </Grid>
-
+                  {/* Đơn vị */}
                   <Grid item xs={12}>
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>
-                        Hình ảnh {formData.images.length > 0 && `(${formData.images.length}/5)`}
-                      </Typography>
+                    <SectionTitle>Đơn vị</SectionTitle>
+                    {!isEditMode ? (
+                      <InfoValue>{product?.unit || 'Chưa có'}</InfoValue>
+                    ) : (
+                      <StyledTextField
+                        fullWidth
+                        size="medium"
+                        value={formData.unit}
+                        onChange={handleChange('unit')}
+                        disabled={submitting}
+                        placeholder="VD: giờ, ngày, tháng, buổi"
+                      />
+                    )}
+                  </Grid>
+                  {/* Mô tả */}
+                  <Grid item xs={12}>
+                    <SectionTitle>Mô tả sản phẩm/dịch vụ</SectionTitle>
+                    {!isEditMode ? (
+                      <InfoValue sx={{ whiteSpace: 'pre-wrap' }}>
+                        {product?.description || 'Chưa có mô tả'}
+                      </InfoValue>
+                    ) : (
+                      <StyledTextField
+                        fullWidth
+                        size="medium"
+                        value={formData.description}
+                        onChange={handleChange('description')}
+                        error={!!errors.description}
+                        helperText={errors.description }
+                        multiline
+                        rows={6}
+                        disabled={submitting}
+                        placeholder="Nhập mô tả chi tiết"
+                        InputProps={{
+                          sx: {
+                            alignItems: 'flex-start',
+                            padding: '14px',
+                            minHeight: 160,
+                          }
+                        }}
+                      />
+                    )}
+                  </Grid>
+                  {/* Hình ảnh */}
+                  <Grid item xs={12}>
+                    <SectionTitle>
+                      Hình ảnh {isEditMode && formData.images.length > 0 && `(${formData.images.length}/5)`}
+                    </SectionTitle>
+                    <Box>
                       {uploadingImages && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                           <CircularProgress size={20} />
@@ -805,37 +749,43 @@ export default function EditProduct() {
                           </Typography>
                         </Box>
                       )}
-                      {formData.images.length > 0 && (
-                        <Grid container spacing={2} sx={{ mb: 2 }}>
+                      {formData.images.length > 0 ? (
+                        <Grid container spacing={2.5} sx={{ mb: 2 }}>
                           {formData.images.map((image, index) => (
                             <Grid item xs={6} sm={4} md={3} key={index}>
                               <ImagePreviewBox>
-                                <img src={image} alt={`Preview ${index + 1}`} />
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleRemoveImage(index)}
-                                  disabled={submitting}
-                                  sx={{
-                                    position: 'absolute',
-                                    top: 8,
-                                    right: 8,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                    color: theme.palette.error.main,
-                                    boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.2)}`,
-                                    '&:hover': {
-                                      backgroundColor: theme.palette.error.main,
-                                      color: 'white',
-                                    },
-                                  }}
-                                >
-                                  <DeleteIcon fontSize="small" />
-                                </IconButton>
+                                <img src={image} alt={`Hình ${index + 1}`} />
+                                {isEditMode && (
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleRemoveImage(index)}
+                                    disabled={submitting}
+                                    sx={{
+                                      position: 'absolute',
+                                      top: 8,
+                                      right: 8,
+                                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                      color: theme.palette.error.main,
+                                      boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.2)}`,
+                                      '&:hover': {
+                                        backgroundColor: theme.palette.error.main,
+                                        color: 'white',
+                                      },
+                                    }}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                )}
                               </ImagePreviewBox>
                             </Grid>
                           ))}
                         </Grid>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          Chưa có hình ảnh
+                        </Typography>
                       )}
-                      {formData.images.length < 5 && (
+                      {isEditMode && formData.images.length < 5 && (
                         <Box>
                           <input
                             type="file"
@@ -867,51 +817,10 @@ export default function EditProduct() {
                     </Box>
                   </Grid>
                 </Grid>
-              </Box>
             </CardContent>
           </StyledCard>
 
-          {/* Action Buttons */}
-          <Box 
-            display="flex" 
-            gap={2} 
-            justifyContent="flex-end" 
-            sx={{ 
-              mt: 3,
-              p: 2.5,
-              borderRadius: 2,
-              backgroundColor: alpha(theme.palette.background.default, 0.5),
-              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-            }}
-          >
-            <Button 
-              variant="outlined" 
-              onClick={handleCancel}
-              disabled={submitting}
-              sx={{ 
-                textTransform: 'none', 
-                minWidth: 120,
-                borderRadius: 1.5,
-                fontWeight: 600,
-                borderWidth: 2,
-                '&:hover': {
-                  borderWidth: 2,
-                },
-              }}
-            >
-              Hủy
-            </Button>
-            <GradientButton 
-              onClick={handleSubmit}
-              disabled={submitting || uploadingImages}
-              sx={{ minWidth: 180 }}
-              startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : null}
-            >
-              {submitting ? 'Đang cập nhật...' : 'Cập nhật sản phẩm'}
-            </GradientButton>
-          </Box>
-        </Grid>
-      </Grid>
+        </Box>
 
       {/* Snackbar for notifications */}
       <Snackbar
