@@ -35,6 +35,7 @@ import EventTicketTypeManagement from "../../ticket/pages/EventTicketTypeManagem
 import EventRoleManagement from "../../permission/pages/EventRoleManagement";
 import EventUserPermission from "../../permission/pages/EventUserPermission";
 import EventFeedback from "../../feedback/pages/Feedback";
+import EventCheckinHistory from "../../ticket/pages/EventCheckinHistory";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -174,8 +175,7 @@ export default function EventDetail() {
     { label: "Nhân sự", icon: <PeopleIcon /> },
     { label: "Phân quyền", icon: <LockIcon /> },
     { label: "Đánh giá", icon: <StarIcon /> },
-    { label: "Lịch sửa check-in", icon: <LocalOfferIcon /> },
-
+    { label: "Lịch sử check-in", icon: <LocalOfferIcon /> },
   ];
 
   return (
@@ -344,6 +344,14 @@ export default function EventDetail() {
 
               <TabPanel value={tab} index={6}>
                 <EventFeedback 
+                  eventId={eventId} 
+                  enterpriseId={enterpriseId} 
+                  eventData={event} 
+                />
+              </TabPanel>
+
+              <TabPanel value={tab} index={7}>
+                <EventCheckinHistory 
                   eventId={eventId} 
                   enterpriseId={enterpriseId} 
                   eventData={event} 

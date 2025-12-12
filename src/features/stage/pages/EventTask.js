@@ -28,10 +28,10 @@ import groupTaskTypeApi from "../../type_setting/api/groupTaskTypeApi";
 import StageTreeView from "../components/StageTreeView";
 import StageDialog from "../components/StageDialog";
 import TaskDetailDrawer from "../components/TaskDetailDrawer";
-import TaskCreateDialog from "../components/TaskCreateDialog";
+import TaskCreateDialog from "../components/TaskCreateDialog.jsx";
 import { parseDateTimeLocal } from "../../../shared/utils/dateFormatter";
 import taskApi from "../api/task.api";
-import { TASK_STATES } from "../../../shared/constants/taskStates";
+import { TASK_STATES } from "../../../shared/constants/taskStates.js";
 
 // Styled Components
 const HeaderBox = styled(Paper)(({ theme }) => ({
