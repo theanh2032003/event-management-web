@@ -744,8 +744,8 @@ export default function QuoteRequests() {
           page={page}
           totalCount={totalCount}
           onPageChange={(newPage) => setPage(newPage)}
-          onRowsPerPageChange={(newRowsPerPage) => {
-            setRowsPerPage(newRowsPerPage);
+          onRowsPerPageChange={(event) => {
+            setRowsPerPage(parseInt(event.target.value, 10));
             setPage(0);
           }}
           emptyMessage="Chưa có yêu cầu báo giá nào"

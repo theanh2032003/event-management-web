@@ -146,8 +146,8 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (newRowsPerPage) => {
-    setRowsPerPage(newRowsPerPage);
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 

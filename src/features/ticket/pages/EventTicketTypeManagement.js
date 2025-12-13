@@ -675,8 +675,8 @@ export default function EventTicketTypeManagement({ enterpriseId, eventId, event
               page={page}
               totalCount={ticketTypes.length}
               onPageChange={(newPage) => setPage(newPage)}
-              onRowsPerPageChange={(newPageSize) => {
-                setPageSize(newPageSize);
+              onRowsPerPageChange={(event) => {
+                setPageSize(parseInt(event.target.value, 10));
                 setPage(0);
               }}
               emptyMessage="Không có loại vé nào"

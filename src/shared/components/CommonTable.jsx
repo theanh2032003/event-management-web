@@ -151,7 +151,7 @@ const CustomTablePagination = ({ page, pageSize, totalCount, onPageChange, onPag
         <FormControl variant="outlined" size="small">
           <CompactSelect
             value={pageSize}
-            onChange={(e) => onPageSizeChange?.(parseInt(e.target.value, 10))}
+            onChange={(e) => onPageSizeChange?.(e)}
             input={<InputBase />}
             sx={{
               borderRadius: 1,
