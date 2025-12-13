@@ -8,13 +8,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
   InputAdornment,
   Chip,
   CircularProgress,
@@ -33,6 +26,7 @@ import {
 import checkinApi from '../api/checkin.api';
 import ticketApi from '../api/ticket.api';
 import { formatDateTime } from '../../../shared/utils/dateFormatter';
+import { CommonTable } from '../../../shared/components/CommonTable';
 
 // Styled Components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -61,16 +55,6 @@ const StatIcon = styled(Box)(({ theme }) => ({
 
 const StatContent = styled(Box)(() => ({
   flex: 1,
-}));
-
-const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-  '& .MuiTableCell-head': {
-    backgroundColor: alpha(theme.palette.primary.main, 0.08),
-    fontWeight: 700,
-    color: theme.palette.primary.main,
-  },
 }));
 
 export default function EventCheckinHistory({ eventId, enterpriseId, eventData }) {
@@ -158,16 +142,88 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
     setPage(0);
   };
 
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (newPage) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+  const handleChangeRowsPerPage = (newRowsPerPage) => {
+    setRowsPerPage(newRowsPerPage);
     setPage(0);
   };
 
   const checkInRate = totalSold > 0 ? ((totalCheckedIn / totalSold) * 100).toFixed(1) : 0;
+
+  const columns = [
+    {
+      field: 'stt',
+      headerName: 'STT',
+      width: 50,
+      render: (value, row, index) => page * rowsPerPage + index + 1,
+    },
+    {
+      field: 'code',
+      headerName: 'Mã vé',
+      render: (value, row) => (
+        <Typography variant="body2" fontWeight={600} color="primary">
+          {value || `#${row.id}`}
+        </Typography>
+      ),
+    },
+    {
+      field: 'owner',
+      headerName: 'Chủ vé',
+      render: (value) => (
+        <Typography variant="body2" fontWeight={600}>
+          {value?.name || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'ownerEmail',
+      headerName: 'Email',
+      render: (value, row) => (
+        <Typography variant="body2">
+          {row.owner?.email || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'ownerPhone',
+      headerName: 'Số điện thoại',
+      render: (value, row) => (
+        <Typography variant="body2">
+          {row.owner?.phone || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'checkedInBy',
+      headerName: 'Người check-in',
+      render: (value) => (
+        <Typography variant="body2">
+          {value?.name || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'purchasedAt',
+      headerName: 'Thời gian mua',
+      render: (value) => (
+        <Typography variant="body2">
+          {formatDateTime(value)}
+        </Typography>
+      ),
+    },
+    {
+      field: 'usedAt',
+      headerName: 'Thời gian check-in',
+      render: (value) => (
+        <Typography variant="body2" fontWeight={600}>
+          {formatDateTime(value)}
+        </Typography>
+      ),
+    },
+  ];
 
   return (
     <Box sx={{ p: 3 }}>
@@ -259,95 +315,18 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
       </Paper> */}
 
       {/* Table */}
-      <StyledTableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>STT</TableCell>
-              <TableCell>Mã vé</TableCell>
-              <TableCell>Chủ vé</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Số điện thoại</TableCell>
-              <TableCell>Người check-in</TableCell>
-              <TableCell>Thời gian mua</TableCell>
-              <TableCell>Thời gian check-in</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
-                  <CircularProgress />
-                </TableCell>
-              </TableRow>
-            ) : checkinList.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Chưa có dữ liệu check-in
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              checkinList.map((ticket, index) => (
-                <TableRow key={ticket.id} hover>
-                  <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={600} color="primary">
-                      {ticket.code || `#${ticket.id}`}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {ticket.owner?.name || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {ticket.owner?.email || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {ticket.owner?.phone || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {ticket.checkedInBy?.name || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {formatDateTime(ticket.purchasedAt)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {formatDateTime(ticket.usedAt)}
-                    </Typography>
-                  </TableCell>
-                
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-
-        <TablePagination
-          component="div"
-          count={totalElements}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          labelRowsPerPage="Số dòng mỗi trang:"
-          labelDisplayedRows={({ from, to, count }) =>
-            `${from}–${to} trong ${count !== -1 ? count : `nhiều hơn ${to}`}`
-          }
-        />
-      </StyledTableContainer>
+      <CommonTable
+        columns={columns}
+        data={checkinList}
+        loading={loading}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        totalCount={totalElements}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        emptyMessage="Chưa có dữ liệu check-in"
+        maxHeight="600px"
+      />
     </Box>
   );
 }
