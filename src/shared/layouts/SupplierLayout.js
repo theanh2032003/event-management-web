@@ -291,7 +291,7 @@ export default function SupplierLayout({ children }) {
           })}
         </List>
       </Box>
-      <Divider />
+      {/* <Divider />
         <Box
           sx={{
             p: 1,
@@ -316,7 +316,7 @@ export default function SupplierLayout({ children }) {
           >
             {sidebarCollapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
           </IconButton>
-        </Box>
+        </Box> */}
     </Box>
   );
 
