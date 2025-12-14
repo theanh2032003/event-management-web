@@ -6,12 +6,6 @@ import {
   Paper,
   CircularProgress,
   Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Select,
   MenuItem,
   IconButton,
@@ -26,7 +20,6 @@ import {
   InputLabel,
   Card,
   CardContent,
-  TablePagination,
   useTheme,
   useMediaQuery,
   styled,
@@ -48,43 +41,8 @@ import enterpriseApi from "../../enterprise/api/enterprise.api";
 import quoteApi from "../../quote/api/quote.api";
 import paymentApprovalApi from "../../payment/api/paymentApproval.api";
 import ContractPDFView from "../components/ContractPDFView";
-
-// Styled Components - Matching EventManagement style
-const HeaderBox = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(2),
-  marginBottom: theme.spacing(4),
-  padding: theme.spacing(3),
-  borderRadius: theme.spacing(2),
-  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-  [theme.breakpoints.down('sm')]: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: theme.spacing(1.5),
-    padding: theme.spacing(2),
-  },
-}));
-
-const IconBox = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(1.5),
-  borderRadius: theme.spacing(2),
-  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-}));
-
-const TitleBox = styled(Box)(({ theme }) => ({
-  flex: 1,
-  [theme.breakpoints.down('sm')]: {
-    '& .MuiTypography-h4': {
-      fontSize: '1.5rem',
-    },
-  },
-}));
+import { CommonTable } from "../../../shared/components/CommonTable";
+import { CommonDialog } from "../../../shared/components/CommonDialog";
 
 const EmptyStateBox = styled(Box)(({ theme }) => ({
   textAlign: 'center',
@@ -143,51 +101,6 @@ const StyledTableContainer = styled(Paper)(({ theme }) => ({
   },
 }));
 
-const StyledTable = styled(Table)(({ theme }) => ({
-  minWidth: 1000,
-  '& .MuiTableHead-root': {
-    backgroundColor:
-      theme.palette.mode === 'light'
-        ? alpha(theme.palette.grey[100], 0.98)
-        : alpha(theme.palette.grey[800], 0.95),
-    '& .MuiTableCell-root': {
-      fontWeight: 700,
-      fontSize: '0.85rem',
-      letterSpacing: '0.5px',
-      textTransform: 'uppercase',
-      color: theme.palette.text.primary,
-      borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-      padding: theme.spacing(1.75, 2),
-      whiteSpace: 'nowrap',
-    },
-  },
-  '& .MuiTableBody-root': {
-    '& .MuiTableRow-root': {
-      transition: 'all 0.2s ease',
-      '&:hover': {
-        backgroundColor: alpha(theme.palette.primary.main, 0.04),
-        transform: 'translateY(-1px)',
-        boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.15)}`,
-      },
-      '&:last-of-type .MuiTableCell-root': {
-        borderBottom: 'none',
-      },
-    },
-    '& .MuiTableCell-root': {
-      borderBottom: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-      padding: theme.spacing(1.75, 2),
-      fontSize: '0.95rem',
-    },
-  },
-}));
-
-const ActionButton = styled(IconButton)(({ theme }) => ({
-  transition: 'all 0.2s ease',
-  '&:hover': {
-    transform: 'scale(1.1)',
-    backgroundColor: alpha(theme.palette.primary.main, 0.1),
-  },
-}));
 
 const formatCurrency = (value) => {
   if (value === null || value === undefined || value === "") return "0";
@@ -217,6 +130,8 @@ export default function Contracts() {
   
   // Action states
   const [stateChanging, setStateChanging] = useState(null);
+  const [confirmStateOpen, setConfirmStateOpen] = useState(false);
+  const [pendingStateChange, setPendingStateChange] = useState(null);
   
   // Modal states
   const [detailOpen, setDetailOpen] = useState(false);
@@ -261,7 +176,6 @@ export default function Contracts() {
           setTotalCount(0);
         }
       } catch (error) {
-        console.error("[CONTRACTS] ❌ Error fetching contracts:", error);
         enqueueSnackbar(
           error?.response?.data?.message || "Lỗi khi tải danh sách hợp đồng. Vui lòng thử lại.",
           { variant: "error" }
@@ -296,7 +210,6 @@ export default function Contracts() {
             supplierIdToFetch = workspace.id.toString();
           }
         } catch (e) {
-          console.error('Error parsing currentWorkspace:', e);
         }
       }
 
@@ -316,16 +229,7 @@ export default function Contracts() {
           }
           
           setSupplierInfo(supplierData);
-          console.log("[CONTRACTS] ✅ Supplier info fetched:", {
-            name: supplierData?.name,
-            address: supplierData?.address,
-            email: supplierData?.email,
-            phone: supplierData?.phone,
-            taxCode: supplierData?.taxCode,
-            fullData: supplierData
-          });
         } catch (error) {
-          console.error("[CONTRACTS] ❌ Error fetching supplier:", error);
           enqueueSnackbar("Không thể tải thông tin nhà cung cấp", { variant: "warning" });
         }
       }
@@ -344,16 +248,7 @@ export default function Contracts() {
           }
           
           setEnterpriseInfo(enterpriseData);
-          console.log("[CONTRACTS] ✅ Enterprise info fetched:", {
-            name: enterpriseData?.name,
-            address: enterpriseData?.address,
-            email: enterpriseData?.email,
-            phone: enterpriseData?.phone,
-            taxCode: enterpriseData?.taxCode,
-            fullData: enterpriseData
-          });
         } catch (error) {
-          console.error("[CONTRACTS] ❌ Error fetching enterprise:", error);
           enqueueSnackbar("Không thể tải thông tin doanh nghiệp", { variant: "warning" });
         }
       }
@@ -368,9 +263,7 @@ export default function Contracts() {
           const paymentApprovalResponse = await paymentApprovalApi.getPaymentApprovalById(projectId, contract.paymentApprovalId);
           const paymentApprovalData = paymentApprovalResponse?.data || paymentApprovalResponse;
           quoteIdToFetch = paymentApprovalData?.quoteId;
-          console.log("[CONTRACTS] ✅ PaymentApproval info fetched, quoteId:", quoteIdToFetch);
         } catch (error) {
-          console.error("[CONTRACTS] ❌ Error fetching paymentApproval:", error);
           // Continue without quoteId from paymentApproval
         }
       }
@@ -387,14 +280,7 @@ export default function Contracts() {
           }
           
           setQuoteInfo(quoteData);
-          console.log("[CONTRACTS] ✅ Quote info fetched:", {
-            id: quoteData?.id,
-            paymentTerms: quoteData?.paymentTerms,
-            guarantee: quoteData?.guarantee,
-            fullData: quoteData
-          });
         } catch (error) {
-          console.error("[CONTRACTS] ❌ Error fetching quote:", error);
           enqueueSnackbar("Không thể tải thông tin báo giá", { variant: "warning" });
         }
       }
@@ -517,7 +403,7 @@ export default function Contracts() {
     }
   };
 
-  const handleStateChange = async (contractId, newState, currentState) => {
+  const handleStateChange = (contractId, newState, currentState) => {
     // Validate state transition
     const validTransitions = {
       'SUBMITTED': ['COMPLETED', 'CANCELED'],
@@ -529,9 +415,15 @@ export default function Contracts() {
       return;
     }
 
-    if (!window.confirm(`Bạn có chắc chắn muốn chuyển trạng thái sang "${getStateLabel(newState)}"?`)) {
-      return;
-    }
+    // Open confirmation dialog
+    setPendingStateChange({ contractId, newState, currentState });
+    setConfirmStateOpen(true);
+  };
+
+  const handleConfirmStateChange = async () => {
+    if (!pendingStateChange) return;
+
+    const { contractId, newState } = pendingStateChange;
 
     try {
       setStateChanging(contractId);
@@ -559,14 +451,20 @@ export default function Contracts() {
         setTotalCount(response.length);
       }
     } catch (error) {
-      console.error("[CONTRACTS] ❌ Error changing contract state:", error);
       enqueueSnackbar(
         error?.response?.data?.message || "Lỗi khi thay đổi trạng thái. Vui lòng thử lại.",
         { variant: "error" }
       );
     } finally {
       setStateChanging(null);
+      setConfirmStateOpen(false);
+      setPendingStateChange(null);
     }
+  };
+
+  const handleCancelStateChange = () => {
+    setConfirmStateOpen(false);
+    setPendingStateChange(null);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -712,121 +610,153 @@ export default function Contracts() {
           </Typography>
         </EmptyStateBox>
       ) : (
-        <>
-          <StyledTableContainer>
-            <Box className="table-wrapper">
-              <StyledTable stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Tên hợp đồng</TableCell>
-                    <TableCell align="right">Tổng giá trị</TableCell>
-                    <TableCell>Ngày bắt đầu</TableCell>
-                    <TableCell>Ngày kết thúc</TableCell>
-                    <TableCell>Trạng thái</TableCell>
-                    <TableCell align="center">Hành động</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {contracts.map((contract) => (
-                    <TableRow key={contract.id} hover>
-                      <TableCell sx={{ fontWeight: 500 }}>{contract.name || "N/A"}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
-                        {formatCurrency(contract.totalValue)} {contract.currency || "VND"}
-                      </TableCell>
-                      <TableCell>{formatDate(contract.startDate)}</TableCell>
-                      <TableCell>{formatDate(contract.endDate)}</TableCell>
-                      <TableCell>
-                        {canChangeState(contract.state) ? (
-                          <Select
-                            value={contract.state || "DRAFT"}
-                            onChange={(e) => handleStateChange(contract.id, e.target.value, contract.state)}
-                            size="small"
-                            disabled={stateChanging === contract.id}
-                            sx={{ 
-                              minWidth: 150, 
-                              borderRadius: 1.5,
-                              '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: alpha(theme.palette.primary.main, 0.3),
-                              },
-                              '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: theme.palette.primary.main,
-                              },
-                            }}
-                          >
-                            <MenuItem value={contract.state} disabled>
-                              {getStateLabel(contract.state)}
-                            </MenuItem>
-                            {getAvailableStates(contract.state).map((state) => (
-                              <MenuItem key={state} value={state}>
-                                {getStateLabel(state)}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        ) : (
-                          <Chip
-                            label={getStateLabel(contract.state)}
-                            color={getStateColor(contract.state)}
-                            size="small"
-                            variant={contract.state === "SUBMITTED" ? "filled" : "outlined"}
-                            sx={{
-                              fontWeight: 600,
-                              ...(contract.state === "SUBMITTED" && {
-                                backgroundColor: alpha(theme.palette.info.main, 0.15),
-                                color: theme.palette.info.main,
-                                border: `1px solid ${alpha(theme.palette.info.main, 0.4)}`
-                              }),
-                              ...(contract.state === "COMPLETED" && {
-                                backgroundColor: alpha(theme.palette.success.main, 0.15),
-                                color: theme.palette.success.main,
-                                border: `1px solid ${alpha(theme.palette.success.main, 0.4)}`
-                              }),
-                            }}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center", flexWrap: "wrap" }}>
-                          <Tooltip title="Xem chi tiết">
-                            <ActionButton 
-                              size="small"
-                              onClick={() => handleOpenDetail(contract)}
-                              color="info"
-                              sx={{
-                                backgroundColor: alpha(theme.palette.info.main, 0.1),
-                                '&:hover': {
-                                  backgroundColor: alpha(theme.palette.info.main, 0.2),
-                                },
-                              }}
-                            >
-                              <InfoIcon fontSize="small" />
-                            </ActionButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </StyledTable>
-            </Box>
-            <TablePagination
-              component="div"
-              count={totalCount}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              labelRowsPerPage="Số dòng mỗi trang:"
-              labelDisplayedRows={({ from, to, count }) =>
-                `${from}-${to} trong tổng ${count !== -1 ? count : `hơn ${to}`}`
-              }
-              sx={{
-                borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                backgroundColor: theme.palette.background.paper,
-              }}
-            />
-          </StyledTableContainer>
-        </>
+        <CommonTable
+          columns={[
+            {
+              field: 'name',
+              headerName: 'Tên hợp đồng',
+              flex: 1.2,
+              minWidth: 180,
+              render: (value) => (
+                <Typography sx={{ fontWeight: 500 }}>{value || "N/A"}</Typography>
+              ),
+            },
+            {
+              field: 'totalValue',
+              headerName: 'Tổng giá trị',
+              flex: 0.9,
+              minWidth: 130,
+              align: 'right',
+              render: (value, row) => (
+                <Typography sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
+                  {formatCurrency(value)} {row.currency || "VND"}
+                </Typography>
+              ),
+              cellSx: { textAlign: 'right' },
+            },
+            {
+              field: 'enterpriseName',
+              headerName: 'Doanh nghiệp',
+              flex: 0.8,
+              minWidth: 120,
+              render: (value) => (
+                <Typography sx={{ fontWeight: 500 }}>{value || "N/A"}</Typography>
+              ),
+            },
+            {
+              field: 'quote',
+              headerName: 'Dịch vụ',
+              flex: 0.8,
+              minWidth: 120,
+              render: (value) => (
+                <Typography sx={{ fontWeight: 500 }}>{value.productName || "N/A"}</Typography>
+              ),
+            },
+            {
+              field: 'startDate',
+              headerName: 'Ngày bắt đầu',
+              flex: 0.8,
+              minWidth: 120,
+              render: (value) => formatDate(value),
+            },
+            {
+              field: 'endDate',
+              headerName: 'Ngày kết thúc',
+              flex: 0.8,
+              minWidth: 120,
+              render: (value) => formatDate(value),
+            },
+            {
+              field: 'state',
+              headerName: 'Trạng thái',
+              flex: 0.9,
+              minWidth: 140,
+              render: (value, row) => {
+                if (canChangeState(value)) {
+                  return (
+                    <Select
+                      value={value || "DRAFT"}
+                      onChange={(e) => handleStateChange(row.id, e.target.value, value)}
+                      size="small"
+                      disabled={stateChanging === row.id}
+                      sx={{ 
+                        minWidth: 140, 
+                        borderRadius: 1.5,
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: alpha(theme.palette.primary.main, 0.3),
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: theme.palette.primary.main,
+                        },
+                      }}
+                    >
+                      <MenuItem value={value} disabled>
+                        {getStateLabel(value)}
+                      </MenuItem>
+                      {getAvailableStates(value).map((state) => (
+                        <MenuItem key={state} value={state}>
+                          {getStateLabel(state)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  );
+                }
+                return (
+                  <Chip
+                    label={getStateLabel(value)}
+                    color={getStateColor(value)}
+                    size="small"
+                    variant={value === "SUBMITTED" ? "filled" : "outlined"}
+                    sx={{
+                      fontWeight: 600,
+                      ...(value === "SUBMITTED" && {
+                        backgroundColor: alpha(theme.palette.info.main, 0.15),
+                        color: theme.palette.info.main,
+                        border: `1px solid ${alpha(theme.palette.info.main, 0.4)}`
+                      }),
+                      ...(value === "COMPLETED" && {
+                        backgroundColor: alpha(theme.palette.success.main, 0.15),
+                        color: theme.palette.success.main,
+                        border: `1px solid ${alpha(theme.palette.success.main, 0.4)}`
+                      }),
+                    }}
+                  />
+                );
+              },
+            },
+            {
+              field: 'actions',
+              headerName: 'Hành động',
+              width: 100,
+              align: 'center',
+              render: (_, row) => (
+                <Tooltip title="Xem chi tiết">
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenDetail(row)}
+                    color="info"
+                    sx={{
+                      backgroundColor: alpha(theme.palette.info.main, 0.1),
+                      '&:hover': {
+                        backgroundColor: alpha(theme.palette.info.main, 0.2),
+                      },
+                    }}
+                  >
+                    <InfoIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              ),
+            },
+          ]}
+          data={contracts}
+          loading={loading}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          emptyMessage="Chưa có hợp đồng"
+        />
       )}
 
       {/* Detail Dialog */}
@@ -1043,6 +973,28 @@ export default function Contracts() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* State Change Confirmation Dialog */}
+      <CommonDialog
+        open={confirmStateOpen}
+        title="Xác nhận chuyển trạng thái"
+        onClose={handleCancelStateChange}
+        onSubmit={handleConfirmStateChange}
+        submitLabel={stateChanging ? "Đang cập nhật..." : "Xác nhận"}
+        cancelLabel="Hủy"
+        submitColor="primary"
+        loading={stateChanging !== null}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+          }
+        }}
+      >
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          Bạn có chắc chắn muốn chuyển trạng thái sang <strong>"{pendingStateChange ? getStateLabel(pendingStateChange.newState) : ""}"</strong>?
+        </Typography>
+      </CommonDialog>
     </Box>
   );
 }

@@ -86,10 +86,10 @@ const contractApi = {
    * Headers: enterprise-id, user-id
    * Path param: id (contractId)
    */
-  submitContract: async (contractId, enterpriseId) => {
+  submitContract: async (contractId) => {
     try {
 
-      const response = await axiosClient.patch(`/contract/${contractId}/submit`, {}, { headers });
+      const response = await axiosClient.patch(`/contract/${contractId}/submit`);
       return response?.data || response;
     } catch (error) {
       throw error;

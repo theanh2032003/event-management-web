@@ -4,16 +4,10 @@ import {
   Box,
   Typography,
   Button,
-  Paper,
   CircularProgress,
   Alert,
   Chip,
-  Table,
-  TableBody,
-  TableCell,
   TableContainer,
-  TableHead,
-  TableRow,
   Select,
   MenuItem,
   IconButton,
@@ -28,7 +22,6 @@ import {
   InputLabel,
   Card,
   CardContent,
-  TablePagination,
   useTheme,
   useMediaQuery,
   styled,
@@ -50,43 +43,7 @@ import projectApi from "../../project/api/project.api";
 import paymentApprovalApi from "../../payment/api/paymentApproval.api";
 import ContractDetail from "./ContractEnterpriseDetail";
 import CommonTable from "../../../shared/components/CommonTable";
-
-// Styled Components - Matching EventManagement style
-const HeaderBox = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(2),
-  marginBottom: theme.spacing(4),
-  padding: theme.spacing(3),
-  borderRadius: theme.spacing(2),
-  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-  [theme.breakpoints.down('sm')]: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: theme.spacing(1.5),
-    padding: theme.spacing(2),
-  },
-}));
-
-const IconBox = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(1.5),
-  borderRadius: theme.spacing(2),
-  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-}));
-
-const TitleBox = styled(Box)(({ theme }) => ({
-  flex: 1,
-  [theme.breakpoints.down('sm')]: {
-    '& .MuiTypography-h4': {
-      fontSize: '1.5rem',
-    },
-  },
-}));
+import CommonDialog from "../../../shared/components/CommonDialog";
 
 const StyledButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
@@ -132,61 +89,6 @@ const FilterCard = styled(Card)(({ theme }) => ({
   border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
 }));
 
-const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-  overflow: 'hidden',
-  maxHeight: 'calc(100vh - 300px)',
-  overflowY: 'auto',
-  '&::-webkit-scrollbar': {
-    width: '8px',
-  },
-  '&::-webkit-scrollbar-track': {
-    background: alpha(theme.palette.divider, 0.1),
-    borderRadius: '4px',
-  },
-  '&::-webkit-scrollbar-thumb': {
-    background: alpha(theme.palette.primary.main, 0.3),
-    borderRadius: '4px',
-    '&:hover': {
-      background: alpha(theme.palette.primary.main, 0.5),
-    },
-  },
-  '& .MuiTableHead-root': {
-    backgroundColor: alpha(theme.palette.primary.main, 0.04),
-    position: 'sticky',
-    top: 0,
-    zIndex: 10,
-    '& .MuiTableCell-root': {
-      fontWeight: 700,
-      color: theme.palette.text.primary,
-      fontSize: '0.875rem',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      borderBottom: `2px solid ${alpha(theme.palette.divider, 0.2)}`,
-      padding: theme.spacing(2),
-      backgroundColor: alpha(theme.palette.primary.main, 0.04),
-    },
-  },
-  '& .MuiTableBody-root': {
-    '& .MuiTableRow-root': {
-      transition: 'all 0.2s ease',
-      '&:hover': {
-        backgroundColor: alpha(theme.palette.primary.main, 0.04),
-        transform: 'translateY(-1px)',
-        boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.1)}`,
-      },
-      '&:last-child .MuiTableCell-root': {
-        borderBottom: 'none',
-      },
-    },
-    '& .MuiTableCell-root': {
-      borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-      padding: theme.spacing(2),
-    },
-  },
-}));
 
 const ActionButton = styled(IconButton)(({ theme }) => ({
   transition: 'all 0.2s ease',
@@ -230,14 +132,15 @@ export default function Contracts() {
   // Action states
   const [submittingContractId, setSubmittingContractId] = useState(null);
   const [deletingContractId, setDeletingContractId] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmContractId, setDeleteConfirmContractId] = useState(null);
   
   // Modal states
   const [viewMode, setViewMode] = useState("list"); // "list" or "detail"
   const [selectedContract, setSelectedContract] = useState(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createSubmitting, setCreateSubmitting] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState("create"); // "create" or "edit"
+  const [formSubmitting, setFormSubmitting] = useState(false);
   const [editingContract, setEditingContract] = useState(null);
   
   // Create form data
@@ -368,21 +271,18 @@ export default function Contracts() {
   };
 
   const handleEditFromDetail = () => {
-    setEditOpen(true);
-
+    setFormOpen(true);
   };
 
   const handleOpenEdit = (contract) => {
-    console.log("[CONTRACTS] ✏️ Mở form SỬA hợp đồng:", contract);
-    console.log("[CONTRACTS] 📊 Payment Approvals hiện tại:", paymentApprovals);
-    console.log("[CONTRACTS] 📊 Số lượng Payment Approvals:", paymentApprovals.length);
     setEditingContract(contract);
+    setFormMode("edit");
     setCreateFormData({
       name: contract.name || "",
       paymentApprovalId: contract.paymentApprovalId?.toString() || "",
       startDate: contract.startDate ? new Date(contract.startDate).toISOString().slice(0, 16) : "",
       endDate: contract.endDate ? new Date(contract.endDate).toISOString().slice(0, 16) : "",
-      totalValue: contract.totalValue?.toString() || "",
+      totalValue: contract.totalValue ? contract.totalValue.toLocaleString('vi-VN') : "",
       currency: contract.currency || "VND",
       paymentTerms: contract.paymentTerms || "",
       guaranteeTerms: contract.guaranteeTerms || "",
@@ -390,12 +290,13 @@ export default function Contracts() {
       notes: contract.notes || "",
       attachments: contract.attachments || [],
     });
-    setEditOpen(true);
+    setFormOpen(true);
   };
 
-  const handleCloseEdit = () => {
-    if (!editSubmitting) {
-      setEditOpen(false);
+  const handleCloseForm = () => {
+    if (!formSubmitting) {
+      setFormOpen(false);
+      setFormMode("create");
       setEditingContract(null);
       setCreateFormData({
         name: "",
@@ -430,12 +331,14 @@ export default function Contracts() {
         return;
       }
 
-      if (!createFormData.totalValue || parseFloat(createFormData.totalValue) <= 0) {
+      // Parse totalValue removing formatting
+      const totalValueNumeric = createFormData.totalValue.replace(/\D/g, '');
+      if (!totalValueNumeric || parseFloat(totalValueNumeric) <= 0) {
         enqueueSnackbar("Vui lòng nhập tổng giá trị hợp đồng hợp lệ", { variant: "error" });
         return;
       }
 
-      setEditSubmitting(true);
+      setFormSubmitting(true);
 
       const startDateISO = new Date(createFormData.startDate).toISOString();
       const endDateISO = new Date(createFormData.endDate).toISOString();
@@ -445,7 +348,7 @@ export default function Contracts() {
         paymentApprovalId: createFormData.paymentApprovalId ? parseInt(createFormData.paymentApprovalId) : null,
         startDate: startDateISO,
         endDate: endDateISO,
-        totalValue: parseFloat(createFormData.totalValue),
+        totalValue: parseFloat(totalValueNumeric),
         currency: createFormData.currency,
         paymentTerms: createFormData.paymentTerms || null,
         guaranteeTerms: createFormData.guaranteeTerms || null,
@@ -454,9 +357,14 @@ export default function Contracts() {
         attachments: createFormData.attachments || [],
       };
 
-      await contractApi.updateContract(editingContract.id, contractData);
-
-      enqueueSnackbar("Cập nhật hợp đồng thành công", { variant: "success" });
+      // Call appropriate API based on formMode
+      if (formMode === "edit" && editingContract) {
+        await contractApi.updateContract(editingContract.id, contractData);
+        enqueueSnackbar("Cập nhật hợp đồng thành công", { variant: "success" });
+      } else {
+        await contractApi.createContract(contractData, enterpriseId);
+        enqueueSnackbar("Tạo hợp đồng thành công", { variant: "success" });
+      }
       
       // Refresh list
       const filters = {
@@ -479,27 +387,30 @@ export default function Contracts() {
         setTotalCount(response.totalElements || response.total || response.data.length);
       }
 
-      handleCloseEdit();
+      handleCloseForm();
     } catch (error) {
-      console.error("[CONTRACTS] ❌ Error updating contract:", error);
+      console.error("[CONTRACTS] ❌ Error:", error);
       enqueueSnackbar(
-        error?.response?.data?.message || "Lỗi khi cập nhật hợp đồng. Vui lòng thử lại.",
+        error?.response?.data?.message || `Lỗi khi ${formMode === "edit" ? "cập nhật" : "tạo"} hợp đồng. Vui lòng thử lại.`,
         { variant: "error" }
       );
     } finally {
-      setEditSubmitting(false);
+      setFormSubmitting(false);
     }
   };
 
-  const handleDeleteContract = async (contractId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa hợp đồng này?")) {
-      return;
-    }
+  const handleDeleteContract = (contractId) => {
+    setDeleteConfirmContractId(contractId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmContractId) return;
 
     try {
-      setDeletingContractId(contractId);
+      setDeletingContractId(deleteConfirmContractId);
       
-      await contractApi.deleteContract(contractId);
+      await contractApi.deleteContract(deleteConfirmContractId);
       
       enqueueSnackbar("Đã xóa hợp đồng thành công", { variant: "success" });
       
@@ -531,13 +442,19 @@ export default function Contracts() {
       );
     } finally {
       setDeletingContractId(null);
+      setDeleteConfirmOpen(false);
+      setDeleteConfirmContractId(null);
     }
   };
 
+  const handleCancelDelete = () => {
+    setDeleteConfirmOpen(false);
+    setDeleteConfirmContractId(null);
+  };
+
   const handleOpenCreate = () => {
-    console.log("[CONTRACTS] 📝 Mở form TẠO hợp đồng");
-    console.log("[CONTRACTS] 📊 Payment Approvals hiện tại:", paymentApprovals);
-    console.log("[CONTRACTS] 📊 Số lượng Payment Approvals:", paymentApprovals.length);
+    setFormMode("create");
+    setEditingContract(null);
     setCreateFormData({
       name: "",
       paymentApprovalId: "",
@@ -551,30 +468,50 @@ export default function Contracts() {
       notes: "",
       attachments: [],
     });
-    setCreateOpen(true);
+    setFormOpen(true);
   };
 
-  const handleCloseCreate = () => {
-    if (!createSubmitting) {
-      setCreateOpen(false);
-      setCreateFormData({
-        name: "",
-        paymentApprovalId: "",
-        startDate: "",
-        endDate: "",
-        totalValue: "",
-        currency: "VND",
-        paymentTerms: "",
-        guaranteeTerms: "",
-        terminationTerms: "",
-        notes: "",
-        attachments: [],
-      });
+  const handlePaymentApprovalsOpen = async () => {
+    try {
+      const response = await paymentApprovalApi.getPaymentApprovals(null, {states: ['APPROVED_ALL']}, 0, 100);
+      const approvalsList = response?.data || response || [];
+      setPaymentApprovals(Array.isArray(approvalsList) ? approvalsList : []);
+    } catch (error) {
+      console.error("Error fetching payment approvals:", error);
     }
   };
 
   const handleCreateInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // If changing paymentApprovalId, auto-fill totalValue from approval amount
+    if (name === 'paymentApprovalId' && value) {
+      const selectedApproval = paymentApprovals.find(
+        approval => approval.id.toString() === value
+      );
+      if (selectedApproval && selectedApproval.amount) {
+        setCreateFormData(prev => ({
+          ...prev,
+          [name]: value,
+          totalValue: selectedApproval.amount.toLocaleString('vi-VN'),
+        }));
+        return;
+      }
+    }
+
+    // Format currency for totalValue field
+    if (name === 'totalValue') {
+      // Remove all non-digit characters
+      const numericValue = value.replace(/\D/g, '');
+      // Format with thousand separators
+      const formattedValue = numericValue ? parseInt(numericValue).toLocaleString('vi-VN') : '';
+      setCreateFormData(prev => ({
+        ...prev,
+        [name]: formattedValue,
+      }));
+      return;
+    }
+
     setCreateFormData(prev => ({
       ...prev,
       [name]: value,
@@ -604,54 +541,13 @@ export default function Contracts() {
         return;
       }
 
-      setCreateSubmitting(true);
-
-      // Convert dates to ISO string
-      const startDateISO = new Date(createFormData.startDate).toISOString();
-      const endDateISO = new Date(createFormData.endDate).toISOString();
-
-      const contractData = {
-        ...createFormData,
-        startDate: startDateISO,
-        endDate: endDateISO,
-        paymentApprovalId: createFormData.paymentApprovalId ? parseInt(createFormData.paymentApprovalId) : null,
-        totalValue: parseFloat(createFormData.totalValue),
-      };
-
-      await contractApi.createContract(contractData, enterpriseId);
-
-      enqueueSnackbar("Tạo hợp đồng thành công", { variant: "success" });
-      
-      // Refresh list
-      const filters = {
-        enterpriseId,
-        owner: true,
-      };
-      if (filterProjectId) filters.projectId = filterProjectId;
-      if (filterState) filters.state = filterState;
-      if (filterKeyword) filters.keyword = filterKeyword;
-
-      const response = await contractApi.getContracts(filters, page, rowsPerPage);
-      if (response?.content && Array.isArray(response.content)) {
-        setContracts(response.content);
-        setTotalCount(response.totalElements || response.total || 0);
-      } else if (Array.isArray(response)) {
-        setContracts(response);
-        setTotalCount(response.length);
-      } else if (response?.data && Array.isArray(response.data)) {
-        setContracts(response.data);
-        setTotalCount(response.totalElements || response.total || response.data.length);
-      }
-
-      handleCloseCreate();
+      // Use handleEditSubmit which now handles both create and edit
+      await handleEditSubmit();
     } catch (error) {
-      console.error("[CONTRACTS] ❌ Error creating contract:", error);
       enqueueSnackbar(
         error?.response?.data?.message || "Lỗi khi tạo hợp đồng. Vui lòng thử lại.",
         { variant: "error" }
       );
-    } finally {
-      setCreateSubmitting(false);
     }
   };
 
@@ -684,7 +580,6 @@ export default function Contracts() {
         setTotalCount(response.totalElements || response.total || response.data.length);
       }
     } catch (error) {
-      console.error("[CONTRACTS] ❌ Error submitting contract:", error);
       enqueueSnackbar(
         error?.response?.data?.message || "Lỗi khi gửi duyệt hợp đồng. Vui lòng thử lại.",
         { variant: "error" }
@@ -951,6 +846,24 @@ export default function Contracts() {
               render: (value, row) => `${row.totalValue ? row.totalValue.toLocaleString("vi-VN") : 0} ${row.currency || "VND"}`,
             },
             {
+              field: 'supplierName',
+              headerName: 'Nhà cung cấp',
+              flex: 0.8,
+              minWidth: 120,
+              render: (value) => (
+                <Typography sx={{ fontWeight: 500 }}>{value || "N/A"}</Typography>
+              ),
+            },
+            {
+              field: 'quote',
+              headerName: 'Dịch vụ',
+              flex: 0.8,
+              minWidth: 120,
+              render: (value) => (
+                <Typography sx={{ fontWeight: 500 }}>{value.productName || "N/A"}</Typography>
+              ),
+            },
+            {
               field: "startDate",
               headerName: "Ngày Bắt Đầu",
               render: (value, row) => formatDate(row.startDate),
@@ -1043,10 +956,10 @@ export default function Contracts() {
         />
       )}
 
-      {/* Create Contract Dialog */}
+      {/* Form Dialog - Create or Edit */}
       <Dialog 
-        open={createOpen} 
-        onClose={handleCloseCreate} 
+        open={formOpen} 
+        onClose={handleCloseForm} 
         maxWidth="md" 
         fullWidth
         PaperProps={{
@@ -1062,31 +975,31 @@ export default function Contracts() {
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           pb: 2,
         }}>
-          Tạo hợp đồng mới
+          {formMode === "create" ? "Tạo hợp đồng" : "Sửa hợp đồng"}
         </DialogTitle>
 
         <DialogContent sx={{ pt: 3 }}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, mt: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: formMode === "create" ? 2.5 : 3, mt: 2 }}>
             {/* Tên hợp đồng */}
             <TextField
-              label="Tên hợp đồng *"
+              label="Tên hợp đồng"
               name="name"
               value={createFormData.name}
               onChange={handleCreateInputChange}
               fullWidth
-              size="small"
+              size={formMode === "create" ? "small" : "medium"}
               required
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                 },
                 '& .MuiInputBase-input': {
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   color: 'text.primary',
                 },
                 '& .MuiInputLabel-root': {
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   color: 'text.secondary',
                 },
               }}
@@ -1094,24 +1007,25 @@ export default function Contracts() {
 
             {/* Phê duyệt thanh toán */}
             <FormControl fullWidth size="small">
-              <InputLabel sx={{ fontSize: '0.9375rem', color: 'text.secondary' }}>Phê duyệt thanh toán (Tùy chọn)</InputLabel>
+              <InputLabel sx={formMode === "create" ? { fontSize: '0.9375rem', color: 'text.secondary' } : {}}>Phê duyệt thanh toán {formMode === "edit" ? "(Tùy chọn)" : ""}</InputLabel>
               <Select
                 name="paymentApprovalId"
                 value={createFormData.paymentApprovalId}
                 onChange={handleCreateInputChange}
-                label="Phê duyệt thanh toán (Tùy chọn)"
+                onOpen={handlePaymentApprovalsOpen}
+                label={`Phê duyệt thanh toán`}
+                required={formMode === "create"}
                 sx={{ 
                   borderRadius: 2,
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   '& .MuiSelect-select': {
-                    fontSize: '0.9375rem',
+                    fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                     color: 'text.primary',
                   },
                 }}
               >
-                <MenuItem value="" sx={{ fontSize: '0.9375rem' }}>-- Không chọn --</MenuItem>
                 {paymentApprovals.map((approval) => (
-                  <MenuItem key={approval.id} value={approval.id.toString()} sx={{ fontSize: '0.9375rem' }}>
+                  <MenuItem key={approval.id} value={approval.id.toString()} sx={formMode === "create" ? { fontSize: '0.9375rem' } : {}}>
                     {approval.name} - {approval.amount ? approval.amount.toLocaleString("vi-VN") : 0}₫
                   </MenuItem>
                 ))}
@@ -1119,10 +1033,10 @@ export default function Contracts() {
             </FormControl>
 
             {/* Ngày bắt đầu và Ngày kết thúc */}
-            <Grid container spacing={1.5}>
-              <Grid item xs={12} sm={6}>
+            <Grid container spacing={formMode === "create" ? 1.5 : 2}>
+              <Grid item xs={12} sm={6} sx={{width: '100%'}}>
                 <TextField
-                  label="Ngày bắt đầu *"
+                  label="Ngày bắt đầu"
                   name="startDate"
                   type="datetime-local"
                   value={createFormData.startDate}
@@ -1136,22 +1050,22 @@ export default function Contracts() {
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
-                      fontSize: '0.9375rem',
+                      fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                     },
                     '& .MuiInputBase-input': {
-                      fontSize: '0.9375rem',
+                      fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                       color: 'text.primary',
                     },
                     '& .MuiInputLabel-root': {
-                      fontSize: '0.9375rem',
+                      fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                       color: 'text.secondary',
                     },
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} sx={{width: '100%'}}>
                 <TextField
-                  label="Ngày kết thúc *"
+                  label="Ngày kết thúc"
                   name="endDate"
                   type="datetime-local"
                   value={createFormData.endDate}
@@ -1165,14 +1079,14 @@ export default function Contracts() {
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
-                      fontSize: '0.9375rem',
+                      fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                     },
                     '& .MuiInputBase-input': {
-                      fontSize: '0.9375rem',
+                      fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                       color: 'text.primary',
                     },
                     '& .MuiInputLabel-root': {
-                      fontSize: '0.9375rem',
+                      fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                       color: 'text.secondary',
                     },
                   }}
@@ -1181,37 +1095,38 @@ export default function Contracts() {
             </Grid>
 
             {/* Tổng giá trị và Tiền tệ */}
-            <Grid container spacing={1.5}>
-              <Grid item xs={12} sm={8}>
+            <Grid container spacing={formMode === "create" ? 1.5 : 2}>
+              <Grid item xs={12} sm={8} sx={{width: '100%'}}>
                 <TextField
                   label="Tổng giá trị *"
                   name="totalValue"
-                  type="number"
+                  type="text"
                   value={createFormData.totalValue}
                   onChange={handleCreateInputChange}
+                  placeholder="0"
                   fullWidth
                   size="small"
                   required
-                  inputProps={{ min: "0", step: "1000" }}
+                  inputProps={{ inputMode: 'numeric' }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
-                      fontSize: '0.9375rem',
+                      fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                     },
                     '& .MuiInputBase-input': {
-                      fontSize: '0.9375rem',
+                      fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                       color: 'text.primary',
                     },
                     '& .MuiInputLabel-root': {
-                      fontSize: '0.9375rem',
+                      fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                       color: 'text.secondary',
                     },
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={4} sx={{width: '100%'}}>
                 <FormControl fullWidth size="small">
-                  <InputLabel sx={{ fontSize: '0.9375rem', color: 'text.secondary' }}>Tiền tệ</InputLabel>
+                  <InputLabel sx={formMode === "create" ? { fontSize: '0.9375rem', color: 'text.secondary' } : {}}>Tiền tệ</InputLabel>
                   <Select
                     name="currency"
                     value={createFormData.currency}
@@ -1219,16 +1134,16 @@ export default function Contracts() {
                     label="Tiền tệ"
                     sx={{ 
                       borderRadius: 2,
-                      fontSize: '0.9375rem',
+                      fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                       '& .MuiSelect-select': {
-                        fontSize: '0.9375rem',
+                        fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                         color: 'text.primary',
                       },
                     }}
                   >
-                    <MenuItem value="VND" sx={{ fontSize: '0.9375rem' }}>VND</MenuItem>
-                    <MenuItem value="USD" sx={{ fontSize: '0.9375rem' }}>USD</MenuItem>
-                    <MenuItem value="EUR" sx={{ fontSize: '0.9375rem' }}>EUR</MenuItem>
+                    <MenuItem value="VND" sx={formMode === "create" ? { fontSize: '0.9375rem' } : {}}>VND</MenuItem>
+                    <MenuItem value="USD" sx={formMode === "create" ? { fontSize: '0.9375rem' } : {}}>USD</MenuItem>
+                    <MenuItem value="EUR" sx={formMode === "create" ? { fontSize: '0.9375rem' } : {}}>EUR</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -1247,14 +1162,14 @@ export default function Contracts() {
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                 },
                 '& .MuiInputBase-input': {
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   color: 'text.primary',
                 },
                 '& .MuiInputLabel-root': {
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   color: 'text.secondary',
                 },
               }}
@@ -1273,14 +1188,14 @@ export default function Contracts() {
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                 },
                 '& .MuiInputBase-input': {
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   color: 'text.primary',
                 },
                 '& .MuiInputLabel-root': {
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   color: 'text.secondary',
                 },
               }}
@@ -1299,14 +1214,14 @@ export default function Contracts() {
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                 },
                 '& .MuiInputBase-input': {
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   color: 'text.primary',
                 },
                 '& .MuiInputLabel-root': {
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   color: 'text.secondary',
                 },
               }}
@@ -1325,14 +1240,14 @@ export default function Contracts() {
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                 },
                 '& .MuiInputBase-input': {
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   color: 'text.primary',
                 },
                 '& .MuiInputLabel-root': {
-                  fontSize: '0.9375rem',
+                  fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   color: 'text.secondary',
                 },
               }}
@@ -1347,8 +1262,8 @@ export default function Contracts() {
           gap: 2,
         }}>
           <Button 
-            onClick={handleCloseCreate}
-            disabled={createSubmitting}
+            onClick={handleCloseForm}
+            disabled={formSubmitting}
             variant="outlined"
             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
@@ -1357,20 +1272,24 @@ export default function Contracts() {
           <Button 
             variant="contained"
             onClick={handleCreateSubmit}
-            disabled={createSubmitting}
+            disabled={formSubmitting}
             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
-            {createSubmitting ? "Đang tạo..." : "Tạo hợp đồng"}
+            {formSubmitting ? (formMode === "create" ? "Đang tạo..." : "Đang cập nhật...") : (formMode === "create" ? "Tạo hợp đồng" : "Cập nhật hợp đồng")}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Edit Contract Dialog */}
-      <Dialog 
-        open={editOpen} 
-        onClose={handleCloseEdit} 
-        maxWidth="md" 
-        fullWidth
+      {/* Delete Confirmation Dialog */}
+      <CommonDialog
+        open={deleteConfirmOpen}
+        title="Xác nhận xóa"
+        onClose={handleCancelDelete}
+        onSubmit={handleConfirmDelete}
+        loading={deletingContractId !== null}
+        submitLabel="Xóa"
+        submitColor="error"
+        centerButtons
         PaperProps={{
           sx: {
             borderRadius: 3,
@@ -1378,228 +1297,13 @@ export default function Contracts() {
           }
         }}
       >
-        <DialogTitle sx={{ 
-          fontWeight: 700,
-          fontSize: "1.25rem",
-          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          pb: 2,
-        }}>
-          Sửa hợp đồng
-        </DialogTitle>
-
-        <DialogContent sx={{ pt: 3 }}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {/* Tên hợp đồng */}
-            <TextField
-              label="Tên hợp đồng *"
-              name="name"
-              value={createFormData.name}
-              onChange={handleCreateInputChange}
-              fullWidth
-              size="medium"
-              required
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                },
-              }}
-            />
-
-            {/* Phê duyệt thanh toán */}
-            <FormControl fullWidth size="small">
-              <InputLabel>Phê duyệt thanh toán (Tùy chọn)</InputLabel>
-              <Select
-                name="paymentApprovalId"
-                value={createFormData.paymentApprovalId}
-                onChange={handleCreateInputChange}
-                label="Phê duyệt thanh toán (Tùy chọn)"
-                sx={{ borderRadius: 2 }}
-              >
-                <MenuItem value="">-- Không chọn --</MenuItem>
-                {paymentApprovals.map((approval) => (
-                  <MenuItem key={approval.id} value={approval.id.toString()}>
-                    {approval.name} - {approval.amount ? approval.amount.toLocaleString("vi-VN") : 0}₫
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Ngày bắt đầu và Ngày kết thúc */}
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Ngày bắt đầu *"
-                  name="startDate"
-                  type="datetime-local"
-                  value={createFormData.startDate}
-                  onChange={handleCreateInputChange}
-                  fullWidth
-                  size="small"
-                  required
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Ngày kết thúc *"
-                  name="endDate"
-                  type="datetime-local"
-                  value={createFormData.endDate}
-                  onChange={handleCreateInputChange}
-                  fullWidth
-                  size="small"
-                  required
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                    },
-                  }}
-                />
-              </Grid>
-            </Grid>
-
-            {/* Tổng giá trị và Tiền tệ */}
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={8}>
-                <TextField
-                  label="Tổng giá trị *"
-                  name="totalValue"
-                  type="number"
-                  value={createFormData.totalValue}
-                  onChange={handleCreateInputChange}
-                  fullWidth
-                  size="small"
-                  required
-                  inputProps={{ min: "0", step: "1000" }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Tiền tệ</InputLabel>
-                  <Select
-                    name="currency"
-                    value={createFormData.currency}
-                    onChange={handleCreateInputChange}
-                    label="Tiền tệ"
-                    sx={{ borderRadius: 2 }}
-                  >
-                    <MenuItem value="VND">VND</MenuItem>
-                    <MenuItem value="USD">USD</MenuItem>
-                    <MenuItem value="EUR">EUR</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-
-            {/* Điều khoản thanh toán */}
-            <TextField
-              label="Điều khoản thanh toán"
-              name="paymentTerms"
-              value={createFormData.paymentTerms}
-              onChange={handleCreateInputChange}
-              fullWidth
-              size="small"
-              multiline
-              rows={3}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                },
-              }}
-            />
-
-            {/* Điều khoản bảo hành */}
-            <TextField
-              label="Điều khoản bảo hành"
-              name="guaranteeTerms"
-              value={createFormData.guaranteeTerms}
-              onChange={handleCreateInputChange}
-              fullWidth
-              size="small"
-              multiline
-              rows={3}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                },
-              }}
-            />
-
-            {/* Điều khoản chấm dứt */}
-            <TextField
-              label="Điều khoản chấm dứt"
-              name="terminationTerms"
-              value={createFormData.terminationTerms}
-              onChange={handleCreateInputChange}
-              fullWidth
-              size="small"
-              multiline
-              rows={3}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                },
-              }}
-            />
-
-            {/* Ghi chú */}
-            <TextField
-              label="Ghi chú"
-              name="notes"
-              value={createFormData.notes}
-              onChange={handleCreateInputChange}
-              fullWidth
-              size="small"
-              multiline
-              rows={3}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                },
-              }}
-            />
-          </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ 
-          p: 3, 
-          pt: 2,
-          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          gap: 2,
-        }}>
-          <Button 
-            onClick={handleCloseEdit}
-            disabled={editSubmitting}
-            variant="outlined"
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
-          >
-            Hủy
-          </Button>
-          <Button 
-            variant="contained"
-            onClick={handleEditSubmit}
-            disabled={editSubmitting}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
-          >
-            {editSubmitting ? "Đang cập nhật..." : "Cập nhật hợp đồng"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Typography sx={{ textAlign: 'center', mb: 2 }}>
+          Bạn có chắc chắn muốn xóa hợp đồng này?
+        </Typography>
+        <Typography sx={{ textAlign: 'center', fontSize: '0.875rem', color: 'text.secondary' }}>
+          Hành động này không thể hoàn tác.
+        </Typography>
+      </CommonDialog>
     </Box>
   );
 }

@@ -1,415 +1,259 @@
 import React from 'react';
-import { Box, Typography, Divider, useTheme, alpha } from '@mui/material';
+import { Box, Typography, Divider, useTheme } from '@mui/material';
 
 const ContractPDFView = ({ contract, supplier, enterprise, quote }) => {
   const theme = useTheme();
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      return new Date(dateString).toLocaleDateString("vi-VN", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch (e) {
-      return dateString;
-    }
+  const formatDateFull = (dateString) => {
+    if (!dateString) return "……";
+    const date = new Date(dateString);
+    return `ngày ${date.getDate()} tháng ${date.getMonth() + 1} năm ${date.getFullYear()}`;
   };
 
   const formatCurrency = (value, currency = "VND") => {
-    if (value === null || value === undefined || value === "") return "0";
-    const num = typeof value === "number" ? value : Number(value);
-    if (Number.isNaN(num)) return "0";
-    return num.toLocaleString("vi-VN") + " " + currency;
+    if (!value) return "0 " + currency;
+    return Number(value).toLocaleString("vi-VN") + " " + currency;
   };
 
-  const getStateLabel = (state) => {
-    const labels = {
-      DRAFT: "Bản nháp",
-      SUBMITTED: "Đã gửi",
-      SIGNED: "Đã ký",
-      IN_PROGRESS: "Đang thực hiện",
-      COMPLETED: "Hoàn thành",
-      CANCELED: "Đã hủy",
-    };
-    return labels[state] || state;
-  };
+  const numberToVietnameseWords = (number) => {
+  if (number === null || number === undefined) return "";
 
-  const formatDateFull = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      const date = new Date(dateString);
-      const day = date.getDate();
-      const month = date.getMonth() + 1;
-      const year = date.getFullYear();
-      const monthNames = [
-        "01", "02", "03", "04", "05", "06",
-        "07", "08", "09", "10", "11", "12"
-      ];
-      return `ngày ${day} tháng ${monthNames[month - 1]} năm ${year}`;
-    } catch (e) {
-      return dateString;
+  const units = [
+    "không", "một", "hai", "ba", "bốn",
+    "năm", "sáu", "bảy", "tám", "chín"
+  ];
+
+  const readThreeDigits = (num) => {
+    let hundred = Math.floor(num / 100);
+    let ten = Math.floor((num % 100) / 10);
+    let unit = num % 10;
+    let result = "";
+
+    if (hundred > 0) {
+      result += units[hundred] + " trăm";
+      if (ten === 0 && unit > 0) result += " lẻ";
     }
+
+    if (ten > 1) {
+      result += " " + units[ten] + " mươi";
+      if (unit === 1) result += " mốt";
+      else if (unit === 5) result += " lăm";
+      else if (unit > 0) result += " " + units[unit];
+    } else if (ten === 1) {
+      result += " mười";
+      if (unit === 5) result += " lăm";
+      else if (unit > 0) result += " " + units[unit];
+    } else if (ten === 0 && unit > 0 && hundred === 0) {
+      result += units[unit];
+    }
+
+    return result.trim();
   };
 
-  const formatDateEnglish = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      const date = new Date(dateString);
-      const monthNames = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-      ];
-      const day = date.getDate();
-      const month = monthNames[date.getMonth()];
-      const year = date.getFullYear();
-      const daySuffix = day === 1 ? "st" : day === 2 ? "nd" : day === 3 ? "rd" : "th";
-      return `${month} ${day}${daySuffix} ${year}`;
-    } catch (e) {
-      return dateString;
+  const scales = ["", " nghìn", " triệu", " tỷ"];
+  let num = Math.floor(Number(number));
+  if (num === 0) return "Không đồng";
+
+  let words = "";
+  let scaleIndex = 0;
+
+  while (num > 0) {
+    const chunk = num % 1000;
+    if (chunk > 0) {
+      words = readThreeDigits(chunk) + scales[scaleIndex] + " " + words;
     }
-  };
+    num = Math.floor(num / 1000);
+    scaleIndex++;
+  }
+
+  return words.trim().charAt(0).toUpperCase() + words.trim().slice(1) + " đồng";
+};
+
 
   return (
     <Box
       sx={{
         width: '100%',
         minHeight: '800px',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#fff',
         padding: '60px',
         fontFamily: '"Times New Roman", serif',
-        color: '#000000',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-        position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '4px',
-          background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-        },
+        color: '#000',
       }}
     >
-      {/* National Header */}
+      {/* Quốc hiệu */}
       <Box sx={{ textAlign: 'center', mb: 3 }}>
-        <Typography
-          variant="body1"
-          sx={{
-            fontSize: '14px',
-            fontWeight: 600,
-            mb: 0.5,
-            textTransform: 'uppercase',
-          }}
-        >
+        <Typography sx={{ fontSize: 14, fontWeight: 700 }}>
           CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
         </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            fontSize: '14px',
-            fontWeight: 600,
-            mb: 1,
-            textTransform: 'uppercase',
-          }}
-        >
-          SOCIALIST REPUBLIC OF VIET NAM
+        <Typography sx={{ fontSize: 14, fontWeight: 700 }}>
+          Độc lập – Tự do – Hạnh phúc
         </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            fontSize: '14px',
-            fontWeight: 600,
-            mb: 0.5,
-          }}
-        >
-          Độc lập - Tự do - Hạnh phúc
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            fontSize: '14px',
-            fontWeight: 600,
-            mb: 2,
-            fontStyle: 'italic',
-          }}
-        >
-          Independence - Freedom - Happiness
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            fontSize: '12px',
-            color: '#666',
-            letterSpacing: '2px',
-          }}
-        >
-          ---oOo---
-        </Typography>
+        <Typography sx={{ fontSize: 12 }}>--------------------</Typography>
       </Box>
 
-      {/* Contract Title */}
-      <Box sx={{ textAlign: 'center', mb: 3 }}>
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 700,
-            fontSize: '24px',
-            mb: 1,
-            color: '#000000',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-          }}
-        >
+      {/* Tên hợp đồng */}
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
+        <Typography sx={{ fontSize: 24, fontWeight: 700 }}>
           HỢP ĐỒNG DỊCH VỤ
         </Typography>
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 600,
-            fontSize: '18px',
-            mb: 2,
-            color: '#000000',
-            textTransform: 'uppercase',
-            fontStyle: 'italic',
-          }}
-        >
-          SERVICE CONTRACT
-        </Typography>
-        <Typography variant="body2" sx={{ fontSize: '14px', mb: 1 }}>
-          <strong>Số/No.:</strong> {contract?.contractNumber || contract?.id || "N/A"}
+        <Typography sx={{ fontSize: 14, mt: 1 }}>
+          Số: {contract?.contractNumber || contract?.id || "……"}
         </Typography>
       </Box>
 
-      {/* Legal Basis */}
+      {/* Căn cứ */}
+      <Box sx={{ mb: 4 }}>
+        <Typography sx={{ fontSize: 14, lineHeight: 1.8 }}>
+          Căn cứ Bộ luật Dân sự năm 2015;
+          <br />
+          Căn cứ Luật Thương mại năm 2005;
+          <br />
+          Căn cứ nhu cầu và khả năng của các bên.
+        </Typography>
+
+        <Typography sx={{ fontSize: 14, mt: 2 }}>
+          Hôm nay, {formatDateFull(contract?.startDate || contract?.createdAt)}, 
+          tại ……., chúng tôi gồm có:
+        </Typography>
+      </Box>
+
+      {/* Bên A */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="body2" sx={{ fontSize: '14px', lineHeight: 1.8, textAlign: 'justify' }}>
-          <strong>Căn cứ</strong> Bộ luật Dân sự số 33/2005/QH11 ngày 14/06/2005 của Quốc hội nước Cộng hòa xã hội chủ nghĩa Việt Nam;
-          <br />
-          <strong>Căn cứ</strong> Luật Thương mại số 36/2005/QH11 ngày 14/06/2005 của Quốc hội nước Cộng hòa xã hội chủ nghĩa Việt Nam;
-          <br />
-          <strong>Căn cứ</strong> Nhu cầu và khả năng của các bên;
+        <Typography sx={{ fontSize: 15, fontWeight: 700 }}>
+          BÊN A (BÊN CUNG CẤP DỊCH VỤ)
         </Typography>
-        <Typography variant="body2" sx={{ fontSize: '14px', lineHeight: 1.8, mt: 2, textAlign: 'justify' }}>
-          <strong>Hôm nay, {formatDateFull(contract?.startDate || contract?.createdAt)} (Date: {formatDateEnglish(contract?.startDate || contract?.createdAt)}), chúng tôi gồm có (Both Parties):</strong>
+        <Typography sx={{ fontSize: 14, pl: 2, lineHeight: 1.8 }}>
+          Tên đơn vị: {supplier?.name || "……"}
+          <br />
+          Người đại diện: {supplier?.ownerName || "……"}
+          <br />
+          Điện thoại: {supplier?.phone || "……"}
+          <br />
+          Email: {supplier?.email || "……"}
         </Typography>
       </Box>
 
-      {/* Parties */}
+      {/* Bên B */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="body1" sx={{ fontSize: '15px', fontWeight: 700, mb: 1.5 }}>
-            BÊN CUNG CẤP (SELLER) - Part A: {supplier?.name || contract?.supplier?.name || contract?.supplierName || "NHÀ CUNG CẤP"}
-          </Typography>
-          <Typography variant="body2" sx={{ fontSize: '14px', pl: 2, lineHeight: 1.8 }}>
-            <strong>Người đại diện/Representative:</strong> {supplier?.representative || supplier?.contactPerson || contract?.supplier?.representative || contract?.supplier?.contactPerson || "N/A"}
-            <br />
-            <strong>Điện thoại/Phone:</strong> {supplier?.phone || contract?.supplier?.phone || "N/A"}
-            {(supplier?.fax || contract?.supplier?.fax) && (
-              <>
-                <br />
-                <strong>Fax:</strong> {supplier?.fax || contract?.supplier?.fax}
-              </>
-            )}
-            <br />
-            <strong>Email:</strong> {supplier?.email || contract?.supplier?.email || "N/A"}
-          </Typography>
-        </Box>
-
-        <Box>
-          <Typography variant="body1" sx={{ fontSize: '15px', fontWeight: 700, mb: 1.5 }}>
-            BÊN SỬ DỤNG (BUYER) - (Bên B/Party B): {enterprise?.name || contract?.enterprise?.name || "DOANH NGHIỆP"}
-          </Typography>
-          <Typography variant="body2" sx={{ fontSize: '14px', pl: 2, lineHeight: 1.8 }}>
-            <strong>Người đại diện/Representative:</strong> {enterprise?.representative || enterprise?.contactPerson || contract?.enterprise?.representative || contract?.enterprise?.contactPerson || "N/A"}
-            <br />
-            <strong>Điện thoại/Phone:</strong> {enterprise?.phone || contract?.enterprise?.phone || "N/A"}
-            {(enterprise?.fax || contract?.enterprise?.fax) && (
-              <>
-                <br />
-                <strong>Fax:</strong> {enterprise?.fax || contract?.enterprise?.fax}
-              </>
-            )}
-            <br />
-            <strong>Email:</strong> {enterprise?.email || contract?.enterprise?.email || "N/A"}
-          </Typography>
-        </Box>
-      </Box>
-
-      <Divider sx={{ my: 3, borderWidth: 1, borderColor: '#ddd' }} />
-
-      {/* Contract Terms */}
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontSize: '16px',
-            fontWeight: 700,
-            mb: 1.5,
-            textTransform: 'uppercase',
-          }}
-        >
-          Điều 1/Article 1: Nội dung hợp đồng (The contract contents)
+        <Typography sx={{ fontSize: 15, fontWeight: 700 }}>
+          BÊN B (BÊN SỬ DỤNG DỊCH VỤ)
         </Typography>
-        <Typography variant="body2" sx={{ fontSize: '14px', lineHeight: 1.8, textAlign: 'justify' }}>
-          Bên A thực hiện cung cấp dịch vụ {contract?.name || "theo nội dung hợp đồng"} cho bên B như sau/ Party A supply to Party B {contract?.name || "service"} follows:
+        <Typography sx={{ fontSize: 14, pl: 2, lineHeight: 1.8 }}>
+          Tên đơn vị: {enterprise?.name || "……"}
           <br />
-          {contract?.description || contract?.notes || "Các dịch vụ/sản phẩm được thỏa thuận giữa hai bên theo nội dung hợp đồng này."}
-        </Typography>
-      </Box>
-
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontSize: '16px',
-            fontWeight: 700,
-            mb: 1.5,
-            textTransform: 'uppercase',
-          }}
-        >
-          Điều 2/Article 2: Giá trị hợp đồng (Contract value)
-        </Typography>
-        <Typography variant="body2" sx={{ fontSize: '14px', lineHeight: 1.8, textAlign: 'justify' }}>
-          Tổng giá trị hợp đồng/Total contract value: <strong>{formatCurrency(contract?.totalValue, contract?.currency)}</strong>
+          Người đại diện: {enterprise?.ownerName || "……"}
           <br />
-          Bằng chữ/In words: {contract?.totalValueInWords || "N/A"}
-        </Typography>
-      </Box>
-
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontSize: '16px',
-            fontWeight: 700,
-            mb: 1.5,
-            textTransform: 'uppercase',
-          }}
-        >
-          Điều 3/Article 3: Thời hạn hợp đồng (Contract term)
-        </Typography>
-        <Typography variant="body2" sx={{ fontSize: '14px', lineHeight: 1.8, textAlign: 'justify' }}>
-          Thời hạn hợp đồng từ ngày {formatDateFull(contract?.startDate)} đến ngày {formatDateFull(contract?.endDate)}.
+          Điện thoại: {enterprise?.phone || "……"}
           <br />
-          Contract term from {formatDateEnglish(contract?.startDate)} to {formatDateEnglish(contract?.endDate)}.
+          Email: {enterprise?.email || "……"}
         </Typography>
       </Box>
 
+      <Divider sx={{ my: 3 }} />
+
+      {/* Điều 1 */}
+      <Box sx={{ mb: 4 }}>
+        <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
+          Điều 1. Nội dung hợp đồng
+        </Typography>
+        <Typography sx={{ fontSize: 14, lineHeight: 1.8 }}>
+          Bên A cung cấp cho Bên B dịch vụ: {contract?.name || "……"}.
+          <br />
+          Nội dung chi tiết: {contract?.description || contract?.notes || "Theo thỏa thuận giữa hai bên."}
+        </Typography>
+      </Box>
+
+      {/* Điều 2 */}
+      <Box sx={{ mb: 4 }}>
+        <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
+          Điều 2. Giá trị hợp đồng
+        </Typography>
+        <Typography sx={{ fontSize: 14, lineHeight: 1.8 }}>
+          Tổng giá trị hợp đồng: <strong>{formatCurrency(contract?.totalValue, contract?.currency)}</strong>
+          <br />
+          (Bằng chữ: {numberToVietnameseWords(contract?.totalValue) || "……"})
+        </Typography>
+      </Box>
+
+      {/* Điều 3 */}
+      <Box sx={{ mb: 4 }}>
+        <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
+          Điều 3. Thời hạn thực hiện hợp đồng
+        </Typography>
+        <Typography sx={{ fontSize: 14, lineHeight: 1.8 }}>
+          Thời hạn thực hiện hợp đồng từ {formatDateFull(contract?.startDate)} 
+          đến {formatDateFull(contract?.endDate)}.
+        </Typography>
+      </Box>
+
+      {/* Điều 4 */}
       {(quote?.paymentTerms || contract?.paymentTerms) && (
         <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: '16px',
-              fontWeight: 700,
-              mb: 1.5,
-              textTransform: 'uppercase',
-            }}
-          >
-            Điều 4/Article 4: Điều khoản thanh toán (Payment terms)
+          <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
+            Điều 4. Phương thức và điều kiện thanh toán
           </Typography>
-          <Typography variant="body2" sx={{ fontSize: '14px', lineHeight: 1.8, textAlign: 'justify', whiteSpace: 'pre-line' }}>
+          <Typography sx={{ fontSize: 14, whiteSpace: 'pre-line', lineHeight: 1.8 }}>
             {quote?.paymentTerms || contract?.paymentTerms}
           </Typography>
         </Box>
       )}
 
+      {/* Điều 5 */}
       {(quote?.guarantee || contract?.guaranteeTerms) && (
         <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: '16px',
-              fontWeight: 700,
-              mb: 1.5,
-              textTransform: 'uppercase',
-            }}
-          >
-            Điều 5/Article 5: Điều khoản bảo hành (Warranty terms)
+          <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
+            Điều 5. Bảo hành và cam kết
           </Typography>
-          <Typography variant="body2" sx={{ fontSize: '14px', lineHeight: 1.8, textAlign: 'justify', whiteSpace: 'pre-line' }}>
+          <Typography sx={{ fontSize: 14, whiteSpace: 'pre-line', lineHeight: 1.8 }}>
             {quote?.guarantee || contract?.guaranteeTerms}
           </Typography>
         </Box>
       )}
 
+      {/* Điều 6 */}
       {contract?.terminationTerms && (
         <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: '16px',
-              fontWeight: 700,
-              mb: 1.5,
-              textTransform: 'uppercase',
-            }}
-          >
-            Điều 6/Article 6: Điều khoản chấm dứt hợp đồng (Termination terms)
+          <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
+            Điều 6. Chấm dứt hợp đồng
           </Typography>
-          <Typography variant="body2" sx={{ fontSize: '14px', lineHeight: 1.8, textAlign: 'justify', whiteSpace: 'pre-line' }}>
+          <Typography sx={{ fontSize: 14, whiteSpace: 'pre-line', lineHeight: 1.8 }}>
             {contract.terminationTerms}
           </Typography>
         </Box>
       )}
 
+      {/* Điều 7 */}
       <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontSize: '16px',
-            fontWeight: 700,
-            mb: 1.5,
-            textTransform: 'uppercase',
-          }}
-        >
-          Điều 7/Article 7: Trách nhiệm và quyền lợi (Rights and obligations)
+        <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
+          Điều 7. Điều khoản chung
         </Typography>
-        <Typography variant="body2" sx={{ fontSize: '14px', lineHeight: 1.8, textAlign: 'justify' }}>
-          Các bên có trách nhiệm thực hiện đúng các điều khoản đã thỏa thuận trong hợp đồng này. 
-          Mọi tranh chấp phát sinh sẽ được giải quyết thông qua thương lượng, hòa giải hoặc theo quy định của pháp luật.
-          <br />
-          Both parties are responsible for properly implementing the terms agreed in this contract. 
-          Any disputes arising will be resolved through negotiation, mediation or in accordance with the law.
+        <Typography sx={{ fontSize: 14, lineHeight: 1.8 }}>
+          Hai bên cam kết thực hiện đúng và đầy đủ các điều khoản đã thỏa thuận trong hợp đồng này.
+          Mọi tranh chấp phát sinh sẽ được ưu tiên giải quyết thông qua thương lượng, nếu không đạt được
+          thỏa thuận thì đưa ra cơ quan có thẩm quyền theo quy định pháp luật.
         </Typography>
       </Box>
 
-      <Divider sx={{ my: 4, borderWidth: 1, borderColor: '#ddd' }} />
+      <Divider sx={{ my: 4 }} />
 
-      {/* Signatures */}
+      {/* Ký tên */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 6 }}>
         <Box sx={{ textAlign: 'center', flex: 1 }}>
-          <Typography variant="body1" sx={{ fontSize: '15px', fontWeight: 700, mb: 4 }}>
-            BÊN A (BÊN CUNG CẤP)
-            <br />
-            PARTY A (SELLER)
-          </Typography>
-          <Typography variant="body2" sx={{ fontSize: '14px', mt: 4 }}>
-            (Ký và ghi rõ họ tên)
-            <br />
-            (Signature and full name)
-          </Typography>
+          <Typography sx={{ fontWeight: 700 }}>ĐẠI DIỆN BÊN A</Typography>
+          <Typography sx={{ mt: 6 }}>(Ký, ghi rõ họ tên)</Typography>
         </Box>
         <Box sx={{ textAlign: 'center', flex: 1 }}>
-          <Typography variant="body1" sx={{ fontSize: '15px', fontWeight: 700, mb: 4 }}>
-            BÊN B (BÊN SỬ DỤNG)
-            <br />
-            PARTY B (BUYER)
-          </Typography>
-          <Typography variant="body2" sx={{ fontSize: '14px', mt: 4 }}>
-            (Ký và ghi rõ họ tên)
-            <br />
-            (Signature and full name)
-          </Typography>
+          <Typography sx={{ fontWeight: 700 }}>ĐẠI DIỆN BÊN B</Typography>
+          <Typography sx={{ mt: 6 }}>(Ký, ghi rõ họ tên)</Typography>
         </Box>
       </Box>
 
-      {/* Footer */}
+      {/* Hiệu lực */}
       <Box sx={{ mt: 4, pt: 2, borderTop: '1px solid #ddd', textAlign: 'center' }}>
-        <Typography variant="caption" sx={{ fontSize: '12px', color: '#666' }}>
-          Hợp đồng này có hiệu lực từ ngày ký và được lập thành {contract?.copies || 2} bản, mỗi bên giữ {contract?.copies ? Math.ceil(contract.copies / 2) : 1} bản có giá trị pháp lý như nhau.
+        <Typography sx={{ fontSize: 12 }}>
+          Hợp đồng được lập thành {contract?.copies || 2} bản, có giá trị pháp lý như nhau,
+          mỗi bên giữ {contract?.copies ? Math.ceil(contract.copies / 2) : 1} bản.
         </Typography>
       </Box>
     </Box>
@@ -417,4 +261,3 @@ const ContractPDFView = ({ contract, supplier, enterprise, quote }) => {
 };
 
 export default ContractPDFView;
-
