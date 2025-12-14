@@ -220,6 +220,16 @@ export default function EventSchedule({ eventData, onRefresh }) {
     }
   };
 
+  const handleOpenDetailDialog = (scheduleId) => {
+    setSelectedScheduleId(scheduleId);
+    setDetailDialogOpen(true);
+  };
+
+  const handleCloseDetailDialog = () => {
+    setDetailDialogOpen(false);
+    setSelectedScheduleId(null);
+  };
+
   // ====== CREATE/UPDATE SCHEDULE ======
   const handleSaveSchedule = async (scheduleForm, scheduleId) => {
     try {
@@ -444,7 +454,10 @@ export default function EventSchedule({ eventData, onRefresh }) {
                         {childSchedules.length === 0 && <Box sx={{ width: 32 }} />}
 
                         {/* Title + Time */}
-                        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                        <Box 
+                          sx={{ flex: 1, display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                          onClick={() => handleOpenDetailDialog(schedule.id)}
+                        >
                           <Typography variant="body1" fontWeight={600} sx={{ mr: 4, fontSize: '1rem' }} >
                             {schedule.title}
                           </Typography>
@@ -476,7 +489,10 @@ export default function EventSchedule({ eventData, onRefresh }) {
                               backgroundColor: alpha(theme.palette.primary.main, 0.02),
                             }}
                           >
-                            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                            <Box 
+                              sx={{ flex: 1, display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                              onClick={() => handleOpenDetailDialog(child.id)}
+                            >
                               <Typography variant="body2" fontWeight={500} sx={{ mr: 4, fontSize: '1rem' }}>
                                 {child.title}
                               </Typography>
@@ -585,6 +601,14 @@ export default function EventSchedule({ eventData, onRefresh }) {
               </Button>
             </DialogActions>
           </Dialog>
+
+          {/* Schedule Detail Dialog */}
+          <ScheduleDetailDialog
+            open={detailDialogOpen}
+            onClose={handleCloseDetailDialog}
+            scheduleId={selectedScheduleId}
+            projectId={eventId}
+          />
         </Box>
       ) : null}
     </Box>

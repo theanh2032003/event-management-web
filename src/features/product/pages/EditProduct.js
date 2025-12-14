@@ -576,9 +576,9 @@ export default function EditProduct() {
       <Box>
         <StyledCard>
           <CardContent sx={{ p: { xs: 2.5, sm: 3.5, md: 4.5 } }}>
-                <Grid container spacing={3}>
-                  {/* Tên sản phẩm */}
-                  <Grid item xs={12}>
+                <Grid container spacing={4}>
+                  {/* Tên sản phẩm  */}
+                  <Grid item xs={12} md={8}>
                     <SectionTitle>Tên sản phẩm/Dịch vụ *</SectionTitle>
                     {!isEditMode ? (
                       <InfoValue>{product?.name || 'Chưa có tên'}</InfoValue>
@@ -597,7 +597,7 @@ export default function EditProduct() {
                   </Grid>
 
                   {/* Danh mục */}
-                  <Grid item xs={12}>
+                  <Grid item xs={12} md={4}>
                     <SectionTitle>Danh mục *</SectionTitle>
                     {!isEditMode ? (
                       <InfoValue>
@@ -612,9 +612,10 @@ export default function EditProduct() {
                           value={formData.categoryId}
                           onChange={handleChange('categoryId')}
                           label="Chọn danh mục"
+                          displayEmpty
                         >
                         <MenuItem value="">
-                          <em>Chọn danh mục</em>
+                          <em style={{ color: '#aaa' }}>Chọn danh mục</em>
                         </MenuItem>
                         {categories.map((category) => (
                           <MenuItem key={category.id || category._id} value={category.id || category._id}>
@@ -628,9 +629,10 @@ export default function EditProduct() {
                           </Typography>
                         )}
                       </StyledFormControl>
-                    )}                </Grid>
+                    )}                
+                  </Grid>
 
-                  {/* Location dropdown - chỉ hiển thị khi category có isLocationCategory = true và đang ở edit mode */}
+                  {/* Location dropdown - Full width  */}
                   {isEditMode && categories.find(cat => cat.id === formData.categoryId || cat.id === Number(formData.categoryId))?.isLocationCategory === true && (
                     <Grid item xs={12}>
                       <SectionTitle>Địa điểm</SectionTitle>
@@ -659,10 +661,8 @@ export default function EditProduct() {
                     </Grid>
                   )}
 
-                 
-
-                  {/* Giá */}
-                  <Grid item xs={12}>
+                  {/* Giá  */}
+                  <Grid item xs={12} sm={6}>
                     <SectionTitle>Giá *</SectionTitle>
                     {!isEditMode ? (
                       <InfoValue>
@@ -691,7 +691,7 @@ export default function EditProduct() {
                   </Grid>
 
                   {/* Đơn vị */}
-                  <Grid item xs={12}>
+                  <Grid item xs={12} sm={6}>
                     <SectionTitle>Đơn vị</SectionTitle>
                     {!isEditMode ? (
                       <InfoValue>{product?.unit || 'Chưa có'}</InfoValue>
@@ -706,8 +706,9 @@ export default function EditProduct() {
                       />
                     )}
                   </Grid>
-                  {/* Mô tả */}
-                  <Grid item xs={12}>
+
+                  {/* Mô tả - Full width */}
+                  <Grid >
                     <SectionTitle>Mô tả sản phẩm/dịch vụ</SectionTitle>
                     {!isEditMode ? (
                       <InfoValue sx={{ whiteSpace: 'pre-wrap' }}>
@@ -735,7 +736,8 @@ export default function EditProduct() {
                       />
                     )}
                   </Grid>
-                  {/* Hình ảnh */}
+
+                  {/* Hình ảnh - Full width */}
                   <Grid item xs={12}>
                     <SectionTitle>
                       Hình ảnh {isEditMode && formData.images.length > 0 && `(${formData.images.length}/5)`}
@@ -752,7 +754,7 @@ export default function EditProduct() {
                       {formData.images.length > 0 ? (
                         <Grid container spacing={2.5} sx={{ mb: 2 }}>
                           {formData.images.map((image, index) => (
-                            <Grid item xs={6} sm={4} md={3} key={index}>
+                            <Grid item xs={6} sm={4} md={3} lg={2.4} key={index}>
                               <ImagePreviewBox>
                                 <img src={image} alt={`Hình ${index + 1}`} />
                                 {isEditMode && (
@@ -836,4 +838,3 @@ export default function EditProduct() {
     </Box>
   );
 }
-
