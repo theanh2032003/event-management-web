@@ -769,27 +769,6 @@ export default function Marketplace() {
               ),
             },
             {
-              field: 'code',
-              headerName: 'Mã sản phẩm',
-              width: 130,
-              render: (value) => (
-                <Typography 
-                  variant="body2" 
-                  color="text.primary"
-                  sx={{ 
-                    fontFamily: 'monospace',
-                    backgroundColor: alpha(theme.palette.grey[200], 0.5),
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    display: 'inline-block',
-                  }}
-                >
-                  {value || 'N/A'}
-                </Typography>
-              ),
-            },
-            {
               field: 'categoryId',
               headerName: 'Danh mục',
               width: 160,

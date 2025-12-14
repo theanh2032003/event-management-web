@@ -150,18 +150,18 @@ export default function SupplierDashboard() {
     }
   };
 
-  // Use API data or fallback to empty values
+  // Use API data or fallback to mock data
   const overviewData = {
-    totalQuotes: supplierV1Data?.totalQuote || MOCK_DATA.overview.totalQuotes,
-    convertedToContract: supplierV1Data?.totalRFQ || MOCK_DATA.overview.convertedToContract,
-    conversionRate: supplierV1Data?.conversionRate ? (supplierV1Data.conversionRate * 100) : MOCK_DATA.overview.conversionRate,
-    totalProducts: supplierV1Data?.totalProduct || MOCK_DATA.overview.totalProducts,
-    totalRevenue: supplierV1Data?.totalRevenue || MOCK_DATA.overview.totalRevenue,
-    totalRFQ: supplierV1Data?.totalRFQ || MOCK_DATA.overview.totalRFQ,
+    totalQuotes: supplierV1Data?.totalQuote || 0,
+    convertedToContract: supplierV1Data?.totalQuote || 0,
+    conversionRate: supplierV1Data?.conversionRate ? (supplierV1Data.conversionRate * 100) : 0,
+    totalProducts: supplierV1Data?.totalProduct || 0,
+    totalRevenue: supplierV1Data?.totalRevenue || 0,
+    totalRFQ: supplierV1Data?.totalRFQ || 0,
   };
 
   // Transform monthly revenue from revenueByMonth object
-  const monthlyRevenue = supplierV1Data?.revenueByMonth 
+  const monthlyRevenue = supplierV1Data?.revenueByMonth && Object.keys(supplierV1Data.revenueByMonth).length > 0
     ? Object.entries(supplierV1Data.revenueByMonth).map(([month, revenue]) => ({
         month: `Tháng ${month}`,
         revenue: revenue || 0,
@@ -169,10 +169,10 @@ export default function SupplierDashboard() {
     : MOCK_DATA.monthlyRevenue;
 
   // Transform top products
-  const topProducts = supplierV1Data?.topProducts 
+  const topProducts = supplierV1Data?.topProducts && supplierV1Data.topProducts.length > 0
     ? supplierV1Data.topProducts.map(product => ({
         productName: product.productName,
-        totalRevenue: product.revenue,
+        totalRevenue: product.revenue || 0,
         totalQuantity: 0, // API không cung cấp số lượng
       }))
     : MOCK_DATA.topProducts;

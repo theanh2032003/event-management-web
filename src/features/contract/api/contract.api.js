@@ -9,30 +9,7 @@ const contractApi = {
    */
   getContracts: async (filters = {}, page = 0, size = 10, sort = 'id,desc') => {
     try {
-      // Get IDs from localStorage
-      const getUserId = () => {
-        const raw = localStorage.getItem('user');
-        const user = raw ? JSON.parse(raw) : {};
-        return user?.id || user?._id || user?.userId || localStorage.getItem('userId');
-      };
 
-      const getSupplierId = () => {
-        const currentWorkspace = localStorage.getItem('currentWorkspace');
-        if (currentWorkspace) {
-          try {
-            const workspace = JSON.parse(currentWorkspace);
-            if (workspace.type === 'supplier' && workspace.id) {
-              return workspace.id.toString();
-            }
-          } catch (e) {
-            console.error('Error parsing currentWorkspace:', e);
-          }
-        }
-        return null;
-      };
-
-      const userId = getUserId();
-      const supplierId = getSupplierId();
 
       // Build query params
       const params = {
@@ -60,35 +37,12 @@ const contractApi = {
         params.keyword = filters.keyword;
       }
 
-      // Build headers
-      const headers = {};
-      
-      if (filters.enterpriseId) {
-        headers['enterprise-id'] = filters.enterpriseId;
-      }
-
-      if (supplierId) {
-        headers['supplier-id'] = supplierId;
-      }
-
-      if (userId) {
-        headers['user-id'] = userId;
-      }
-
-      console.log('[CONTRACT_API] 📡 GET /contract with params:', params, 'headers:', headers);
       const response = await axiosClient.get('/contract', { 
         params,
-        headers,
       });
-      console.log('[CONTRACT_API] ✅ GET /contract response:', response);
       
       return response?.data || response;
     } catch (error) {
-      console.error('[CONTRACT_API] ❌ GET /contract error:', {
-        message: error?.response?.data?.message || error.message,
-        status: error?.response?.status,
-        data: error?.response?.data
-      });
       throw error;
     }
   },
@@ -101,13 +55,6 @@ const contractApi = {
    */
   createContract: async (contractData, enterpriseId) => {
     try {
-      const getUserId = () => {
-        const raw = localStorage.getItem('user');
-        const user = raw ? JSON.parse(raw) : {};
-        return user?.id || user?._id || user?.userId || localStorage.getItem('userId');
-      };
-
-      const userId = getUserId();
 
       const requestData = {
         name: contractData.name,
@@ -126,24 +73,9 @@ const contractApi = {
         attachments: contractData.attachments || [],
       };
 
-      const headers = {};
-      if (enterpriseId) {
-        headers['enterprise-id'] = enterpriseId;
-      }
-      if (userId) {
-        headers['user-id'] = userId;
-      }
-
-      console.log('[CONTRACT_API] 📡 POST /contract with data:', requestData, 'headers:', headers);
-      const response = await axiosClient.post('/contract', requestData, { headers });
-      console.log('[CONTRACT_API] ✅ POST /contract response:', response);
+      const response = await axiosClient.post('/contract', requestData);
       return response?.data || response;
     } catch (error) {
-      console.error('[CONTRACT_API] ❌ POST /contract error:', {
-        message: error?.response?.data?.message || error.message,
-        status: error?.response?.status,
-        data: error?.response?.data
-      });
       throw error;
     }
   },
@@ -156,32 +88,10 @@ const contractApi = {
    */
   submitContract: async (contractId, enterpriseId) => {
     try {
-      const getUserId = () => {
-        const raw = localStorage.getItem('user');
-        const user = raw ? JSON.parse(raw) : {};
-        return user?.id || user?._id || user?.userId || localStorage.getItem('userId');
-      };
 
-      const userId = getUserId();
-
-      const headers = {};
-      if (enterpriseId) {
-        headers['enterprise-id'] = enterpriseId;
-      }
-      if (userId) {
-        headers['user-id'] = userId;
-      }
-
-      console.log(`[CONTRACT_API] 📡 PATCH /contract/${contractId}/submit with headers:`, headers);
       const response = await axiosClient.patch(`/contract/${contractId}/submit`, {}, { headers });
-      console.log(`[CONTRACT_API] ✅ PATCH /contract/${contractId}/submit response:`, response);
       return response?.data || response;
     } catch (error) {
-      console.error(`[CONTRACT_API] ❌ PATCH /contract/${contractId}/submit error:`, {
-        message: error?.response?.data?.message || error.message,
-        status: error?.response?.status,
-        data: error?.response?.data
-      });
       throw error;
     }
   },
@@ -206,16 +116,9 @@ const contractApi = {
         attachments: contractData.attachments || [],
       };
 
-      console.log(`[CONTRACT_API] 📡 PUT /contract/${id} with data:`, requestData);
       const response = await axiosClient.put(`/contract/${id}`, requestData);
-      console.log(`[CONTRACT_API] ✅ PUT /contract/${id} response:`, response);
       return response?.data || response;
     } catch (error) {
-      console.error(`[CONTRACT_API] ❌ PUT /contract/${id} error:`, {
-        message: error?.response?.data?.message || error.message,
-        status: error?.response?.status,
-        data: error?.response?.data
-      });
       throw error;
     }
   },
@@ -226,16 +129,9 @@ const contractApi = {
    */
   deleteContract: async (id) => {
     try {
-      console.log(`[CONTRACT_API] 📡 DELETE /contract/${id}`);
       const response = await axiosClient.delete(`/contract/${id}`);
-      console.log(`[CONTRACT_API] ✅ DELETE /contract/${id} response:`, response);
       return response?.data || response;
     } catch (error) {
-      console.error(`[CONTRACT_API] ❌ DELETE /contract/${id} error:`, {
-        message: error?.response?.data?.message || error.message,
-        status: error?.response?.status,
-        data: error?.response?.data
-      });
       throw error;
     }
   },
@@ -246,16 +142,9 @@ const contractApi = {
    */
   getContractById: async (id) => {
     try {
-      console.log(`[CONTRACT_API] 📡 GET /contract/${id}`);
       const response = await axiosClient.get(`/contract/${id}`);
-      console.log(`[CONTRACT_API] ✅ GET /contract/${id} response:`, response);
       return response?.data || response;
     } catch (error) {
-      console.error(`[CONTRACT_API] ❌ GET /contract/${id} error:`, {
-        message: error?.response?.data?.message || error.message,
-        status: error?.response?.status,
-        data: error?.response?.data
-      });
       throw error;
     }
   },
@@ -273,7 +162,6 @@ const contractApi = {
       const response = await axiosClient.patch(`/contract/${id}/status`, requestData);
       return response?.data || response;
     } catch (error) {
-      console.error('❌ Error updating contract status:', error?.response?.data || error.message);
       throw error;
     }
   },
@@ -285,52 +173,14 @@ const contractApi = {
    */
   updateContractState: async (id, data) => {
     try {
-      const getUserId = () => {
-        const raw = localStorage.getItem('user');
-        const user = raw ? JSON.parse(raw) : {};
-        return user?.id || user?._id || user?.userId || localStorage.getItem('userId');
-      };
-
-      const getSupplierId = () => {
-        const currentWorkspace = localStorage.getItem('currentWorkspace');
-        if (currentWorkspace) {
-          try {
-            const workspace = JSON.parse(currentWorkspace);
-            if (workspace.type === 'supplier' && workspace.id) {
-              return workspace.id.toString();
-            }
-          } catch (e) {
-            console.error('Error parsing currentWorkspace:', e);
-          }
-        }
-        return null;
-      };
-
-      const userId = getUserId();
-      const supplierId = getSupplierId();
 
       const requestData = {
         state: data.state,
       };
 
-      const headers = {};
-      if (supplierId) {
-        headers['supplier-id'] = supplierId;
-      }
-      if (userId) {
-        headers['user-id'] = userId;
-      }
-
-      console.log(`[CONTRACT_API] 📡 PATCH /contract/${id}/state with data:`, requestData, 'headers:', headers);
-      const response = await axiosClient.patch(`/contract/${id}/state`, requestData, { headers });
-      console.log(`[CONTRACT_API] ✅ PATCH /contract/${id}/state response:`, response);
+      const response = await axiosClient.patch(`/contract/${id}/change-state`, requestData);
       return response?.data || response;
     } catch (error) {
-      console.error(`[CONTRACT_API] ❌ PATCH /contract/${id}/state error:`, {
-        message: error?.response?.data?.message || error.message,
-        status: error?.response?.status,
-        data: error?.response?.data
-      });
       throw error;
     }
   },

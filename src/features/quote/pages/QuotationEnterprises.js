@@ -239,32 +239,6 @@ export default function Quotations() {
     setSelectedQuote(null);
   };
 
-  const getStatusLabel = (state) => {
-    switch (state) {
-      case "SUBMITTED":
-        return "Đã gửi";
-      case "APPROVED":
-        return "Chấp nhận";
-      case "REJECTED":
-        return "Từ chối";
-      default:
-        return state || "Không xác định";
-    }
-  };
-
-  const getStatusColor = (state) => {
-    switch (state) {
-      case "SUBMITTED":
-        return "warning";
-      case "APPROVED":
-        return "success";
-      case "REJECTED":
-        return "error";
-      default:
-        return "default";
-    }
-  };
-
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({
       ...prev,
@@ -489,7 +463,7 @@ export default function Quotations() {
             <Box sx={{ width: "calc(20% - 4px)" }}>
               {renderAutocompleteFilter(
                 'projectIds',
-                'Chọn dự án',
+                'Chọn sự kiện',
                 projects,
                 projectKeyword,
                 setProjectKeyword,

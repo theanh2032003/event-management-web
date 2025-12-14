@@ -520,8 +520,8 @@ export default function Contracts() {
   const handleStateChange = async (contractId, newState, currentState) => {
     // Validate state transition
     const validTransitions = {
-      'SUBMITTED': ['SIGNED'],
-      'IN_PROGRESS': ['COMPLETED'],
+      'SUBMITTED': ['COMPLETED', 'CANCELED'],
+      'IN_PROGRESS': ['COMPLETED', 'CANCELED'],
     };
 
     if (!validTransitions[currentState] || !validTransitions[currentState].includes(newState)) {
@@ -610,7 +610,6 @@ export default function Contracts() {
     const labels = {
       DRAFT: "Bản nháp",
       SUBMITTED: "Đã gửi",
-      SIGNED: "Đã ký",
       IN_PROGRESS: "Đang thực hiện",
       COMPLETED: "Hoàn thành",
       CANCELED: "Đã hủy",
@@ -622,7 +621,6 @@ export default function Contracts() {
     const colors = {
       DRAFT: "default",
       SUBMITTED: "info",
-      SIGNED: "primary",
       IN_PROGRESS: "warning",
       COMPLETED: "success",
       CANCELED: "error",
@@ -633,8 +631,8 @@ export default function Contracts() {
   // Get available state transitions for supplier
   const getAvailableStates = (currentState) => {
     const transitions = {
-      'SUBMITTED': ['SIGNED'],
-      'IN_PROGRESS': ['COMPLETED'],
+      'SUBMITTED': ['COMPLETED', 'CANCELED'],
+      'IN_PROGRESS': ['COMPLETED', 'CANCELED'],
     };
     return transitions[currentState] || [];
   };
@@ -646,31 +644,6 @@ export default function Contracts() {
 
   return (
     <Box>
-      {/* Header */}
-      <HeaderBox>
-        <IconBox>
-          <ContractIcon sx={{ fontSize: 32, color: 'white' }} />
-        </IconBox>
-        <TitleBox>
-          <Typography 
-            variant="h4" 
-            component="h1"
-            sx={{
-              fontWeight: 700,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              mb: 0.5,
-            }}
-          >
-            Hợp đồng
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Xem và quản lý các hợp đồng với doanh nghiệp
-          </Typography>
-        </TitleBox>
-      </HeaderBox>
 
       {/* Filters */}
       <FilterCard>
@@ -711,7 +684,6 @@ export default function Contracts() {
                 <MenuItem value="">Tất cả trạng thái</MenuItem>
                 <MenuItem value="DRAFT">Bản nháp</MenuItem>
                 <MenuItem value="SUBMITTED">Đã gửi</MenuItem>
-                <MenuItem value="SIGNED">Đã ký</MenuItem>
                 <MenuItem value="IN_PROGRESS">Đang thực hiện</MenuItem>
                 <MenuItem value="COMPLETED">Hoàn thành</MenuItem>
                 <MenuItem value="CANCELED">Đã hủy</MenuItem>
@@ -802,11 +774,6 @@ export default function Contracts() {
                                 backgroundColor: alpha(theme.palette.info.main, 0.15),
                                 color: theme.palette.info.main,
                                 border: `1px solid ${alpha(theme.palette.info.main, 0.4)}`
-                              }),
-                              ...(contract.state === "SIGNED" && {
-                                backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                                color: theme.palette.primary.main,
-                                border: `1px solid ${alpha(theme.palette.primary.main, 0.4)}`
                               }),
                               ...(contract.state === "COMPLETED" && {
                                 backgroundColor: alpha(theme.palette.success.main, 0.15),

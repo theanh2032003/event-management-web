@@ -7,12 +7,6 @@ import {
   Paper,
   CircularProgress,
   Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Select,
   MenuItem,
   IconButton,
@@ -27,7 +21,6 @@ import {
   InputLabel,
   Card,
   CardContent,
-  TablePagination,
   InputAdornment,
   Stack,
   useTheme,
@@ -59,6 +52,7 @@ import {
 } from "@mui/icons-material";
 import rfqApi from "../api/rfq.api";
 import quoteApi from "../../quote/api/quote.api";
+import { CommonTable } from "../../../shared/components/CommonTable";
 
 // Styled Components - Matching EventManagement style
 const HeaderBox = styled(Box)(({ theme }) => ({
@@ -166,86 +160,7 @@ const FilterCard = styled(Card)(({ theme }) => ({
   border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
 }));
 
-const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-  borderRadius: theme.spacing(2),
-  boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.08)}`,
-  border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-  overflow: 'hidden',
-  backgroundColor: theme.palette.background.paper,
-  display: 'flex',
-  flexDirection: 'column',
-  maxHeight: 'calc(100vh - 400px)',
-  '& .table-wrapper': {
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    flex: 1,
-    '&::-webkit-scrollbar': {
-      width: '8px',
-    },
-    '&::-webkit-scrollbar-track': {
-      background: alpha(theme.palette.divider, 0.1),
-      borderRadius: '4px',
-    },
-    '&::-webkit-scrollbar-thumb': {
-      background: alpha(theme.palette.primary.main, 0.3),
-      borderRadius: '4px',
-      '&:hover': {
-        background: alpha(theme.palette.primary.main, 0.5),
-      },
-    },
-  },
-}));
 
-const StyledTable = styled(Table)(({ theme }) => ({
-  '& .MuiTableHead-root': {
-    backgroundColor: theme.palette.mode === 'dark' 
-      ? alpha(theme.palette.grey[800], 0.95)
-      : alpha(theme.palette.grey[100], 0.98),
-    position: 'sticky',
-    top: 0,
-    zIndex: 10,
-    backdropFilter: 'blur(10px)',
-    '& .MuiTableCell-head': {
-      fontWeight: 700,
-      fontSize: '0.875rem',
-      color: theme.palette.mode === 'dark' 
-        ? theme.palette.grey[100]
-        : theme.palette.grey[800],
-      borderBottom: `2px solid ${alpha(theme.palette.divider, 0.5)}`,
-      padding: theme.spacing(1.5, 2),
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      backgroundColor: theme.palette.mode === 'dark' 
-        ? alpha(theme.palette.grey[800], 0.95)
-        : alpha(theme.palette.grey[100], 0.98),
-      whiteSpace: 'nowrap',
-      boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.08)}`,
-    },
-  },
-  '& .MuiTableCell-body': {
-    borderBottom: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-    padding: theme.spacing(2),
-    verticalAlign: 'middle',
-  },
-  '& .MuiTableRow-root': {
-    transition: 'all 0.2s ease',
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.primary.main, 0.04),
-      transform: 'scale(1.001)',
-    },
-    '&:last-child .MuiTableCell-body': {
-      borderBottom: 'none',
-    },
-  },
-}));
-
-const ActionButton = styled(IconButton)(({ theme }) => ({
-  transition: 'all 0.2s ease',
-  '&:hover': {
-    transform: 'scale(1.1)',
-    backgroundColor: alpha(theme.palette.primary.main, 0.1),
-  },
-}));
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
@@ -291,6 +206,25 @@ const SectionCard = styled(Paper)(({ theme }) => ({
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
   },
 }));
+
+const bigInputSx = {
+  '& .MuiOutlinedInput-root': {
+    minHeight: 52,
+    fontSize: 15,
+  },
+  '& input': {
+    padding: '14px 14px',
+  },
+  '& textarea': {
+    padding: '14px',
+    fontSize: 15,
+    lineHeight: 1.6,
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: 14,
+  },
+};
+
 
 export default function RFQ() {
   const { id: supplierId } = useParams();
@@ -637,31 +571,6 @@ export default function RFQ() {
 
   return (
     <Box>
-      {/* Header */}
-      <HeaderBox>
-        <IconBox>
-          <RequestQuoteIcon sx={{ fontSize: 32, color: 'white' }} />
-        </IconBox>
-        <TitleBox>
-          <Typography 
-            variant="h4" 
-            component="h1"
-            sx={{
-              fontWeight: 700,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              mb: 0.5,
-            }}
-          >
-            Yêu cầu báo giá
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Xem và xử lý các yêu cầu báo giá từ doanh nghiệp
-          </Typography>
-        </TitleBox>
-      </HeaderBox>
 
       {/* Filters */}
       <FilterCard>
@@ -725,156 +634,134 @@ export default function RFQ() {
           </Typography>
         </EmptyStateBox>
       ) : (
-        <>
-          <StyledTableContainer component={Paper}>
-            <Box className="table-wrapper">
-              <StyledTable stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>Tên yêu cầu</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>Doanh nghiệp</TableCell>
-                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>Số lượng</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>Ngày hết hạn</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>Ngày tạo</TableCell>
-                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>Hành động</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rfqs.map((rfq) => {
-                    const isExpired = rfq.expiredAt ? new Date(rfq.expiredAt) < new Date() : false;
-                    return (
-                    <TableRow key={rfq.id} hover>
-                      <TableCell>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontWeight: 600,
-                            color: theme.palette.text.primary,
-                          }}
-                        >
-                          {rfq.name || "N/A"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={rfq.enterprise?.name || rfq.enterpriseName || "N/A"}
-                          size="small"
-                          sx={{
+        <CommonTable
+          columns={[
+            {
+              field: 'name',
+              headerName: 'Tên yêu cầu',
+              flex: 1.5,
+              minWidth: 200,
+              render: (value) => (
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {value || "N/A"}
+                </Typography>
+              ),
+            },
+            {
+              field: 'enterprise',
+              headerName: 'Doanh nghiệp',
+              flex: 1.2,
+              minWidth: 150,
+              render: (value) => (
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {value?.name || "N/A"}
+                </Typography>
+              ),
+            },
+            {
+              field: 'quantity',
+              headerName: 'Số lượng',
+              width: 120,
+              align: 'center',
+              render: (value) => (
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {value?.toLocaleString("vi-VN") || "N/A"}
+                </Typography>
+              ),
+            },
+            {
+              field: 'expiredAt',
+              headerName: 'Ngày hết hạn',
+              flex: 1.1,
+              minWidth: 150,
+              render: (value) => {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: theme.palette.text.primary,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {formatDate(value)}
+                    </Typography>
+                  </Box>
+                );
+              },
+            },
+            {
+              field: 'createdAt',
+              headerName: 'Ngày tạo',
+              flex: 1,
+              minWidth: 150,
+              render: (value) => (
+                <Typography variant="body2" color="text.secondary">
+                  {formatDate(value)}
+                </Typography>
+              ),
+            },
+            {
+              field: 'actions',
+              headerName: 'Hành động',
+              width: 140,
+              align: 'center',
+              render: (value, row) => {
+                const isExpired = new Date(row.expiredAt) < new Date();
+                return isExpired ? (
+                  <Chip
+                    label="Đã hết hạn"
+                    size="small"
+                    color="error"
+                    variant="outlined"
+                    sx={{ fontWeight: 600 }}
+                  />
+                ) : (
+                  <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
+                    <Tooltip title="Xem chi tiết yêu cầu báo giá" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenDetail(row)}
+                        sx={{
+                          color: theme.palette.info.main,
+                          '&:hover': {
+                            backgroundColor: alpha(theme.palette.info.main, 0.1),
+                            transform: 'scale(1.1)',
+                          },
+                        }}
+                      >
+                        <InfoIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Tạo báo giá cho yêu cầu này" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenCreateQuote(row)}
+                        sx={{
+                          color: theme.palette.primary.main,
+                          '&:hover': {
                             backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                            color: theme.palette.primary.main,
-                            fontWeight: 500,
-                            border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontWeight: 600,
-                            color: theme.palette.text.primary,
-                          }}
-                        >
-                          {rfq.quantity?.toLocaleString("vi-VN") || "N/A"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Typography 
-                            variant="body2"
-                            sx={{
-                              color: new Date(rfq.expiredAt) < new Date() 
-                                ? theme.palette.error.main 
-                                : theme.palette.text.primary,
-                              fontWeight: 500,
-                            }}
-                          >
-                            {formatDate(rfq.expiredAt)}
-                          </Typography>
-                          {new Date(rfq.expiredAt) < new Date() && (
-                            <Chip
-                              label="Hết hạn"
-                              size="small"
-                              color="error"
-                              sx={{ height: 20, fontSize: '0.7rem' }}
-                            />
-                          )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatDate(rfq.createdAt)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        {isExpired ? (
-                          <Chip 
-                            label="Đã hết hạn" 
-                            size="small" 
-                            color="error" 
-                            variant="outlined"
-                            sx={{ fontWeight: 600 }}
-                          />
-                        ) : (
-                          <Box sx={{ display: "flex", gap: 1, justifyContent: "center", alignItems: "center" }}>
-                            <Tooltip title="Xem chi tiết yêu cầu báo giá" arrow>
-                              <ActionButton 
-                                size="small"
-                                onClick={() => handleOpenDetail(rfq)}
-                                sx={{
-                                  color: theme.palette.info.main,
-                                  '&:hover': {
-                                    backgroundColor: alpha(theme.palette.info.main, 0.1),
-                                    transform: 'scale(1.1)',
-                                  },
-                                }}
-                              >
-                                <InfoIcon fontSize="small" />
-                              </ActionButton>
-                            </Tooltip>
-                            <Tooltip title="Tạo báo giá cho yêu cầu này" arrow>
-                              <ActionButton 
-                                size="small"
-                                onClick={() => handleOpenCreateQuote(rfq)}
-                                sx={{
-                                  color: theme.palette.primary.main,
-                                  '&:hover': {
-                                    backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                                    transform: 'scale(1.1)',
-                                  },
-                                }}
-                              >
-                                <AddIcon fontSize="small" />
-                              </ActionButton>
-                            </Tooltip>
-                          </Box>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )})}
-                </TableBody>
-              </StyledTable>
-            </Box>
-            <TablePagination
-              component="div"
-              count={totalCount}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[10, 20, 50]}
-              labelRowsPerPage="Số dòng mỗi trang:"
-              labelDisplayedRows={({ from, to, count }) =>
-                `${from}-${to} trong tổng ${count !== -1 ? count : `hơn ${to}`}`
-              }
-              sx={{
-                borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                backgroundColor: theme.palette.background.paper,
-                flexShrink: 0,
-              }}
-            />
-          </StyledTableContainer>
-        </>
+                            transform: 'scale(1.1)',
+                          },
+                        }}
+                      >
+                        <AddIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                );
+              },
+            },
+          ]}
+          data={rfqs}
+          loading={loading}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          emptyMessage="Không có yêu cầu báo giá"
+        />
       )}
 
       {/* Detail Dialog */}
@@ -1111,7 +998,6 @@ export default function RFQ() {
             <Button 
               variant="contained"
               color="primary"
-              startIcon={<AddIcon />}
               onClick={() => {
                 handleCloseDetail();
                 handleOpenCreateQuote(selectedRfq);
@@ -1128,7 +1014,7 @@ export default function RFQ() {
                 },
               }}
             >
-              Tạo báo giá từ RFQ này
+              Tạo báo giá
             </Button>
           )}
         </DialogActions>
@@ -1159,377 +1045,240 @@ export default function RFQ() {
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
         }}>
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <ReceiptIcon sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
             <Box>
               <Typography 
                 variant="h5" 
                 sx={{ 
                   fontWeight: 700,
                   mb: 0.5,
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  background: theme.palette.primary.main,
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Tạo báo giá từ RFQ
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Điền thông tin để tạo báo giá cho doanh nghiệp
+                Tạo báo giá
               </Typography>
             </Box>
           </Box>
-          <IconButton 
-            onClick={handleCloseCreateQuote}
-            size="small"
-            disabled={createQuoteSubmitting}
-            sx={{
-              color: 'text.secondary',
-              '&:hover': {
-                backgroundColor: alpha(theme.palette.error.main, 0.1),
-                color: theme.palette.error.main,
-              },
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
         </DialogTitle>
 
         <DialogContent sx={{ pt: 3, pb: 2 }}>
-          <Stack spacing={3}>
-            {/* RFQ Info */}
-            {selectedRfq && (
-              <SectionCard elevation={0}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                  <RequestQuoteIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                  <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-                    Báo giá cho
-                  </Typography>
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-                  {selectedRfq.name || selectedRfq.product?.name || "N/A"}
-                </Typography>
-                {selectedRfq.enterprise && (
-                  <Typography variant="body2" color="text.secondary">
-                    Doanh nghiệp: {selectedRfq.enterprise.name}
-                  </Typography>
-                )}
-              </SectionCard>
-            )}
+          <Grid container spacing={4} sx={{ mt: 3, width: '100%' }}>
 
-            {/* Tên báo giá và Ngày hết hạn */}
-            <SectionCard elevation={0}>
-              <Grid container spacing={2.5}>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    label="Tên báo giá *"
-                    name="name"
-                    value={createQuoteFormData.name}
-                    onChange={handleCreateQuoteInputChange}
-                    size="small"
-                    required
-                    placeholder="VD: Báo giá Đèn Follow Spot 2500W - Tháng 11/2025"
-                    helperText="Mô tả ngắn gọn cho báo giá này"
-                    sx={{
-                      width: quoteNameFieldWidth,
-                      maxWidth: "100%",
-                    }}
-                    InputProps={{
-                      startAdornment: (
-                        <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                          <EventNoteIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-                        </Box>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <StyledTextField
-                    label="Ngày hết hạn *"
-                    name="expiredAt"
-                    type="datetime-local"
-                    value={createQuoteFormData.expiredAt}
-                    onChange={handleCreateQuoteInputChange}
-                    fullWidth
-                    size="small"
-                    required
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    helperText="Báo giá có hiệu lực đến ngày này"
-                    InputProps={{
-                      startAdornment: (
-                        <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                          <CalendarIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-                        </Box>
-                      ),
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            </SectionCard>
+            {/* Tên báo giá */}
+            <Grid item xs={12} sx={{ width: '100%' }}>
+              <StyledTextField
+                label="Tên báo giá *"
+                name="name"
+                value={createQuoteFormData.name}
+                onChange={handleCreateQuoteInputChange}
+                required
+                fullWidth
+                placeholder="VD: Báo giá Đèn Follow Spot 2500W - Tháng 11/2025"
+                sx={bigInputSx}
+              />
+            </Grid>
 
-            {/* Section: Thông tin giá */}
-            <SectionCard elevation={0}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <AttachMoneyIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  Thông tin giá
-                </Typography>
-              </Box>
-              
-              <Grid container spacing={2.5}>
-                <Grid item xs={12} sm={6}>
-                  <StyledTextField
-                    label="Số lượng *"
-                    name="quantity"
-                    type="number"
-                    value={createQuoteFormData.quantity}
-                    onChange={handleCreateQuoteInputChange}
-                    fullWidth
-                    size="small"
-                    required
-                    inputProps={{ min: "0", step: "1" }}
-                    helperText="Số lượng sản phẩm cần báo giá"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <StyledTextField
-                    label="Đơn giá *"
-                    name="unitPrice"
-                    type="text"
-                    value={formatCurrency(createQuoteFormData.unitPrice)}
-                    onChange={handleCreateQuoteInputChange}
-                    fullWidth
-                    size="small"
-                    required
-                    helperText="Giá cho mỗi đơn vị sản phẩm"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <LocalAtmIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="body2" color="text.secondary">₫</Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    label="Tổng giá"
-                    name="totalPrice"
-                    type="text"
-                    value={formatCurrency(createQuoteFormData.totalPrice)}
-                    fullWidth
-                    size="small"
-                    helperText="Tự động tính từ số lượng × đơn giá"
-                    InputProps={{
-                      readOnly: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <ReceiptIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>₫</Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            </SectionCard>
+            {/* Ngày hết hạn */}
+            <Grid item xs={12} md={4} sx={{width: '100%'}}>
+              <StyledTextField
+                label="Ngày hết hạn *"
+                name="expiredAt"
+                type="datetime-local"
+                value={createQuoteFormData.expiredAt}
+                onChange={handleCreateQuoteInputChange}
+                required
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                sx={bigInputSx}
+              />
+            </Grid>
 
-            {/* Section: Chi phí bổ sung */}
-            <SectionCard elevation={0}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <PercentIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  Chi phí bổ sung
-                </Typography>
-              </Box>
-              
-              <Grid container spacing={2.5}>
-                <Grid item xs={12} sm={6}>
-                  <StyledTextField
-                    label="Thuế"
-                    name="tax"
-                    type="text"
-                    value={formatCurrency(createQuoteFormData.tax)}
-                    onChange={handleCreateQuoteInputChange}
-                    fullWidth
-                    size="small"
-                    placeholder="0"
-                    helperText="Thuế VAT (nếu có)"
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="body2" color="text.secondary">₫</Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <StyledTextField
-                    label="Giảm giá"
-                    name="discount"
-                    type="text"
-                    value={formatCurrency(createQuoteFormData.discount)}
-                    onChange={handleCreateQuoteInputChange}
-                    fullWidth
-                    size="small"
-                    placeholder="0"
-                    helperText="Số tiền giảm giá (nếu có)"
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="body2" color="text.secondary">₫</Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <StyledTextField
-                    label="Phí vận chuyển"
-                    name="shippingFee"
-                    type="text"
-                    value={formatCurrency(createQuoteFormData.shippingFee)}
-                    onChange={handleCreateQuoteInputChange}
-                    fullWidth
-                    size="small"
-                    placeholder="0"
-                    helperText="Chi phí vận chuyển hàng hóa"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <LocalShippingIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="body2" color="text.secondary">₫</Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <StyledTextField
-                    label="Phí khác"
-                    name="otherFee"
-                    type="text"
-                    value={formatCurrency(createQuoteFormData.otherFee)}
-                    onChange={handleCreateQuoteInputChange}
-                    fullWidth
-                    size="small"
-                    placeholder="0"
-                    helperText="Các chi phí khác (nếu có)"
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="body2" color="text.secondary">₫</Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    label="Giá cuối cùng"
-                    name="finalPrice"
-                    type="text"
-                    value={formatCurrency(createQuoteFormData.finalPrice)}
-                    fullWidth
-                    size="small"
-                    helperText="Tổng giá sau khi cộng/trừ các chi phí"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: alpha(theme.palette.success.main, 0.1),
-                        '&.Mui-disabled': {
-                          backgroundColor: alpha(theme.palette.success.main, 0.1),
-                        },
-                      },
-                    }}
-                    InputProps={{
-                      readOnly: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <AttachMoneyIcon sx={{ fontSize: 18, color: theme.palette.success.main }} />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="body2" color="success.main" sx={{ fontWeight: 700 }}>₫</Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            </SectionCard>
+            {/* Số lượng */}
+            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+              <StyledTextField
+                label="Số lượng"
+                name="quantity"
+                type="number"
+                value={createQuoteFormData.quantity}
+                onChange={handleCreateQuoteInputChange}
+                required
+                fullWidth
+                sx={bigInputSx}
+              />
+            </Grid>
 
-            {/* Section: Điều khoản và bảo hành */}
-            <SectionCard elevation={0}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <AccountBalanceIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  Điều khoản và bảo hành
-                </Typography>
-              </Box>
+            {/* Đơn giá */}
+            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+              <StyledTextField
+                label="Đơn giá"
+                name="unitPrice"
+                value={formatCurrency(createQuoteFormData.unitPrice)}
+                onChange={handleCreateQuoteInputChange}
+                required
+                fullWidth
+                sx={{
+                  ...bigInputSx
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Typography fontWeight={600}>₫</Typography>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
 
-              <Stack spacing={2.5}>
-                <StyledFormControl fullWidth size="small">
-                  <InputLabel>Phương thức thanh toán</InputLabel>
-                  <Select
-                    name="paymentMethod"
-                    value={createQuoteFormData.paymentMethod}
-                    onChange={handleCreateQuoteInputChange}
-                    label="Phương thức thanh toán"
-                  >
-                    <MenuItem value="VNPAY">VNPAY</MenuItem>
-                    <MenuItem value="BANK_TRANSFER">Chuyển khoản</MenuItem>
-                    <MenuItem value="CASH">Tiền mặt</MenuItem>
-                    <MenuItem value="MOMO">Ví MOMO</MenuItem>
-                    <MenuItem value="CREDIT_CARD">Thẻ tín dụng</MenuItem>
-                    <MenuItem value="MOBILE_PAYMENT">Thanh toán qua điện thoại</MenuItem>
-                    <MenuItem value="CHECK">Séc</MenuItem>
-                  </Select>
-                </StyledFormControl>
-                <StyledTextField
-                  label="Điều khoản thanh toán"
-                  name="paymentTerms"
-                  value={createQuoteFormData.paymentTerms}
+            {/* Tổng giá */}
+            <Grid item xs={12} sx={{width: '100%'}}>
+              <StyledTextField
+                label="Tổng giá"
+                value={formatCurrency(createQuoteFormData.totalPrice)}
+                fullWidth
+                sx={{
+                  ...bigInputSx
+                }}
+                InputProps={{
+                  readOnly: true,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Typography fontWeight={600}>₫</Typography>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+
+            {/* Thuế */}
+            {/* <Grid item xs={12} sm={6}  sx={{width: '100%'}}>
+              <StyledTextField
+                label="Thuế"
+                name="tax"
+                value={formatCurrency(createQuoteFormData.tax)}
+                onChange={handleCreateQuoteInputChange}
+                fullWidth
+                sx={bigInputSx}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Typography>₫</Typography>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid> */}
+            {/* Phí khác */}
+            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+              <StyledTextField
+                label="Phụ phí"
+                name="otherFee"
+                value={formatCurrency(createQuoteFormData.otherFee)}
+                onChange={handleCreateQuoteInputChange}
+                fullWidth
+                sx={bigInputSx}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Typography>₫</Typography>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+
+            {/* Giảm giá */}
+            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+              <StyledTextField
+                label="Giảm giá"
+                name="discount"
+                value={formatCurrency(createQuoteFormData.discount)}
+                onChange={handleCreateQuoteInputChange}
+                fullWidth
+                sx={bigInputSx}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Typography>₫</Typography>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+
+            {/* Giá cuối cùng */}
+            <Grid item xs={12}  sx={{width: '100%'}}>
+              <StyledTextField
+                label="Giá cuối cùng"
+                value={formatCurrency(createQuoteFormData.finalPrice)}
+                fullWidth
+                sx={{
+                  ...bigInputSx
+                }}
+                InputProps={{
+                  readOnly: true,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Typography>
+                        ₫
+                      </Typography>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+
+            {/* Phương thức thanh toán */}
+            <Grid item xs={12} sm={6}  sx={{width: '100%'}}>
+              <StyledFormControl fullWidth sx={{ minHeight: 52 }}>
+                <InputLabel>Phương thức thanh toán</InputLabel>
+                <Select
+                  name="paymentMethod"
+                  value={createQuoteFormData.paymentMethod}
                   onChange={handleCreateQuoteInputChange}
-                  fullWidth
-                  size="small"
-                  multiline
-                  rows={4}
-                  placeholder="VD: Thanh toán 50% khi ký hợp đồng, 50% còn lại khi giao hàng..."
-                  helperText="Mô tả chi tiết về điều khoản thanh toán"
-                />
-                <StyledTextField
-                  label="Bảo hành"
-                  name="guarantee"
-                  value={createQuoteFormData.guarantee}
-                  onChange={handleCreateQuoteInputChange}
-                  fullWidth
-                  size="small"
-                  multiline
-                  rows={4}
-                  placeholder="VD: Bảo hành 12 tháng, đổi mới trong 30 ngày đầu..."
-                  helperText="Thông tin về chính sách bảo hành sản phẩm"
-                />
-              </Stack>
-            </SectionCard>
-          </Stack>
+                  label="Phương thức thanh toán"
+                >
+                  <MenuItem value="VNPAY">VNPAY</MenuItem>
+                  <MenuItem value="BANK_TRANSFER">Chuyển khoản</MenuItem>
+                  <MenuItem value="CASH">Tiền mặt</MenuItem>
+                  <MenuItem value="MOMO">Ví MOMO</MenuItem>
+                  <MenuItem value="CREDIT_CARD">Thẻ tín dụng</MenuItem>
+                </Select>
+              </StyledFormControl>
+            </Grid>
+
+            {/* Điều khoản */}
+            <Grid item xs={12} sx={{width: '100%'}}>
+              <StyledTextField
+                label="Điều khoản thanh toán"
+                name="paymentTerms"
+                value={createQuoteFormData.paymentTerms}
+                onChange={handleCreateQuoteInputChange}
+                multiline
+                rows={2}
+                fullWidth
+                sx={bigInputSx}
+              />
+            </Grid>
+
+            {/* Bảo hành */}
+            <Grid item xs={12}  sx={{width: '100%'}}>
+              <StyledTextField
+                label="Bảo hành"
+                name="guarantee"
+                value={createQuoteFormData.guarantee}
+                onChange={handleCreateQuoteInputChange}
+                multiline
+                rows={2}
+                fullWidth
+                sx={bigInputSx}
+              />
+            </Grid>
+
+          </Grid>
         </DialogContent>
+
 
         <DialogActions sx={{ 
           p: 3, 
@@ -1558,7 +1307,7 @@ export default function RFQ() {
             variant="contained"
             onClick={handleCreateQuoteSubmit}
             disabled={createQuoteSubmitting}
-            startIcon={createQuoteSubmitting ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
+            startIcon={createQuoteSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
             sx={{
               boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
               '&:hover': {
@@ -1566,7 +1315,7 @@ export default function RFQ() {
               },
             }}
           >
-            {createQuoteSubmitting ? "Đang tạo..." : "Tạo báo giá"}
+            {createQuoteSubmitting ? "Đang tạo..." : "Tạo"}
           </StyledButton>
         </DialogActions>
       </Dialog>
