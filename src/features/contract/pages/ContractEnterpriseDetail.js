@@ -9,13 +9,16 @@ import {
   Tooltip,
   Button,
   useMediaQuery,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {
   Description as ContractIcon,
   ZoomIn as ZoomInIcon,
   ZoomOut as ZoomOutIcon,
   PictureAsPdf as PdfIcon,
-  ArrowBack as BackIcon,
 } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import supplierApi from "../../supplier/api/supplier.api";
@@ -239,38 +242,44 @@ const ContractDetail = ({ contract, onBack, onEdit }) => {
   }
 
   return (
-    <Box sx={{ 
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: '#e0e0e0',
-    }}>
-      {/* Header */}
-      <Box sx={{ 
-        p: 2.5,
-        px: 3,
-        backgroundColor: '#ffffff',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    <Dialog 
+      open={true}
+      onClose={onBack}
+      maxWidth={false}
+      fullWidth
+      fullScreen={isMobile}
+      PaperProps={{
+        sx: {
+          borderRadius: { xs: 0, sm: 0 },
+          boxShadow: 'none',
+          maxHeight: '100vh',
+          height: { xs: '100vh', sm: '100vh' },
+          margin: 0,
+          maxWidth: '100vw',
+          width: '100vw',
+          backgroundColor: '#e0e0e0',
+          display: 'flex',
+          flexDirection: 'column',
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        fontWeight: 700,
+        fontSize: "1.25rem",
         borderBottom: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+        pb: 2,
+        pt: 2.5,
+        px: 3,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        backgroundColor: '#ffffff',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton
-            onClick={onBack}
-            sx={{
-              color: theme.palette.text.primary,
-              '&:hover': {
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-              },
-            }}
-          >
-            <BackIcon />
-          </IconButton>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <ContractIcon sx={{ color: theme.palette.primary.main }} />
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            {contract.name || `Hợp đồng #${contract.id}`}
+            {contract?.name || 'Chi tiết hợp đồng'}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -327,30 +336,16 @@ const ContractDetail = ({ contract, onBack, onEdit }) => {
             </IconButton>
           </Tooltip>
         </Box>
-      </Box>
+      </DialogTitle>
 
-      {/* Content */}
-      <Box sx={{ 
+      <DialogContent sx={{ 
+        p: 0,
+        overflow: 'hidden',
+        backgroundColor: '#e0e0e0',
+        position: 'relative',
         flex: 1,
-        overflow: 'auto',
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        p: { xs: 1, sm: 2, md: 3 },
-        '&::-webkit-scrollbar': {
-          width: '10px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: alpha(theme.palette.divider, 0.1),
-          borderRadius: '5px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: alpha(theme.palette.primary.main, 0.3),
-          borderRadius: '5px',
-          '&:hover': {
-            background: alpha(theme.palette.primary.main, 0.5),
-          },
-        },
+        flexDirection: 'column',
       }}>
         {loadingInfo ? (
           <Box sx={{ 
@@ -358,47 +353,69 @@ const ContractDetail = ({ contract, onBack, onEdit }) => {
             justifyContent: 'center', 
             alignItems: 'center', 
             minHeight: '600px',
+            backgroundColor: '#f5f5f5',
             flex: 1,
           }}>
             <CircularProgress />
           </Box>
         ) : (
-          <Box
-            id="contract-pdf-content"
-            sx={{
-              transform: `scale(${zoomLevel / 100})`,
-              transformOrigin: 'top center',
-              transition: 'transform 0.3s ease',
-              width: { xs: '100%', sm: '210mm' },
-              maxWidth: '210mm',
-              minHeight: '297mm',
-              backgroundColor: '#ffffff',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-              margin: '0 auto',
-              position: 'relative',
-              my: { xs: 1, sm: 2 },
-            }}
-          >
-            <ContractPDFView 
-              contract={contract}
-              supplier={supplierInfo}
-              enterprise={enterpriseInfo || contract.enterprise}
-              quote={quoteInfo}
-            />
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            backgroundColor: '#e0e0e0',
+            p: { xs: 1, sm: 2, md: 3 },
+            flex: 1,
+            overflow: 'auto',
+            '&::-webkit-scrollbar': {
+              width: '10px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: alpha(theme.palette.divider, 0.1),
+              borderRadius: '5px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: alpha(theme.palette.primary.main, 0.3),
+              borderRadius: '5px',
+              '&:hover': {
+                background: alpha(theme.palette.primary.main, 0.5),
+              },
+            },
+          }}>
+            <Box
+              id="contract-pdf-content"
+              sx={{
+                transform: `scale(${zoomLevel / 100})`,
+                transformOrigin: 'top center',
+                transition: 'transform 0.3s ease',
+                width: { xs: '100%', sm: '210mm' },
+                maxWidth: '210mm',
+                minHeight: '297mm',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+                margin: '0 auto',
+                position: 'relative',
+                my: { xs: 1, sm: 2 },
+              }}
+            >
+              <ContractPDFView 
+                contract={contract}
+                supplier={supplierInfo}
+                enterprise={enterpriseInfo || contract.enterprise}
+                quote={quoteInfo}
+              />
+            </Box>
           </Box>
         )}
-      </Box>
+      </DialogContent>
 
-      {/* Footer */}
-      <Box sx={{ 
-        p: 2.5,
+      <DialogActions sx={{ 
+        p: 2.5, 
         px: 3,
         borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+        gap: 2,
         backgroundColor: '#ffffff',
         boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.1)',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        gap: 2,
       }}>
         <Button 
           onClick={onBack}
@@ -436,8 +453,8 @@ const ContractDetail = ({ contract, onBack, onEdit }) => {
         >
           Tải PDF
         </Button>
-      </Box>
-    </Box>
+      </DialogActions>
+    </Dialog>
   );
 };
 
