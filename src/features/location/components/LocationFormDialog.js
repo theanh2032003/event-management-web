@@ -57,12 +57,12 @@ const LocationFormDialog = memo(({
               initialValue={formData.capacity} 
               onChange={onCapacityChange}
             />
-            <OptimizedTextField 
+            {/* <OptimizedTextField 
               label="Giá" 
               fullWidth 
               initialValue={formData.pricePerHour} 
               onChange={onPriceChange}
-            />
+            /> */}
           </Box>
           
           <ImageUpload

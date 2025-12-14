@@ -453,11 +453,11 @@ export default function GroupTaskTypeDetail() {
                         </Box>
 
                         {/* Content */}
-                        <Box sx={{ p: 2 }}>
+                        {/* <Box sx={{ p: 2 }}>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                             {taskType.description || "Không có mô tả"}
                           </Typography>
-                        </Box>
+                        </Box> */}
                       </Box>
                     </Grid>
                   ))}
