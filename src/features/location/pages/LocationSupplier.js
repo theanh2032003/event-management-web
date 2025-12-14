@@ -158,7 +158,6 @@ export default function LocationManagement() {
     address: '',
     capacity: '',
     pricePerHour: '',
-    email: '',
     imagePreview: null,
   });
 
@@ -204,7 +203,6 @@ export default function LocationManagement() {
         address: location.address || '',
         capacity: location.capacity || '',
         pricePerHour: location.pricePerHour || '',
-        email: location.email || '',
         imagePreview: location.image || null,
       });
     } else {
@@ -214,7 +212,6 @@ export default function LocationManagement() {
         address: '',
         capacity: '',
         pricePerHour: '',
-        email: '',
         imagePreview: null,
       });
     }
@@ -229,7 +226,6 @@ export default function LocationManagement() {
       address: '',
       capacity: '',
       pricePerHour: '',
-      email: '',
       imagePreview: null,
     });
   };
@@ -290,7 +286,6 @@ export default function LocationManagement() {
         address: locationForm.address,
         capacity: locationForm.capacity ? parseInt(locationForm.capacity) : null,
         pricePerHour: locationForm.pricePerHour ? parseFloat(locationForm.pricePerHour) : null,
-        email: locationForm.email,
       };
 
       if (editingLocation) {
@@ -678,14 +673,7 @@ export default function LocationManagement() {
               disabled={submitting}
             />
 
-            <TextField
-              label="Email"
-              fullWidth
-              type="email"
-              value={locationForm.email}
-              onChange={(e) => handleFormChange('email', e.target.value)}
-              disabled={submitting}
-            />
+            
 
             <TextField
               label="Sức chứa (người)"

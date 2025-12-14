@@ -121,18 +121,18 @@ export default function EnterpriseSettings() {
   
   // Determine current tab based on URL path
   const getInitialTab = () => {
-    if (pathname.includes('group-task-types')) return 1;
-    if (pathname.includes('group-task-states')) return 0;
-    if (pathname.includes('roles')) return 2;
-    if (pathname.includes('users')) return 3;
-    if (pathname.includes('locations')) return 4;
+    if (pathname.includes('group-task-types')) return 0;
+    // if (pathname.includes('group-task-states')) return 0;
+    if (pathname.includes('roles')) return 1;
+    if (pathname.includes('users')) return 2;
+    if (pathname.includes('locations')) return 3;
     return 0;
   };
 
   const [currentTab, setCurrentTab] = useState(getInitialTab());
 
   const tabConfig = useMemo(() => [
-    { path: 'group-task-states' },
+    // { path: 'group-task-states' },
     { path: 'group-task-types' },
     { path: 'roles' },
     { path: 'users' },
@@ -168,7 +168,12 @@ export default function EnterpriseSettings() {
   } = useEnterpriseUserPermissions(userId);
 
   const tabFullConfig = useMemo(() => [
- 
+    // {
+    //   label: "Nhóm trạng thái công việc",
+    //   icon: <AssignmentIcon />,
+    //   component: TaskStateManagement,
+    //   requiredPermission: PERMISSION_CODES.TASK_STATE_MANAGE,
+    // },
     {
       label: "Nhóm mảng công việc",
       icon: <CategoryIcon />,

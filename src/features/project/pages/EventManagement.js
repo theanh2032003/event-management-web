@@ -211,8 +211,8 @@ const EventManagement = ({ hasPermission = true }) => {
     handleChangePage(null, newPage);
   };
 
-  const handleTableRowsPerPageChange = (newRowsPerPage) => {
-    setRowsPerPage(newRowsPerPage);
+  const handleTableRowsPerPageChange = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 

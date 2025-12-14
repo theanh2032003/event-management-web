@@ -502,40 +502,68 @@ export default function EventUserPermission({ eventData, enterpriseId, eventId }
           {
             field: 'roles',
             headerName: 'Vai trò',
-            width: '25%',
-            render: (roles) => (
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {roles && roles.length > 0 ? (
-                  roles.map((role) => (
+            flex: 1,
+            minWidth: 200,
+            render: (value, row) => {
+              // Nếu là chủ doanh nghiệp, hiển thị "Chủ doanh nghiệp"
+              if (row.isOwner) {
+                return (
+                  <Chip
+                    label="Chủ doanh nghiệp"
+                    size="small"
+                    variant="outlined"
+                    sx={{ fontWeight: 600 }}
+                  />
+                );
+              }
+              
+              const roles = row.roles || [];
+              return roles.length > 0 ? (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {roles.map((role) => (
                     <Chip
                       key={role.id}
                       label={role.name}
                       size="small"
                       variant="outlined"
                     />
-                  ))
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    Chưa có vai trò
-                  </Typography>
-                )}
-              </Box>
-            ),
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Chưa có vai trò
+                </Typography>
+              );
+            },
           },
+        
           {
             field: 'state',
             headerName: 'Trạng thái',
             width: '15%',
             align: 'center',
-            render: (state, user) => (
-              <Switch
-                checked={user.state === 'ACTIVE' || user.state === 'active'}
-                onChange={() => handleToggleUserState(user.id, user.state)}
-                size="small"
-                title={user.state === 'ACTIVE' || user.state === 'active' ? 'Bật' : 'Tắt'}
-              />
-            ),
+            render: (state, user) => {
+              if (user.isOwner) {
+                return (
+                  <Typography variant="body2" color="text.secondary">
+                    Hoạt động
+                  </Typography>
+                );
+              }
+
+              return (
+                <Switch
+                  checked={state === 'ACTIVE' || state === 'active'}
+                  onChange={() => handleToggleUserState(user.id, state)}
+                  size="small"
+                  title={
+                    state === 'ACTIVE' || state === 'active' ? 'Bật' : 'Tắt'
+                  }
+                />
+              );
+            },
           },
+          
           {
             field: 'actions',
             headerName: 'Hành động',

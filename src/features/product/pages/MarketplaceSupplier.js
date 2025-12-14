@@ -558,7 +558,7 @@ export default function Marketplace() {
           <Box sx={{ display: "flex", gap: 2, alignItems: "center", marginBottom: 2 }}>
             {/* Keyword Search */}
             <TextField
-              placeholder="Tìm kiếm sản phẩm ..."
+              placeholder="Tìm kiếm"
               size="medium"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -709,7 +709,7 @@ export default function Marketplace() {
                 fullWidth
                 sx={{ height: 40 }}
               >
-                Tạo Sản Phẩm
+                Tạo dịch vụ
               </StyledButton>
             </Box>
           </Box>
@@ -721,7 +721,7 @@ export default function Marketplace() {
         <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", py: 8, gap: 2 }}>
           <CircularProgress size={50} thickness={4} />
           <Typography variant="body2" color="text.secondary">
-            Đang tải sản phẩm...
+            Đang tải...
           </Typography>
         </Box>
       ) : products.length === 0 ? (
@@ -760,11 +760,32 @@ export default function Marketplace() {
             },
             {
               field: 'name',
-              headerName: 'Tên sản phẩm',
+              headerName: 'Tên dịch vụ',
               flex: 1.5,
               render: (value) => (
                 <Typography variant="body2" color="text.primary">
                   {value}
+                </Typography>
+              ),
+            },
+            {
+              field: 'code',
+              headerName: 'Mã sản phẩm',
+              width: 130,
+              render: (value) => (
+                <Typography 
+                  variant="body2" 
+                  color="text.primary"
+                  sx={{ 
+                    fontFamily: 'monospace',
+                    backgroundColor: alpha(theme.palette.grey[200], 0.5),
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    display: 'inline-block',
+                  }}
+                >
+                  {value || 'N/A'}
                 </Typography>
               ),
             },
@@ -820,7 +841,7 @@ export default function Marketplace() {
                 const productId = row.id || row._id;
                 return (
                   <Box display="flex" gap={1} justifyContent="center">
-                    <Tooltip title="Xem chi tiết">
+                    {/* <Tooltip title="Xem chi tiết">
                       <ActionButton
                         size="small"
                         color="info"
@@ -829,15 +850,15 @@ export default function Marketplace() {
                       >
                         <InfoIcon fontSize="small" />
                       </ActionButton>
-                    </Tooltip>
-                    <Tooltip title="Sửa">
+                    </Tooltip> */}
+                    <Tooltip title="Chi tiết">
                       <ActionButton
                         size="small"
                         color="primary"
                         onClick={() => handleEditProduct(row)}
                         disabled={!productId || loading}
                       >
-                        <EditIcon fontSize="small" />
+                        <InfoIcon fontSize="small" />
                       </ActionButton>
                     </Tooltip>
                     <Tooltip title="Xóa">
@@ -865,7 +886,7 @@ export default function Marketplace() {
             setRowsPerPage(newPageSize);
             setPage(0);
           }}
-          emptyMessage="Không có sản phẩm nào"
+          emptyMessage="Không có dịch vụ nào"
           maxHeight={600}
           minHeight={600}
         />
@@ -891,11 +912,11 @@ export default function Marketplace() {
          aria-describedby="delete-dialog-description"
        >
          <DialogTitle id="delete-dialog-title" sx={{ fontWeight: 600 }}>
-           Xác nhận xóa sản phẩm
+           Xác nhận xóa dịch vụ
          </DialogTitle>
          <DialogContent>
            <DialogContentText id="delete-dialog-description">
-             Bạn có chắc chắn muốn xóa sản phẩm <strong>"{deleteDialog.productName}"</strong>?
+             Bạn có chắc chắn muốn xóa dịch vụ <strong>"{deleteDialog.productName}"</strong>?
              <br />
              Hành động này không thể hoàn tác.
            </DialogContentText>
@@ -999,176 +1020,7 @@ export default function Marketplace() {
                </Box>
 
                <Grid container spacing={3}>
-                 {/* Preview Section - Left Side (giống EditProduct) */}
-                 <Grid item xs={12} md={4}>
-                   <Paper
-                     sx={{
-                       borderRadius: 2.5,
-                       boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.12)}`,
-                       border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-                       background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha('#ff6b9d', 0.02)} 100%)`,
-                       p: 3,
-                       position: 'sticky',
-                       top: 24,
-                     }}
-                   >
-                     <Typography 
-                       variant="h6" 
-                       gutterBottom 
-                       fontWeight={700}
-                       sx={{
-                         mb: 2,
-                         background: `linear-gradient(135deg, ${theme.palette.primary.main}, #ff6b9d)`,
-                         backgroundClip: 'text',
-                         WebkitBackgroundClip: 'text',
-                         WebkitTextFillColor: 'transparent',
-                       }}
-                     >
-                       Xem trước 
-                     </Typography>
-                     
-                     {/* Main Image */}
-                     {detailDialog.product.images && detailDialog.product.images.length > 0 ? (
-                       <Box
-                         sx={{
-                           width: '100%',
-                           height: 320,
-                           borderRadius: 2.5,
-                           overflow: 'hidden',
-                           mb: 2.5,
-                           bgcolor: 'grey.100',
-                           boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.12)}`,
-                           border: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                         }}
-                       >
-                         <img
-                           src={detailDialog.product.images[0]}
-                           alt="Preview"
-                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                         />
-                       </Box>
-                     ) : (
-                       <Box
-                         sx={{
-                           width: '100%',
-                           height: 320,
-                           borderRadius: 2.5,
-                           mb: 2.5,
-                           bgcolor: alpha(theme.palette.grey[100], 0.5),
-                           display: 'flex',
-                           flexDirection: 'column',
-                           alignItems: 'center',
-                           justifyContent: 'center',
-                           border: `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
-                           background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha('#ff6b9d', 0.02)} 100%)`,
-                         }}
-                       >
-                         <Box
-                           sx={{
-                             width: 64,
-                             height: 64,
-                             borderRadius: '50%',
-                             bgcolor: alpha(theme.palette.primary.main, 0.1),
-                             display: 'flex',
-                             alignItems: 'center',
-                             justifyContent: 'center',
-                             mb: 2,
-                           }}
-                         >
-                           <StorefrontIcon sx={{ fontSize: 32, color: theme.palette.primary.main }} />
-                         </Box>
-                         <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                           Chưa có hình ảnh
-                         </Typography>
-                       </Box>
-                     )}
-
-                     {/* Product Name */}
-                     <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-                       {detailDialog.product.name || 'Tên sản phẩm'}
-                     </Typography>
-
-                     {/* Product Code */}
-                     {detailDialog.product.code && (
-                       <Typography 
-                         variant="caption" 
-                         color="text.secondary" 
-                         sx={{ 
-                           display: 'block', 
-                           mb: 1,
-                           fontFamily: 'monospace',
-                           backgroundColor: alpha(theme.palette.grey[200], 0.5),
-                           px: 1,
-                           py: 0.5,
-                           borderRadius: 1,
-                           width: 'fit-content',
-                         }}
-                       >
-                         Mã: {detailDialog.product.code}
-                       </Typography>
-                     )}
-
-                     {/* Category Chip */}
-                     <Chip
-                       label={detailDialog.product.category?.name || getCategoryName(detailDialog.product.categoryId)}
-                       size="small"
-                       color="primary"
-                       variant="outlined"
-                       sx={{ mb: 2, display: 'block', width: 'fit-content' }}
-                     />
-
-                     {/* Description Preview */}
-                     <Typography 
-                       variant="body2" 
-                       color="text.secondary" 
-                       sx={{ 
-                         my: 2,
-                         minHeight: 60,
-                         display: '-webkit-box',
-                         WebkitLineClamp: 3,
-                         WebkitBoxOrient: 'vertical',
-                         overflow: 'hidden',
-                       }}
-                     >
-                       {detailDialog.product.description || 'Mô tả sản phẩm...'}
-                     </Typography>
-
-                     {/* Price Box */}
-                     <Box
-                       sx={{
-                         mt: 3,
-                         p: 2.5,
-                         borderRadius: 2.5,
-                         background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha('#ff6b9d', 0.1)} 100%)`,
-                         border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                         boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.15)}`,
-                       }}
-                     >
-                       <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', fontWeight: 600 }}>
-                         Giá bán
-                       </Typography>
-                       <Typography variant="h5" fontWeight={700} sx={{
-                         background: `linear-gradient(135deg, ${theme.palette.primary.main}, #ff6b9d)`,
-                         backgroundClip: 'text',
-                         WebkitBackgroundClip: 'text',
-                         WebkitTextFillColor: 'transparent',
-                       }}>
-                         {detailDialog.product.price
-                           ? new Intl.NumberFormat('vi-VN', {
-                               style: 'currency',
-                               currency: 'VND',
-                               maximumFractionDigits: 0,
-                             }).format(parseFloat(detailDialog.product.price))
-                           : '0 VNĐ'}
-                         {detailDialog.product.unit && (
-                           <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 500 }}>
-                             / {detailDialog.product.unit}
-                           </Typography>
-                         )}
-                       </Typography>
-                     </Box>
-                   </Paper>
-                 </Grid>
+                
 
                  {/* Detail Section - Right Side (giống EditProduct nhưng chỉ hiển thị) */}
                  <Grid item xs={12} md={8}>
@@ -1202,29 +1054,7 @@ export default function Marketplace() {
                            </Box>
                          </Grid>
 
-                         {/* Mã sản phẩm */}
-                         <Grid item xs={12} sm={6}>
-                           <Box
-                             sx={{
-                               p: 2,
-                               borderRadius: 1.5,
-                               backgroundColor: alpha(theme.palette.background.default, 0.5),
-                               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                             }}
-                           >
-                             <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
-                               Mã sản phẩm
-                             </Typography>
-                             <Typography 
-                               variant="body1" 
-                               sx={{ 
-                                 fontFamily: 'monospace',
-                               }}
-                             >
-                               {detailDialog.product.code || 'N/A'}
-                             </Typography>
-                           </Box>
-                         </Grid>
+                         
 
                          {/* Mô tả */}
                          <Grid item xs={12}>
@@ -1311,27 +1141,7 @@ export default function Marketplace() {
                            </Box>
                          </Grid>
 
-                         {/* Trạng thái */}
-                         <Grid item xs={12} sm={6}>
-                           <Box
-                             sx={{
-                               p: 2,
-                               borderRadius: 1.5,
-                               backgroundColor: alpha(theme.palette.background.default, 0.5),
-                               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                             }}
-                           >
-                             <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
-                               Trạng thái
-                             </Typography>
-                             <Chip
-                               label={detailDialog.product.isActive !== false ? 'Đang bán' : 'Tạm dừng'}
-                               size="small"
-                               color={detailDialog.product.isActive !== false ? 'success' : 'default'}
-                               sx={{ fontWeight: 600 }}
-                             />
-                           </Box>
-                         </Grid>
+                         
 
                          {/* Hình ảnh */}
                          <Grid item xs={12}>
@@ -1390,45 +1200,7 @@ export default function Marketplace() {
                            </Box>
                          </Grid>
 
-                         {/* Timestamps */}
-                         <Grid item xs={12}>
-                           <Box
-                             sx={{
-                               display: 'flex',
-                               gap: 3,
-                               pt: 2,
-                               borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                               flexWrap: 'wrap',
-                             }}
-                           >
-                             {detailDialog.product.createdAt && (
-                               <Box>
-                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                                   <CalendarIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                                     Ngày tạo
-                                   </Typography>
-                                 </Box>
-                                 <Typography variant="body2">
-                                   {new Date(detailDialog.product.createdAt).toLocaleString('vi-VN')}
-                                 </Typography>
-                               </Box>
-                             )}
-                             {detailDialog.product.updatedAt && (
-                               <Box>
-                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                                   <CalendarIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                                     Cập nhật lần cuối
-                                   </Typography>
-                                 </Box>
-                                 <Typography variant="body2">
-                                   {new Date(detailDialog.product.updatedAt).toLocaleString('vi-VN')}
-                                 </Typography>
-                               </Box>
-                             )}
-                           </Box>
-                         </Grid>
+                        
                        </Grid>
                      </Box>
                    </Paper>

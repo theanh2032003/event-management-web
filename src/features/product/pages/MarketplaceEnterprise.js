@@ -329,7 +329,7 @@ const StyledProductCard = memo(({ product, onViewDetail }) => {
 
         <ProductDescription>
           {product.description ||
-            "Nhà cung cấp chưa thêm mô tả cho sản phẩm này."}
+            "Nhà cung cấp chưa thêm mô tả cho dịch vụ này."}
         </ProductDescription>
 
         <ProductFooter>
@@ -525,7 +525,7 @@ export default function EnterpriseMarketplace() {
             <Grid item xs={12} md={6} sx={{width: '50%'}}>
               <TextField
                 fullWidth
-                placeholder="Tìm kiếm sản phẩm..."
+                placeholder="Tìm kiếm"
                 variant="outlined"
                 size="medium"
                 onChange={handleSearchChange}
@@ -644,17 +644,17 @@ export default function EnterpriseMarketplace() {
         <LoadingBox>
           <CircularProgress size={50} thickness={4} />
           <Typography variant="body2" color="text.secondary">
-            Đang tải sản phẩm...
+            Đang tải...
           </Typography>
         </LoadingBox>
       ) : products.length === 0 ? (
         <EmptyStateBox>
           <ShoppingCartIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
           <Typography variant="h6" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
-            Không tìm thấy sản phẩm
+            Không tìm thấy 
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Không có sản phẩm nào phù hợp với bộ lọc bạn đã chọn.
+            Không có dịch vụ nào phù hợp với bộ lọc bạn đã chọn.
           </Typography>
         </EmptyStateBox>
       ) : (
@@ -726,7 +726,7 @@ export default function EnterpriseMarketplace() {
           {!hasMore && products.length > 0 && (
             <Box sx={{ textAlign: "center", p: 3 }}>
               <Typography variant="body2" color="text.secondary">
-                Không còn sản phẩm nào
+                Không còn dịch vụ nào
               </Typography>
             </Box>
           )}

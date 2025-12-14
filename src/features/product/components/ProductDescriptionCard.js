@@ -109,12 +109,7 @@ export default function ProductDescriptionCard({ description }) {
           </HeaderIcon>
           <Box>
             <SectionTitle>Mô tả sản phẩm</SectionTitle>
-            <SectionSubtitle>Những điểm nổi bật</SectionSubtitle>
-            <HighlightChip
-              label="Tóm tắt dành cho khách hàng"
-              variant="outlined"
-              sx={{ mt: 1 }}
-            />
+            
           </Box>
         </SectionHeader>
 
