@@ -36,7 +36,7 @@ const parseDate = (dateString) => {
 /**
  * Format date time for display in table/list
  * Format: dd/MM/yyyy HH:mm (24-hour format)
- * Displays the exact time from server without timezone conversion
+ * Preserves the exact time values the API returns (no timezone conversion)
  * @param {string|Date} dateString - Date string or Date object
  * @returns {string} Formatted date string or "N/A" if invalid
  */
@@ -44,14 +44,28 @@ export const formatDateTime = (dateString) => {
   if (!dateString) return "N/A";
   
   try {
-    // Parse the date string as-is and extract the date/time components
-    // This preserves the exact time values from the server
-    const date = dayjs(dateString);
-    if (!date.isValid()) return "N/A";
+    let date;
+
+    if (typeof dateString === 'string' && dateString.includes('T')) {
+      // Extract raw date + time parts and drop timezone/offset to keep API time intact
+      const [datePart, timePartWithZone] = dateString.split('T');
+      // Remove timezone info (e.g., Z or +07:00) and milliseconds
+      const timePart = timePartWithZone
+        ?.split(/[Z+-]/)[0]
+        ?.split('.')[0] || "";
+
+      // Build a naive datetime string and parse strictly to avoid auto conversions
+      const candidate = `${datePart}T${timePart}`;
+      date = dayjs(candidate, ['YYYY-MM-DDTHH:mm:ss', 'YYYY-MM-DDTHH:mm'], true);
+    } else {
+      date = dayjs(dateString);
+    }
+
+    if (!date?.isValid()) return "N/A";
     
     return date.format('DD/MM/YYYY HH:mm');
   } catch (e) {
-    console.error('Error formatting date:', e);
+    console.error('Error formatting date:', e, 'Input:', dateString);
     return "N/A";
   }
 };
@@ -107,13 +121,23 @@ export const formatDateTimeLocal = (dateString) => {
   if (!dateString) return "";
   
   try {
-    // Parse the date and convert to Asia/Ho_Chi_Minh timezone
-    const localDate = dayjs(dateString).tz('Asia/Ho_Chi_Minh');
+    // Parse the datetime string without any timezone conversion
+    // Extract the date/time components directly from the string
+    let date;
+    if (typeof dateString === 'string' && dateString.includes('T')) {
+      // If it's an ISO string, parse it directly without timezone conversion
+      const parts = dateString.split('T');
+      const datePart = parts[0];
+      const timePart = parts[1]?.split('.')[0]?.substring(0, 5); // Get HH:mm only
+      date = dayjs(`${datePart}T${timePart}`, 'YYYY-MM-DDTHH:mm', true);
+    } else {
+      date = dayjs(dateString);
+    }
     
-    if (!localDate.isValid()) return "";
+    if (!date.isValid()) return "";
     
     // Format for datetime-local input
-    return localDate.format('YYYY-MM-DDTHH:mm');
+    return date.format('YYYY-MM-DDTHH:mm');
   } catch (e) {
     console.error('Error formatting datetime-local:', e);
     return "";
@@ -248,17 +272,17 @@ export const parseDateTimeLocal = (dateTimeLocalValue) => {
   if (!dateTimeLocalValue) return "";
   
   try {
-    // Parse the datetime-local value as local time in Asia/Ho_Chi_Minh timezone
+    // Parse the datetime-local value directly without timezone conversion
     // This preserves the exact time the user entered
-    const localDate = dayjs.tz(dateTimeLocalValue, 'Asia/Ho_Chi_Minh');
+    const date = dayjs(dateTimeLocalValue, 'YYYY-MM-DDTHH:mm', true);
     
-    if (!localDate.isValid()) {
+    if (!date.isValid()) {
       console.error('Invalid datetime-local value:', dateTimeLocalValue);
       return "";
     }
     
     // Format as ISO string without timezone and milliseconds: YYYY-MM-DDTHH:mm:ss
-    return localDate.format('YYYY-MM-DDTHH:mm:ss');
+    return date.format('YYYY-MM-DDTHH:mm:ss');
   } catch (e) {
     console.error('Error parsing datetime-local:', e);
     return "";
