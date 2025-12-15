@@ -210,7 +210,7 @@ export default function SupplierDashboard() {
           <KpiCard
             sx={{ height: '100%' }}
             title="Tổng yêu cầu báo giá"
-            value={parseFloat((overviewData?.totalQuotes || 0).toFixed(2))}
+            value={parseFloat((overviewData?.totalRFQ || 0).toFixed(2))}
             icon={QuoteIcon}
             color="primary"
             format="number"
@@ -219,8 +219,8 @@ export default function SupplierDashboard() {
         <Grid item sx={{ height: '100%' }}>
           <KpiCard
             sx={{ height: '100%' }}
-            title="Báo giá chuyển đổi"
-            value={parseFloat((overviewData?.convertedToContract || 0).toFixed(2))}
+            title="Tổng báo giá"
+            value={parseFloat((overviewData?.totalQuote || 0).toFixed(2))}
             icon={ContractIcon}
             color="success"
             format="number"
@@ -254,16 +254,6 @@ export default function SupplierDashboard() {
             icon={MoneyIcon}
             color="success"
             format="currency"
-          />
-        </Grid>
-        <Grid item sx={{ height: '100%' }}>
-          <KpiCard
-            sx={{ height: '100%' }}
-            title="Yêu cầu chờ xử lý"
-            value={parseFloat((overviewData?.totalRFQ || 0).toFixed(2))}
-            icon={QuoteIcon}
-            color="error"
-            format="number"
           />
         </Grid>
       </Grid>
@@ -355,7 +345,7 @@ export default function SupplierDashboard() {
           gap: 3,
         }}
       >
-        {/* Recent Quotes Table */}
+        {/* Recent Quotes Table
         <Grid item>
           <Card sx={{ bgcolor: 'white', borderRadius: '12px' }}>
             <CardContent>
@@ -414,7 +404,7 @@ export default function SupplierDashboard() {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
+        </Grid> */}
 
       </Grid>
     </Box>
