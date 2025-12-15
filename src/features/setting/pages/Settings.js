@@ -150,8 +150,6 @@ export default function EnterpriseSettings() {
     const raw = localStorage.getItem('user');
     const user = raw ? JSON.parse(raw) : {};
     const extractedId = user?.id || user?._id || user?.userId || localStorage.getItem('userId');
-    console.log('[SETTINGS] 👤 Extracted userId:', extractedId);
-    console.log('[SETTINGS] 📦 User object:', user);
     return extractedId;
   };
 

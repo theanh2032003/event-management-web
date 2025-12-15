@@ -36,8 +36,8 @@ import {
   Edit as EditIcon,
   People as PeopleIcon,
 } from "@mui/icons-material";
-import { toast } from "react-toastify";
 import PermissionGate from "../../../shared/components/PermissionGate";
+import { useToast } from "../../../app/providers/ToastContext";
 import { CommonTable } from "../../../shared/components/CommonTable";
 import { PERMISSION_CODES } from "../../../shared/constants/permissions";
 import {
@@ -72,6 +72,7 @@ export default function UserPermissionManagement({
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { showToast } = useToast();
   
   // Kiểm tra quyền của user
   const hasAccessPermission = hasPermission(requiredPermission);
@@ -214,13 +215,13 @@ export default function UserPermissionManagement({
         { token: emailInput.trim() }
       );
       
-      toast.success("Đã thêm người dùng vào doanh nghiệp.");
+      showToast('Đã thêm người dùng vào doanh nghiệp.', 'success', 3000);
       handleCloseAddUserDialog();
       await fetchUsers();
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Không thể thêm người dùng";
       setEmailError(errorMessage);
-      toast.error(errorMessage);
+      showToast(errorMessage, 'error', 3000);
     } finally {
       setSubmittingAddUser(false);
     }
@@ -247,16 +248,10 @@ export default function UserPermissionManagement({
     try {
       // Determine new state (toggle between ACTIVE and BLOCKED)
       const newState = currentState === "ACTIVE" ? "BLOCK" : "ACTIVE";
-      // Verify token exists
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Token không tồn tại. Vui lòng đăng nhập lại.');
-        return;
-      }
       
-      await userApi.blockUser(userId);
+      await userApi.blockUser(userId, newState);
       
-      toast.success(`Đã ${newState === "ACTIVE" ? "kích hoạt" : "khóa"} người dùng`);
+      showToast(`Đã ${newState === "ACTIVE" ? "kích hoạt" : "khóa"} người dùng`, 'success', 3000);
       
       // Update user state in the list
       setUsers(prevUsers => 
@@ -267,11 +262,11 @@ export default function UserPermissionManagement({
     } catch (err) {
       // Check if it's a network error
       if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
-        toast.error("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng!");
+        showToast('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng!', 'error', 3000);
         return;
       }
       const errorMessage = err.response?.data?.message || err.message || "Không thể thay đổi trạng thái người dùng";
-      toast.error(errorMessage);
+      showToast('Máy chủ không phản hồi. Vui lòng thử lại sau.', 'error', 3000);
     }
   };
 
@@ -299,8 +294,7 @@ export default function UserPermissionManagement({
         roleIds: currentRoleIds
       });
     } catch (err) {
-      console.error("❌ Error loading dialog data:", err);
-      toast.error("Không thể tải dữ liệu");
+      showToast('Không thể tải dữ liệu', 'error', 3000);
     } finally {
       setLoadingRoles(false);
     }
@@ -327,7 +321,7 @@ export default function UserPermissionManagement({
   const handleAssignPermission = async () => {
     // Validate
     if (!assignForm.userId) {
-      toast.error("Vui lòng chọn người dùng");
+      showToast('Vui lòng chọn người dùng', 'error', 3000);
       return;
     }
 
@@ -343,13 +337,13 @@ export default function UserPermissionManagement({
         requestBody
       );
       
-      toast.success("Cập nhật vai trò thành công!");
+      showToast('Cập nhật vai trò thành công!', 'success', 3000);
       handleCloseAssignDialog();
       // Refresh users list to update roles
       await fetchUsers();
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Không thể cập nhật vai trò";
-      toast.error(errorMessage);
+      showToast(errorMessage, 'error', 3000);
     } finally {
       setSubmittingAssign(false);
     }

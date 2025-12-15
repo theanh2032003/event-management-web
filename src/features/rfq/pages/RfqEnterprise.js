@@ -302,7 +302,7 @@ export default function QuoteRequests() {
       
       setQuoteRequests(Array.isArray(data) ? data : []);
       setTotalCount(total);
-      showToast("✅ Đã cập nhật và tải lại danh sách", 'success');
+      showToast("Đã cập nhật và tải lại danh sách", 'success');
     } catch (error) {
       // Fallback to old way if reload fails
       setQuoteRequests(prev =>

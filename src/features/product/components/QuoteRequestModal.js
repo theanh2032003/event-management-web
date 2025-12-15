@@ -32,7 +32,7 @@ import {
   EventNote as EventNoteIcon,
   Send as SendIcon,
 } from "@mui/icons-material";
-import { useSnackbar } from "notistack";
+import { useToast } from '../../../app/providers/ToastContext';
 import rfqApi from "../../rfq/api/rfq.api";
 import projectApi from "../../project/api/project.api";
 
@@ -122,7 +122,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
  * Modal để tạo RFQ (Request for Quotation) hoặc sửa RFQ hiện có
  */
 export default function QuoteRequestModal({ open, onClose, product, rfq, enterpriseId, onSave }) {
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [loading, setLoading] = useState(false);
@@ -167,7 +167,7 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
       // Load projects
       loadProjects();
     }
-  }, [open, product, rfq, isEditMode]);
+  }, [open, product, rfq, isEditMode, showToast]);
 
   const loadProjects = async () => {
     try {
@@ -228,7 +228,7 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
     const maxSize = 5 * 1024 * 1024; // 5MB
     const validFiles = selectedFiles.filter((file) => {
       if (file.size > maxSize) {
-        enqueueSnackbar(`File ${file.name} vượt quá 5MB`, { variant: "warning" });
+        showToast(`⚠️ File ${file.name} vượt quá 5MB`, 'error', 3000);
         return false;
       }
       return true;
@@ -253,26 +253,20 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
 
   const handleSubmit = async () => {
     try {
-      console.log("[RFQ SUBMIT] ===== START SUBMIT =====");
-      console.log("[RFQ SUBMIT] Edit mode:", isEditMode);
-
       // Validate form first
       if (!validateForm()) {
-        console.warn("[RFQ SUBMIT] ⚠️ Form validation failed");
-        enqueueSnackbar("Vui lòng điền đầy đủ thông tin bắt buộc", { variant: "warning" });
+        showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'error', 3000);
         return;
       }
 
       if (isEditMode) {
         // Edit mode
         if (!rfq || !rfq.id) {
-          console.error("[RFQ SUBMIT] ❌ RFQ or rfq.id is missing!");
-          enqueueSnackbar("Dữ liệu RFQ không hợp lệ", { variant: "error" });
+          showToast('Dữ liệu RFQ không hợp lệ', 'error', 3000);
           return;
         }
 
         setLoading(true);
-        console.log("[RFQ SUBMIT] ✅ Starting edit process...");
 
         const updateData = {
           name: formData.name.trim(),
@@ -285,37 +279,30 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
         };
 
         await rfqApi.updateRfq(rfq.id, updateData);
-        enqueueSnackbar("✅ Cập nhật yêu cầu báo giá thành công!", { variant: "success" });
+        showToast('Cập nhật yêu cầu báo giá thành công!', 'success', 3000);
         
         // Call onSave callback if provided
         if (onSave) {
           onSave(updateData);
         }
-
-        console.log("[RFQ SUBMIT] ===== EDIT COMPLETED =====");
       } else {
         // Create mode
         if (!product || !product.id) {
-          console.error("[RFQ SUBMIT] ❌ Product or product.id is missing!");
-          enqueueSnackbar("Sản phẩm không hợp lệ", { variant: "error" });
+          showToast('Sản phẩm không hợp lệ', 'error', 3000);
           return;
         }
 
         setLoading(true);
-        console.log("[RFQ SUBMIT] ✅ All validations passed, starting upload process...");
 
         // Prepare files
         let uploadedFileUrls = [];
         if (formData.files && formData.files.length > 0) {
           try {
-            console.log(`[RFQ SUBMIT] Processing ${formData.files.length} files...`);
             uploadedFileUrls = formData.files.map((file) => {
               const url = URL.createObjectURL(file);
-              console.log(`[RFQ SUBMIT] File: ${file.name}, URL: ${url}`);
               return url;
             });
           } catch (fileError) {
-            console.error("[RFQ SUBMIT] ❌ Error processing files:", fileError);
             // Continue - files are optional
           }
         }
@@ -334,9 +321,7 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
         // Call API with projectId
         const response = await rfqApi.createRfq(rfqData);
         
-        enqueueSnackbar("✅ Yêu cầu báo giá được tạo thành công!", { variant: "success" });
-
-        console.log("[RFQ SUBMIT] ===== SUBMIT COMPLETED =====");
+        showToast('Yêu cầu báo giá được tạo thành công!', 'success', 3000);
       }
 
       // Reset form
@@ -353,19 +338,12 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
       // Close modal
       onClose();
     } catch (error) {
-      console.error("[RFQ SUBMIT] ❌ ===== ERROR =====");
-      console.error("[RFQ SUBMIT] Error object:", error);
-      console.error("[RFQ SUBMIT] Error status:", error?.response?.status);
-      console.error("[RFQ SUBMIT] Error data:", error?.response?.data);
-      console.error("[RFQ SUBMIT] Error message:", error?.message);
-
       const errorMsg = isEditMode 
         ? error?.response?.data?.message || error?.message || "Lỗi khi cập nhật yêu cầu báo giá"
         : error?.response?.data?.message || error?.message || "Lỗi khi tạo yêu cầu báo giá";
-      enqueueSnackbar(`❌ ${errorMsg}`, { variant: "error" });
+      showToast(`❌ ${errorMsg}`, 'error', 3000);
     } finally {
       setLoading(false);
-      console.log("[RFQ SUBMIT] Loading finished");
     }
   };
 

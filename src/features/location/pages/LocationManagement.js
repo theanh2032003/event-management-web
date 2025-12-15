@@ -31,7 +31,7 @@ import {
 } from "@mui/icons-material";
 import locationApi from "../api/location.api";
 import { uploadToCloudinary } from "../../../shared/utils/uploadToCloudinary";
-import { useSnackbar } from 'notistack';
+import { useToast } from '../../../app/providers/ToastContext';
 import LocationFormDialog from '../components/LocationFormDialog';
 import SubLocationDetailDialog from '../components/SubLocationDetailDialog';
 import PermissionGate from "../../../shared/components/PermissionGate";
@@ -179,7 +179,7 @@ export default function LocationManagement({
   const [locationToDelete, setLocationToDelete] = useState(null);
   const [isDeletingLocation, setIsDeletingLocation] = useState(false);
 
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
 
   // Fetch locations on component mount
   useEffect(() => {
@@ -197,7 +197,6 @@ export default function LocationManagement({
       setLocations(response?.data || response || []);
       setTotalElements(response?.metadata?.total || 0);
     } catch (err) {
-      console.error('Error fetching locations:', err);
       setError('Không thể tải danh sách địa điểm. Vui lòng thử lại.');
     } finally {
       setLoading(false);
@@ -261,16 +260,16 @@ export default function LocationManagement({
 
       if (editingLocation) {
         await locationApi.updateLocation(editingLocation.id, locationData);
-        enqueueSnackbar('Cập nhật địa điểm thành công!', { variant: 'success' });
+        showToast('Cập nhật địa điểm thành công!', 'success', 3000);
       } else {
         await locationApi.createLocation(locationData);
-        enqueueSnackbar('Tạo địa điểm thành công!', { variant: 'success' });
+        showToast('Tạo địa điểm thành công!', 'success', 3000);
       }
       
       await fetchLocations();
       handleCloseDialog();
     } catch (err) {
-      enqueueSnackbar('Có lỗi xảy ra khi lưu địa điểm!', { variant: 'error' });
+      showToast('Có lỗi xảy ra khi lưu địa điểm!', 'error', 3000);
     }
   };
 
@@ -288,10 +287,10 @@ export default function LocationManagement({
       await locationApi.deleteLocation(locationToDelete.id);
       setDeleteLocationDialogOpen(false);
       setLocationToDelete(null);
-      enqueueSnackbar('Xóa địa điểm thành công!', { variant: 'success' });
+      showToast('Xóa địa điểm thành công!', 'success', 3000);
       await fetchLocations();
     } catch (err) {
-      enqueueSnackbar('Lỗi khi xóa địa điểm. Vui lòng thử lại.', { variant: 'error' });
+      showToast('Lỗi khi xóa địa điểm. Vui lòng thử lại.', 'error', 3000);
     } finally {
       setIsDeletingLocation(false);
     }
@@ -306,11 +305,10 @@ export default function LocationManagement({
   const handleToggleAvailable = async (locationId, currentAvailable) => {
     try {
       await locationApi.changeAvailableEnterprise(locationId, !currentAvailable);
-      await fetchLocations(); // Reload list
-      console.log(`🔄 Toggled available for location ${locationId}:`, !currentAvailable);
+      showToast('Cập nhật trạng thái địa điểm thành công!', 'success', 3000);
+      await fetchLocations();
     } catch (err) {
-      console.error('Error toggling available:', err);
-      alert('Lỗi khi cập nhật trạng thái. Vui lòng thử lại.');
+      showToast('Lỗi khi cập nhật trạng thái. Vui lòng thử lại.', 'error', 3000);
     }
   };
 
@@ -332,12 +330,12 @@ export default function LocationManagement({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      enqueueSnackbar('Vui lòng chọn file ảnh!', { variant: 'warning' });
+      showToast('Vui lòng chọn file ảnh!', 'error', 3000);
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      enqueueSnackbar('Kích thước ảnh không được vượt quá 5MB!', { variant: 'warning' });
+      showToast('Kích thước ảnh không được vượt quá 5MB!', 'error', 3000);
       return;
     }
 
@@ -346,16 +344,16 @@ export default function LocationManagement({
       const uploadedUrl = await uploadToCloudinary(file);
       if (uploadedUrl) {
         setImagePreview(uploadedUrl);
-        enqueueSnackbar('Tải ảnh lên thành công!', { variant: 'success' });
+        showToast('Tải ảnh lên thành công!', 'success', 3000);
       } else {
-        enqueueSnackbar('Không thể tải ảnh lên. Vui lòng thử lại!', { variant: 'error' });
+        showToast('Không thể tải ảnh lên. Vui lòng thử lại!', 'error', 3000);
       }
     } catch (error) {
-      enqueueSnackbar('Có lỗi xảy ra khi tải ảnh!', { variant: 'error' });
+      showToast('Có lỗi xảy ra khi tải ảnh!', 'error', 3000);
     } finally {
       setUploadingImages(false);
     }
-  }, [enqueueSnackbar]);
+  }, [showToast]);
 
   // Sub-location handlers
   const handleViewDetail = (location) => {
@@ -425,12 +423,12 @@ export default function LocationManagement({
           ...prev,
           images: [...prev.images, ...successfulUrls],
         }));
-        enqueueSnackbar('Tải ảnh lên thành công!', { variant: 'success' });
+        showToast('Tải ảnh lên thành công!', 'success', 3000);
       } else {
-        enqueueSnackbar('Không thể tải ảnh lên. Vui lòng thử lại!', { variant: 'error' });
+        showToast('Không thể tải ảnh lên. Vui lòng thử lại!', 'error', 3000);
       }
     } catch (error) {
-      enqueueSnackbar('Có lỗi xảy ra khi tải ảnh!', { variant: 'error' });
+      showToast('Có lỗi xảy ra khi tải ảnh!', 'error', 3000);
     } finally {
       setUploadingImages(false);
     }
@@ -445,7 +443,7 @@ export default function LocationManagement({
 
   const handleSaveSubLocation = async () => {
     if (!subLocationForm.name.trim()) {
-      enqueueSnackbar('Vui lòng nhập tên địa điểm con!', { variant: 'warning' });
+      showToast('Vui lòng nhập tên địa điểm con!', 'error', 3000);
       return;
     }
 
@@ -460,10 +458,10 @@ export default function LocationManagement({
 
       if (editingSubLocation) {
         await locationApi.updateSubLocation(editingSubLocation.id, payload);
-        enqueueSnackbar('Cập nhật địa điểm con thành công!', { variant: 'success' });
+        showToast('Cập nhật địa điểm con thành công!', 'success', 3000);
       } else {
         await locationApi.createSubLocation(viewingLocation.id, payload);
-        enqueueSnackbar('Tạo địa điểm con thành công!', { variant: 'success' });
+        showToast('Tạo địa điểm con thành công!', 'success', 3000);
       }
 
       // Refresh sub-location list
@@ -472,7 +470,7 @@ export default function LocationManagement({
 
       handleCloseSubLocationDialog();
     } catch (error) {
-      enqueueSnackbar('Có lỗi xảy ra khi lưu địa điểm con!', { variant: 'error' });
+      showToast('Có lỗi xảy ra khi lưu địa điểm con!', 'error', 3000);
     }
   };
 
@@ -480,9 +478,9 @@ export default function LocationManagement({
     try {
       await locationApi.deleteSubLocation(subLocationId);
       setSubLocations((prev) => prev.filter((sl) => sl.id !== subLocationId));
-      enqueueSnackbar('Xóa địa điểm con thành công!', { variant: 'success' });
-    } catch (error) {
-      enqueueSnackbar('Có lỗi xảy ra khi xóa địa điểm con!', { variant: 'error' });
+      showToast('Xóa địa điểm con thành công!', 'success', 3000);
+    } catch (error){
+      showToast('Có lỗi xảy ra khi xóa địa điểm con!', 'error', 3000);
     }
   };
 

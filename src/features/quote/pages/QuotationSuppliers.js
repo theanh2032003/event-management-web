@@ -28,7 +28,7 @@ import {
   styled,
   alpha,
 } from "@mui/material";
-import { useSnackbar } from "notistack";
+import { useToast } from '../../../app/providers/ToastContext';
 import {
   Receipt as QuoteReceiptIcon,
   Inbox as InboxIcon,
@@ -250,7 +250,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 export default function Quotations() {
   const { id: supplierId } = useParams();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -331,9 +331,10 @@ export default function Quotations() {
           setTotalCount(0);
         }
       } catch (error) {
-        enqueueSnackbar(
+        showToast(
           error?.response?.data?.message || "Lỗi khi tải danh sách báo giá. Vui lòng thử lại.",
-          { variant: "error" }
+          'error',
+          3000
         );
         setQuotes([]);
         setTotalCount(0);
@@ -343,7 +344,7 @@ export default function Quotations() {
     };
 
     fetchQuotes();
-  }, [page, rowsPerPage, filterStates, filterKeyword, enqueueSnackbar]);
+  }, [page, rowsPerPage, filterStates, filterKeyword, showToast]);
 
   const handleOpenDetail = (quote) => {
     setSelectedQuote(quote);
@@ -438,24 +439,24 @@ export default function Quotations() {
     try {
       // Validation
       if (!editFormData.name.trim()) {
-        enqueueSnackbar("Vui lòng nhập tên báo giá", { variant: "error" });
+        showToast('Vui lòng nhập tên báo giá', 'error', 3000);
         return;
       }
 
       if (!editFormData.expiredAt) {
-        enqueueSnackbar("Vui lòng chọn ngày hết hạn", { variant: "error" });
+        showToast("Vui lòng chọn ngày hết hạn", "error", 3000);
         return;
       }
 
       const quantity = parseFloat(editFormData.quantity) || 0;
       if (!quantity || quantity <= 0) {
-        enqueueSnackbar("Vui lòng nhập số lượng hợp lệ", { variant: "error" });
+        showToast("Vui lòng nhập số lượng hợp lệ", "error", 3000);
         return;
       }
 
       const unitPriceNum = getCurrencyNumber(editFormData.unitPrice) || parseFloat(editFormData.unitPrice) || 0;
       if (!unitPriceNum || unitPriceNum <= 0) {
-        enqueueSnackbar("Vui lòng nhập đơn giá hợp lệ", { variant: "error" });
+        showToast("Vui lòng nhập đơn giá hợp lệ", "error", 3000);
         return;
       }
 
@@ -492,7 +493,7 @@ export default function Quotations() {
 
       const response = await quoteApi.updateQuote(editingQuote.id, quoteData);
 
-      enqueueSnackbar("✅ Cập nhật báo giá thành công!", { variant: "success" });
+      showToast("Cập nhật báo giá thành công!", "success", 3000);
       
       // Refresh list
       const filters = {};
@@ -513,9 +514,10 @@ export default function Quotations() {
 
       handleCloseEdit();
     } catch (error) {
-      enqueueSnackbar(
+      showToast(
         error?.response?.data?.message || "❌ Lỗi khi cập nhật báo giá. Vui lòng thử lại.",
-        { variant: "error" }
+        "error",
+        3000
       );
     } finally {
       setEditSubmitting(false);
@@ -535,7 +537,7 @@ export default function Quotations() {
       
       await quoteApi.deleteQuote(quoteToDelete.id);
       
-      enqueueSnackbar("Đã xóa báo giá thành công", { variant: "success" });
+      showToast("Đã xóa báo giá thành công", "success", 3000);
       
       // Refresh list
       const filters = {};
@@ -554,9 +556,10 @@ export default function Quotations() {
         setTotalCount(response.length);
       }
     } catch (error) {
-      enqueueSnackbar(
-        error?.response?.data?.message || "Lỗi khi xóa báo giá. Vui lòng thử lại.",
-        { variant: "error" }
+      showToast(
+        error?.response?.data?.message || "❌ Lỗi khi xóa báo giá. Vui lòng thử lại.",
+        "error",
+        3000
       );
     } finally {
       setDeletingQuoteId(null);
@@ -576,7 +579,7 @@ export default function Quotations() {
       
       await quoteApi.supplierChangeState(quoteId, { state: newState });
       
-      enqueueSnackbar("Đã cập nhật trạng thái báo giá", { variant: "success" });
+      showToast("Đã cập nhật trạng thái báo giá", "success", 3000);
       
       // Refresh list
       const filters = {};
@@ -595,9 +598,10 @@ export default function Quotations() {
         setTotalCount(response.length);
       }
     } catch (error) {
-      enqueueSnackbar(
-        error?.response?.data?.message || "Lỗi khi thay đổi trạng thái. Vui lòng thử lại.",
-        { variant: "error" }
+      showToast(
+        error?.response?.data?.message || "❌ Lỗi khi thay đổi trạng thái. Vui lòng thử lại.",
+        "error",
+        3000
       );
     } finally {
       setStateChanging(null);

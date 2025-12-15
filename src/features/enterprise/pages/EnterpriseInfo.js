@@ -20,8 +20,6 @@ import {
   TextField,
   Button,
   Avatar,
-  Snackbar,
-  Alert,
   CircularProgress,
   useTheme,
   styled,
@@ -37,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import enterpriseApi from '../api/enterprise.api';
 import { uploadToCloudinary } from '../../../shared/utils/uploadToCloudinary';
+import { useToast } from '../../../app/providers/ToastContext';
 import useEnterpriseUserPermissions from '../../permission/hooks/useEnterpriseUserPermissions';
 // Styled Components
 const PageContainer = styled(Container)(({ theme }) => ({
@@ -176,17 +175,13 @@ const LockedOverlay = styled(Box)(({ theme }) => ({
 export default function EnterpriseInfo() {
   const theme = useTheme();
   const { id: enterpriseId } = useParams();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
   const [errors, setErrors] = useState({});
 
   const [enterpriseData, setEnterpriseData] = useState({
@@ -245,11 +240,7 @@ export default function EnterpriseInfo() {
 
       setLogoPreview(data.avatar || null);
     } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || 'Không thể tải thông tin doanh nghiệp',
-        severity: 'error',
-      });
+      showToast(err.response?.data?.message || 'Không thể tải thông tin doanh nghiệp', 'error', 3000);
     } finally {
       setLoading(false);
     }
@@ -270,21 +261,13 @@ export default function EnterpriseInfo() {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      setSnackbar({
-        open: true,
-        message: 'Vui lòng chọn file ảnh',
-        severity: 'warning',
-      });
+      showToast('Vui lòng chọn file ảnh', 'error', 3000);
       return;
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setSnackbar({
-        open: true,
-        message: 'Kích thước ảnh không được vượt quá 5MB',
-        severity: 'warning',
-      });
+      showToast('Kích thước ảnh không được vượt quá 5MB', 'error', 3000);
       return;
     }
 
@@ -303,21 +286,13 @@ export default function EnterpriseInfo() {
       if (uploadedUrl) {
         setFormData(prev => ({ ...prev, logo: uploadedUrl }));
       } else {
-        setSnackbar({
-          open: true,
-          message: 'Không thể tải logo lên. Vui lòng thử lại.',
-          severity: 'error',
-        });
+        showToast('Không thể tải logo lên. Vui lòng thử lại.', 'error', 3000);
         setLogoFile(null);
         setLogoPreview(null);
       }
     } catch (error) {
       console.error('Error uploading logo:', error);
-      setSnackbar({
-        open: true,
-        message: 'Lỗi khi tải logo lên. Vui lòng thử lại.',
-        severity: 'error',
-      });
+      showToast('Lỗi khi tải logo lên. Vui lòng thử lại.', 'error', 3000);
       setLogoFile(null);
       setLogoPreview(null);
     } finally {
@@ -351,10 +326,6 @@ export default function EnterpriseInfo() {
     setLogoPreview(enterpriseData.logo || null);
     setLogoFile(null);
     setErrors({});
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const handleSave = async () => {
@@ -408,20 +379,12 @@ export default function EnterpriseInfo() {
       setEnterpriseData({ ...formData });
       setLogoPreview(formData.logo || null);
       setIsEditing(false);
-      setSnackbar({
-        open: true,
-        message: 'Cập nhật thông tin doanh nghiệp thành công!',
-        severity: 'success',
-      });
+      showToast('Cập nhật thông tin doanh nghiệp thành công!', 'success', 3000);
 
       // Refresh data
       await fetchEnterpriseInfo();
     } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || 'Không thể cập nhật thông tin doanh nghiệp',
-        severity: 'error',
-      });
+      showToast(err.response?.data?.message || 'Không thể cập nhật thông tin doanh nghiệp', 'error', 3000);
     } finally {
       setSaving(false);
     }
@@ -465,33 +428,6 @@ export default function EnterpriseInfo() {
 
   return (
     <PageContainer maxWidth="sm">
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-        TransitionProps={{
-          timeout: {
-            enter: 300,
-            exit: 300,
-          },
-        }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{
-            width: '100%',
-            minWidth: 320,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          }}
-          variant="filled"
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
 
       {/* Enterprise Form Card */}
       <FormCard>

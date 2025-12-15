@@ -33,7 +33,7 @@ import {
   AddPhotoAlternate as AddPhotoAlternateIcon,
 } from "@mui/icons-material";
 import { uploadToCloudinary } from "../../../shared/utils/uploadToCloudinary";
-import { useSnackbar } from 'notistack';
+import { useToast } from '../../../app/providers/ToastContext';
 
 // Styled Components
 const StyledDialog = styled(Dialog)(({ theme }) => ({
@@ -160,7 +160,7 @@ const EventDialog = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
 
   const [eventForm, setEventForm] = useState({
     name: "",
@@ -260,12 +260,12 @@ const EventDialog = ({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      enqueueSnackbar('Vui lòng chọn file ảnh!', { variant: 'warning' });
+      showToast('Vui lòng chọn file ảnh!', 'error', 3000);
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      enqueueSnackbar('Kích thước ảnh không được vượt quá 5MB!', { variant: 'warning' });
+      showToast('Kích thước ảnh không được vượt quá 5MB!', 'error', 3000);
       return;
     }
 
@@ -281,13 +281,13 @@ const EventDialog = ({
       const uploadedUrl = await uploadToCloudinary(file);
       if (uploadedUrl) {
         setEventForm({ ...eventForm, avatar: uploadedUrl });
-        enqueueSnackbar('Tải ảnh đại diện lên thành công!', { variant: 'success' });
+        showToast('Tải ảnh đại diện lên thành công!', 'success', 3000);
       } else {
-        enqueueSnackbar('Không thể tải ảnh lên. Vui lòng thử lại!', { variant: 'error' });
+        showToast('Không thể tải ảnh lên. Vui lòng thử lại!', 'error', 3000);
         setAvatarPreview(null);
       }
     } catch (error) {
-      enqueueSnackbar('Có lỗi xảy ra khi tải ảnh!', { variant: 'error' });
+      showToast('Có lỗi xảy ra khi tải ảnh!', 'error', 3000);
       setAvatarPreview(null);
     } finally {
       setUploadingAvatar(false);
@@ -307,11 +307,11 @@ const EventDialog = ({
     // Validate files
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
-        enqueueSnackbar(`File ${file.name} không phải là ảnh!`, { variant: 'warning' });
+        showToast(`❌ File ${file.name} không phải là ảnh!`, 'error', 3000);
         return false;
       }
       if (file.size > 5 * 1024 * 1024) {
-        enqueueSnackbar(`File ${file.name} vượt quá 5MB!`, { variant: 'warning' });
+        showToast(`❌ File ${file.name} vượt quá 5MB!`, 'error', 3000);
         return false;
       }
       return true;
@@ -357,7 +357,7 @@ const EventDialog = ({
           return newPreviews;
         });
         
-        enqueueSnackbar(`Tải ${successfulUrls.length} ảnh lên thành công!`, { variant: 'success' });
+        showToast(`✅ Tải ${successfulUrls.length} ảnh lên thành công!`, 'success', 3000);
       }
       
       // Clean up failed upload blob URLs
@@ -374,10 +374,10 @@ const EventDialog = ({
       }
       
       if (successfulUrls.length === 0) {
-        enqueueSnackbar('Không thể tải ảnh lên. Vui lòng thử lại!', { variant: 'error' });
+        showToast('Không thể tải ảnh lên. Vui lòng thử lại!', 'error', 3000);
       }
     } catch (error) {
-      enqueueSnackbar('Có lỗi xảy ra khi tải ảnh!', { variant: 'error' });
+      showToast('Có lỗi xảy ra khi tải ảnh!', 'error', 3000);
       // Clean up all blob previews on error
       blobPreviews.forEach(preview => URL.revokeObjectURL(preview));
       setImagePreviews(prev => prev.filter(preview => !blobPreviews.includes(preview)));

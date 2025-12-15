@@ -54,9 +54,9 @@ const userApi = {
    * @param {string} userId - ID của người dùng
    * @returns {Promise}
    */
-  blockUser: async (userId) => {
+  blockUser: async (userId, state) => {
     try {
-      const response = await axiosClient.delete(`/api/enterprise/user/${userId}/block`);
+      const response = await axiosClient.patch(`/enterprise/user/${userId}/block`, {state });
       return response;
     } catch (error) {
       throw error;
