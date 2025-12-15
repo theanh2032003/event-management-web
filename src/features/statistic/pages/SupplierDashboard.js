@@ -56,6 +56,22 @@ const formatCurrency = (value) => {
   }).format(value || 0);
 };
 
+// Custom Tooltip cho BarChart
+const CustomBarTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <Box sx={{ backgroundColor: '#fff', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}>
+        {payload.map((entry, index) => (
+          <Typography key={index} variant="caption" sx={{ display: 'block', color: entry.color }}>
+            {entry.name}: {entry.name === 'Số lượng' ? entry.value : formatCurrency(entry.value)}
+          </Typography>
+        ))}
+      </Box>
+    );
+  }
+  return null;
+};
+
 // Mock Data
 const MOCK_DATA = {
   overview: {
@@ -321,7 +337,7 @@ export default function SupplierDashboard() {
                     interval={0}
                   />
                   <YAxis tickFormatter={(value) => (value / 1000000).toFixed(0) + 'M'} />
-                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                  <Tooltip content={<CustomBarTooltip />} />
                   <Legend />
                   <Bar dataKey="totalRevenue" fill="#667eea" name="Doanh thu" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="totalQuantity" fill="#764ba2" name="Số lượng" radius={[4, 4, 0, 0]} />
@@ -332,81 +348,6 @@ export default function SupplierDashboard() {
         </Grid>
       </Grid>
 
-      {/* Recent Quotes and Quick Actions */}
-      <Grid
-        container
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: 'repeat(1, 1fr)',
-            sm: 'repeat(1, 1fr)',
-            md: 'repeat(2, 1fr)',
-          },
-          gap: 3,
-        }}
-      >
-        {/* Recent Quotes Table
-        <Grid item>
-          <Card sx={{ bgcolor: 'white', borderRadius: '12px' }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                Báo giá gần đây
-              </Typography>
-              <Box sx={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #e0e0e0', backgroundColor: '#f5f5f5' }}>
-                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: '#666' }}>
-                        Mã báo giá
-                      </th>
-                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: '#666' }}>
-                        Trạng thái
-                      </th>
-                      <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#666' }}>
-                        Giá trị
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentQuotes.map((quote) => (
-                      <tr key={quote.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                        <td style={{ padding: '12px', fontWeight: 500 }}>{quote.quote}</td>
-                        <td style={{ padding: '12px' }}>
-                          <Box
-                            sx={{
-                              display: 'inline-block',
-                              px: 1.5,
-                              py: 0.5,
-                              borderRadius: '4px',
-                              backgroundColor: getStatusColor(quote.status) + '20',
-                              color: getStatusColor(quote.status),
-                              fontWeight: 600,
-                              fontSize: '0.8rem',
-                            }}
-                          >
-                            {getStatusLabel(quote.status)}
-                          </Box>
-                        </td>
-                        <td
-                          style={{
-                            padding: '12px',
-                            textAlign: 'right',
-                            color: '#667eea',
-                            fontWeight: 600,
-                          }}
-                        >
-                          {formatCurrency(quote.value)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid> */}
-
-      </Grid>
     </Box>
   );
 }
