@@ -50,46 +50,30 @@ const SectionCard = styled(Paper)(({ theme }) => ({
 
 const UploadArea = styled(Box)(({ theme }) => ({
   display: "flex",
-  flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-  padding: theme.spacing(4),
-  border: "2px dashed",
-  borderColor: alpha(theme.palette.primary.main, 0.3),
-  borderRadius: theme.spacing(2),
-  backgroundColor: alpha(theme.palette.primary.main, 0.04),
+  width: 80,
+  height: 80,
+  border: "2px solid",
+  borderColor: alpha(theme.palette.primary.main, 0.5),
+  borderRadius: theme.spacing(1),
+  backgroundColor: alpha(theme.palette.primary.main, 0.08),
   cursor: "pointer",
   transition: "all 0.3s ease",
-  textAlign: "center",
   position: "relative",
   overflow: "hidden",
   "&:hover": {
-    backgroundColor: alpha(theme.palette.primary.main, 0.08),
+    backgroundColor: alpha(theme.palette.primary.main, 0.15),
     borderColor: theme.palette.primary.main,
-    transform: "translateY(-2px)",
+    transform: "scale(1.05)",
     boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}`,
   },
   "&:active": {
-    transform: "translateY(0)",
+    transform: "scale(1)",
   },
 }));
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
-  '& .MuiOutlinedInput-root': {
-    borderRadius: theme.spacing(1.5),
-    backgroundColor: alpha(theme.palette.background.default, 0.5),
-    transition: 'all 0.2s ease',
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.background.default, 0.8),
-    },
-    '&.Mui-focused': {
-      backgroundColor: theme.palette.background.paper,
-      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
-    },
-  },
-}));
-
-const StyledFormControl = styled(FormControl)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
     borderRadius: theme.spacing(1.5),
     backgroundColor: alpha(theme.palette.background.default, 0.5),
@@ -380,31 +364,14 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
             sx={{ 
               fontWeight: 700,
               mb: 0.5,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              background: `${theme.palette.primary.main})`,
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
             }}
           >
-            {isEditMode ? "Sửa Yêu Cầu Báo Giá" : "Tạo Yêu Cầu Báo Giá (RFQ)"}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Chia sẻ nhu cầu của bạn để nhà cung cấp phản hồi nhanh chóng
+            {isEditMode ? "Sửa Yêu Cầu Báo Giá" : "Tạo Yêu Cầu Báo Giá"}
           </Typography>
         </Box>
-        <IconButton 
-          onClick={onClose} 
-          size="small"
-          sx={{
-            color: 'text.secondary',
-            '&:hover': {
-              backgroundColor: alpha(theme.palette.error.main, 0.1),
-              color: theme.palette.error.main,
-            },
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
       </DialogTitle>
 
       <DialogContent
@@ -413,48 +380,12 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
           pb: 2,
         }}
       >
-        <Stack spacing={3}>
-          {/* Product Info */}
-          {product && (
-            <SectionCard elevation={0}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                <DescriptionIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-                  Sản phẩm
-                </Typography>
-              </Box>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 700, mb: 1 }}
-              >
-                {product.name}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-                <Typography
-                  variant="h6"
-                  sx={{ 
-                    fontWeight: 700,
-                    color: theme.palette.primary.main,
-                  }}
-                >
-                  {product.price
-                    ? `${product.price.toLocaleString("vi-VN")}₫`
-                    : "N/A"}
-                </Typography>
-                {product.unit && (
-                  <Typography variant="body2" color="text.secondary">
-                    / {product.unit}
-                  </Typography>
-                )}
-              </Box>
-            </SectionCard>
-          )}
+        <Stack spacing={3} sx={{mt: 2}}>
 
           {/* RFQ Name */}
-          <SectionCard elevation={0}>
             <Grid container spacing={2.5}>
-              <Grid item xs={12}>
-                <StyledTextField
+              <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+                <TextField
                   label="Tên yêu cầu *"
                   name="name"
                   value={formData.name}
@@ -462,18 +393,10 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
                   fullWidth
                   size="small"
                   placeholder="VD: Yêu cầu báo giá - Tháng 11"
-                  helperText={errors.name || "Mô tả ngắn gọn cho yêu cầu này"}
                   error={!!errors.name}
-                  InputProps={{
-                    startAdornment: (
-                      <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                        <EventNoteIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-                      </Box>
-                    ),
-                  }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} sx={{width: '100%'}}>
                 <StyledTextField
                   label="Số lượng *"
                   name="quantity"
@@ -487,8 +410,8 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
                   error={!!errors.quantity}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <StyledTextField
+              <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+                <TextField
                   label="Ngày hết hạn *"
                   name="expiredAt"
                   type="date"
@@ -497,36 +420,26 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
                   fullWidth
                   size="small"
                   InputLabelProps={{ shrink: true }}
-                  helperText={
-                    errors.expiredAt ||
-                    "Nhà cung cấp phải báo giá trước ngày này"
-                  }
                   error={!!errors.expiredAt}
-                  InputProps={{
-                    startAdornment: (
-                      <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                        <CalendarIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-                      </Box>
-                    ),
-                  }}
                 />
               </Grid>
-              <Grid item xs={12}>
-                <StyledFormControl
+              <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+                <FormControl
                   fullWidth
                   size="small"
                   error={!!errors.projectId}
                 >
-                  <InputLabel>Chọn Dự Án / Sự Kiện *</InputLabel>
+                  <InputLabel>Chọn Sự Kiện *</InputLabel>
                   <Select
                     name="projectId"
                     value={formData.projectId}
                     onChange={handleChange}
-                    label="Chọn Dự Án / Sự Kiện *"
+                    onOpen={loadProjects}
+                    label="Chọn Sự Kiện *"
                     disabled={projectsLoading}
                   >
                     <MenuItem value="">
-                      <em>-- Chọn dự án --</em>
+                      <em>-- Chọn sự kiện --</em>
                     </MenuItem>
                     {projects.map((project) => (
                       <MenuItem key={project.id} value={project.id}>
@@ -570,15 +483,13 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
                       Không có dự án nào. Vui lòng tạo dự án trước.
                     </Typography>
                   )}
-                </StyledFormControl>
+                </FormControl>
               </Grid>
             </Grid>
-          </SectionCard>
 
           {/* Notes */}
-          <SectionCard elevation={0}>
-            <StyledTextField
-              label="Ghi chú / Yêu cầu đặc biệt"
+            <TextField
+              label="Ghi chú"
               name="note"
               value={formData.note}
               onChange={handleChange}
@@ -586,16 +497,13 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
               multiline
               rows={4}
               size="small"
-              placeholder="Nhập bất kỳ yêu cầu hoặc thông tin đặc biệt..."
+              placeholder="Nhập ghi chú..."
             />
-          </SectionCard>
 
           {/* File Upload */}
-          <SectionCard elevation={0}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              <AttachFileIcon sx={{ color: 'primary.main', fontSize: 20 }} />
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                Tải lên tệp đính kèm
+                Tệp đính kèm
               </Typography>
             </Box>
             
@@ -607,13 +515,7 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
                 onChange={handleFileSelect}
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png,.txt"
               />
-              <CloudUploadIcon sx={{ fontSize: 56, color: "primary.main", mb: 1.5 }} />
-              <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
-                Kéo thả tệp hoặc click để chọn
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 5MB/file)
-              </Typography>
+              <CloudUploadIcon sx={{ fontSize: 40, color: "primary.main" }} />
             </UploadArea>
 
             {/* File List */}
@@ -636,7 +538,6 @@ export default function QuoteRequestModal({ open, onClose, product, rfq, enterpr
                 </Box>
               </Box>
             )}
-          </SectionCard>
         </Stack>
       </DialogContent>
 

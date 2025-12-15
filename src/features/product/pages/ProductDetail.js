@@ -69,12 +69,13 @@ const HeaderBox = styled(Box)(({ theme }) => ({
 
 // Breadcrumb styling
 const Breadcrumb = styled(Typography)(({ theme }) => ({
-  fontSize: '0.875rem',
-  color: theme.palette.primary.main,
+  fontSize: '1.1rem',
+  fontWeight: 600,
+  color: theme.palette.text.primary,
   cursor: 'pointer',
   transition: 'color 0.2s ease',
   '&:hover': {
-    color: theme.palette.primary.dark,
+    color: theme.palette.primary.main,
     textDecoration: 'underline',
   },
 }));
@@ -215,10 +216,10 @@ export default function ProductDetail() {
               Marketplace
             </Breadcrumb>
           
-            <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>›</Typography>
+            <Typography sx={{ color: 'text.secondary', fontSize: '1.1rem' }}>›</Typography>
             <Typography 
               sx={{ 
-                fontSize: '0.875rem', 
+                fontSize: '1.1rem', 
                 fontWeight: 500,
                 color: 'text.primary',
               }}
