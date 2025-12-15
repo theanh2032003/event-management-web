@@ -438,9 +438,16 @@ const EventDialog = ({
 
     setSubmitting(true);
     try {
-      await onSave(eventForm, event);
-      handleClose();
+      const result = await onSave(eventForm, event);
+      if (result?.success === false) {
+        // Show error from the save operation
+        setError(result.error || "Có lỗi xảy ra khi lưu sự kiện");
+      } else {
+        handleClose();
+      }
     } catch (err) {
+      // Handle unexpected errors
+      console.error("Error in handleSubmit:", err);
       setError(err.message || "Có lỗi xảy ra khi lưu sự kiện");
     } finally {
       setSubmitting(false);
@@ -557,7 +564,7 @@ const EventDialog = ({
                 <Typography variant="body2" color="text.secondary">
                   Ảnh đại diện cho sự kiện (tối đa 5MB)
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                {/* <Typography variant="caption" color="text.secondary">
                   Hoặc nhập URL: <TextField
                     size="small"
                     value={eventForm.avatar}
@@ -569,7 +576,7 @@ const EventDialog = ({
                     placeholder="https://example.com/image.jpg"
                     sx={{ mt: 1, width: '100%' }}
                   />
-                </Typography>
+                </Typography> */}
               </Box>
             </AvatarUploadBox>
           </Box>
@@ -614,7 +621,7 @@ const EventDialog = ({
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            {/* <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Loại phí</InputLabel>
                 <Select
@@ -628,7 +635,7 @@ const EventDialog = ({
                   <MenuItem value="PAID">Trả phí</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
+            </Grid> */}
 
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
@@ -646,21 +653,29 @@ const EventDialog = ({
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Kiểu truy cập</InputLabel>
-                <Select
-                  value={eventForm.accessType}
-                  label="Kiểu truy cập"
-                  onChange={(e) => setEventForm({ ...eventForm, accessType: e.target.value })}
-                  disabled={submitting}
-                  required
-                >
-                  <MenuItem value="OPEN">Mở</MenuItem>
-                  <MenuItem value="INVITE_ONLY">Chỉ mời</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControl
+              fullWidth
+              sx={{ minWidth: 100 }}   
+            >
+              <InputLabel id="access-type-label">Kiểu truy cập</InputLabel>
+              <Select
+                labelId="access-type-label"
+                value={eventForm.accessType}
+                label="Kiểu truy cập"
+                onChange={(e) =>
+                  setEventForm({ ...eventForm, accessType: e.target.value })
+                }
+                disabled={submitting}
+                required
+              >
+                <MenuItem value="OPEN">Mở</MenuItem>
+                <MenuItem value="INVITE_ONLY">Chỉ mời</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+
 
             <Grid item xs={12} sm={6}>
               <TextField
@@ -672,7 +687,6 @@ const EventDialog = ({
                 onChange={(e) => setEventForm({ ...eventForm, startedAt: e.target.value })}
                 disabled={submitting}
                 InputLabelProps={{ shrink: true }}
-                helperText="Chọn ngày và giờ bắt đầu sự kiện"
               />
             </Grid>
 
@@ -686,7 +700,6 @@ const EventDialog = ({
                 onChange={(e) => setEventForm({ ...eventForm, endedAt: e.target.value })}
                 disabled={submitting}
                 InputLabelProps={{ shrink: true }}
-                helperText="Chọn ngày và giờ kết thúc sự kiện"
               />
             </Grid>
 
@@ -716,7 +729,9 @@ const EventDialog = ({
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required>
+          
+              <FormControl fullWidth required
+               sx={{ minWidth: 100 }} >
                 <InputLabel>Địa điểm</InputLabel>
                 <Select
                   value={eventForm.locationId}

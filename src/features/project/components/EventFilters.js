@@ -123,41 +123,9 @@ const EventFilters = ({
           />
         </Grid>
 
-        {/* Filter by State */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StyledFormControl fullWidth size="small">
-            <InputLabel>Trạng thái</InputLabel>
-            <Select
-              value={filterState}
-              label="Trạng thái"
-              onChange={(e) => setFilterState(e.target.value)}
-              disabled={loading}
-            >
-              <MenuItem value="ALL">Tất cả trạng thái</MenuItem>
-              <MenuItem value="NOT_STARTED">Chưa bắt đầu</MenuItem>
-              <MenuItem value="IN_PROGRESS">Đang diễn ra</MenuItem>
-              <MenuItem value="COMPLETED">Hoàn thành</MenuItem>
-              <MenuItem value="CANCELED">Đã hủy</MenuItem>
-            </Select>
-          </StyledFormControl>
-        </Grid>
+       
 
-        {/* Filter by Fee Type */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StyledFormControl fullWidth size="small">
-            <InputLabel>Loại phí</InputLabel>
-            <Select
-              value={filterFeeType}
-              label="Loại phí"
-              onChange={(e) => setFilterFeeType(e.target.value)}
-              disabled={loading}
-            >
-              <MenuItem value="ALL">Tất cả loại phí</MenuItem>
-              <MenuItem value="FREE">Miễn phí</MenuItem>
-              <MenuItem value="PAID">Trả phí</MenuItem>
-            </Select>
-          </StyledFormControl>
-        </Grid>
+       
 
         {/* Filter by Category */}
         <Grid item xs={12} sm={6} md={3}>

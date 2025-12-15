@@ -890,11 +890,7 @@ export default function PaymentApproval() {
                 align: "right",
                 render: (value, row) => `${row.amount ? row.amount.toLocaleString("vi-VN") : 0}₫`,
               },
-              {
-                field: "purpose",
-                headerName: "Mục Đích",
-                render: (value, row) => row.purpose || "—",
-              },
+              
               {
                 field: "state",
                 headerName: "Trạng thái",

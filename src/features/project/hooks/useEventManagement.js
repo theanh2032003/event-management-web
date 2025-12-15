@@ -333,11 +333,20 @@ export const useEventManagement = () => {
     } catch (err) {
       console.error("❌ Error saving event:", err);
       console.error("❌ Error response:", err?.response?.data);
+      console.error("❌ Error status:", err?.response?.status);
 
       let errorMessage = "Không thể lưu sự kiện.";
-      if (err.message && err.message.startsWith("Vui lòng")) {
+      
+      // Check for 401 Unauthorized
+      if (err.response?.status === 401) {
+        errorMessage = err.response?.data?.message || "Không có quyền thực hiện thao tác này.";
+      }
+      // Check for validation errors from form
+      else if (err.message && err.message.startsWith("Vui lòng")) {
         errorMessage = err.message;
-      } else if (err.response?.data) {
+      }
+      // Check for other API errors
+      else if (err.response?.data) {
         const errorData = err.response.data;
         if (typeof errorData === "string") {
           errorMessage = errorData;
@@ -346,7 +355,9 @@ export const useEventManagement = () => {
         } else if (errorData.error) {
           errorMessage = errorData.error;
         }
-      } else if (err.message) {
+      }
+      // Fallback to general error message
+      else if (err.message) {
         errorMessage = err.message;
       }
 
