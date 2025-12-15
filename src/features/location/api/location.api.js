@@ -9,9 +9,9 @@ const locationApi = {
    * @param {string} enterpriseId - ID của doanh nghiệp
    * @returns {Promise} Danh sách địa điểm
    */
-  getLocations: async (enterpriseId) => {
+  getLocations: async (available, page, size) => {
     try {
-      const response = await axiosClient.get(`/location`);
+      const response = await axiosClient.get(`/location`, { params: { available, page, size } });
       return response;
     } catch (error) {
       throw error;

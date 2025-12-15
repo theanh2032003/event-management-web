@@ -40,43 +40,6 @@ import CommonTable from "../../../shared/components/CommonTable";
 import EventCardList from "../components/EventCardList";
 import EventDialog from "../components/EventDialog";
 
-// Styled Components
-const HeaderBox = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(2),
-  marginBottom: theme.spacing(4),
-  padding: theme.spacing(3),
-  borderRadius: theme.spacing(2),
-  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-  [theme.breakpoints.down('sm')]: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: theme.spacing(1.5),
-    padding: theme.spacing(2),
-  },
-}));
-
-const IconBox = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(1.5),
-  borderRadius: theme.spacing(2),
-  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-}));
-
-const TitleBox = styled(Box)(({ theme }) => ({
-  flex: 1,
-  [theme.breakpoints.down('sm')]: {
-    '& .MuiTypography-h4': {
-      fontSize: '1.5rem',
-    },
-  },
-}));
-
 const StyledButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
   fontWeight: 600,
@@ -354,7 +317,7 @@ const EventManagement = ({ hasPermission = true }) => {
       {!hasPermission && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            ⚠️ Bạn không có quyền truy cập chức năng này
+            Bạn không có quyền truy cập chức năng này
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Vui lòng liên hệ với quản trị viên để được cấp quyền

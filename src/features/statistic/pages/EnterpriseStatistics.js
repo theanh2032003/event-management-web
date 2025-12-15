@@ -61,40 +61,28 @@ export default function EnterpriseStatistics({ hasPermission = true }) {
       try {
         switch (currentTab) {
           case 0: // Overview
-            if (!data.overview) {
-              const overviewData = await statisticApi.getOverall();
-              setData(prev => ({ ...prev, overview: overviewData }));
-            }
+            const overviewData = await statisticApi.getOverall();
+            setData(prev => ({ ...prev, overview: overviewData }));
             break;
           case 1: // Ticketing
-            if (!data.ticketing) {
-              const ticketingData = await statisticApi.getTicketing();
-              setData(prev => ({ ...prev, ticketing: ticketingData }));
-            }
+            const ticketingData = await statisticApi.getTicketing();
+            setData(prev => ({ ...prev, ticketing: ticketingData }));
             break;
           case 2: // Finance
-            if (!data.finance) {
-              const financeData = await statisticApi.getFinance();
-              setData(prev => ({ ...prev, finance: financeData }));
-            }
+            const financeData = await statisticApi.getFinance();
+            setData(prev => ({ ...prev, finance: financeData }));
             break;
           case 3: // Attendees
-            if (!data.attendees) {
-              const attendeesData = await statisticApi.getAttendees();
-              setData(prev => ({ ...prev, attendees: attendeesData }));
-            }
+            const attendeesData = await statisticApi.getAttendees();
+            setData(prev => ({ ...prev, attendees: attendeesData }));
             break;
           case 4: // Feedback
-            if (!data.feedback) {
-              const feedbackData = await statisticApi.getFeedback();
-              setData(prev => ({ ...prev, feedback: feedbackData }));
-            }
+            const feedbackData = await statisticApi.getFeedback();
+            setData(prev => ({ ...prev, feedback: feedbackData }));
             break;
           case 5: // Suppliers
-            if (!data.suppliers) {
-              const suppliersData = await statisticApi.getSuppliers();
-              setData(prev => ({ ...prev, suppliers: suppliersData }));
-            }
+            const suppliersData = await statisticApi.getSuppliers();
+            setData(prev => ({ ...prev, suppliers: suppliersData }));
             break;
           default:
             break;
@@ -107,9 +95,15 @@ export default function EnterpriseStatistics({ hasPermission = true }) {
     };
     
     loadData();
-  }, [currentTab, data]);
+  }, [currentTab]);
 
   const handleTabChange = (event, newValue) => {
+    // Reset data của tab vừa chuyển sang để hiển thị loading state
+    const tabKeys = ['overview', 'ticketing', 'finance', 'attendees', 'feedback', 'suppliers'];
+    setData(prev => ({
+      ...prev,
+      [tabKeys[newValue]]: null
+    }));
     setCurrentTab(newValue);
   };
 
@@ -315,8 +309,10 @@ export default function EnterpriseStatistics({ hasPermission = true }) {
         </Box>
       )}
 
-      {/* Overview Tab */}
-      <TabPanel value={currentTab} index={0}>
+      {!loading && (
+        <>
+          {/* Overview Tab */}
+          <TabPanel value={currentTab} index={0}>
         {data.overview && (
           <>
             <Grid
@@ -991,6 +987,8 @@ export default function EnterpriseStatistics({ hasPermission = true }) {
           </>
         )}
       </TabPanel>
+        </>
+      )}
     </Box>
   );
 }

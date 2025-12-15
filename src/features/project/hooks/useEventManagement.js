@@ -20,6 +20,7 @@ export const useEventManagement = () => {
   const [groupTaskTypes, setGroupTaskTypes] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loadingDropdowns, setLoadingDropdowns] = useState(false);
+  const [dropdownsLoaded, setDropdownsLoaded] = useState(false);
 
   // Filter & Search states
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,11 +67,17 @@ export const useEventManagement = () => {
 
   // ====== FETCH DROPDOWN DATA ======
   const fetchDropdownData = async () => {
+    // Skip if already loaded
+    if (dropdownsLoaded) {
+      return;
+    }
+
     try {
       setLoadingDropdowns(true);
       const token = localStorage.getItem("token");
       if (!token) {
         console.error("🔴 No access token found for dropdown fetch");
+        setDropdownsLoaded(true);
         return;
       }
 
@@ -87,7 +94,7 @@ export const useEventManagement = () => {
 
       // Fetch locations - Get all locations for enterprise
       try {
-        const locationsResponse = await locationApi.getLocations(enterpriseId);
+        const locationsResponse = await locationApi.getLocations(true);
         // Handle different response structures
         let locationsArray = [];
         if (Array.isArray(locationsResponse)) {
@@ -98,13 +105,14 @@ export const useEventManagement = () => {
           locationsArray = Array.isArray(locationsResponse.content) ? locationsResponse.content : [];
         }
         setLocations(locationsArray);
-        console.log(`✅ Fetched ${locationsArray.length} locations`);
       } catch (locationErr) {
-        console.error("❌ Error fetching locations:", locationErr);
         setLocations([]);
       }
+
+      setDropdownsLoaded(true);
     } catch (err) {
-      console.error("❌ Error fetching dropdown data:", err);
+      console.error("❌ Error fetching dropdowns:", err);
+      setDropdownsLoaded(true);
     } finally {
       setLoadingDropdowns(false);
     }
@@ -382,7 +390,7 @@ export const useEventManagement = () => {
   useEffect(() => {
     fetchDropdownData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enterpriseId]);
+  }, []); // Empty dependency - fetch only once on mount
 
   // ====== CLEAR FILTERS ======
   const clearFilters = () => {
@@ -440,6 +448,7 @@ export const useEventManagement = () => {
     handleDeleteEvent,
     handleUpdateEventState,
     fetchEvents,
+    fetchDropdownData, // Expose để có thể refetch thủ công nếu cần
 
     // Helpers
     formatDateTimeLocal,

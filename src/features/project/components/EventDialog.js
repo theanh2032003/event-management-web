@@ -307,11 +307,11 @@ const EventDialog = ({
     // Validate files
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
-        showToast(`❌ File ${file.name} không phải là ảnh!`, 'error', 3000);
+        showToast(`File ${file.name} không phải là ảnh!`, 'error', 3000);
         return false;
       }
       if (file.size > 5 * 1024 * 1024) {
-        showToast(`❌ File ${file.name} vượt quá 5MB!`, 'error', 3000);
+        showToast(`File ${file.name} vượt quá 5MB!`, 'error', 3000);
         return false;
       }
       return true;
@@ -357,7 +357,7 @@ const EventDialog = ({
           return newPreviews;
         });
         
-        showToast(`✅ Tải ${successfulUrls.length} ảnh lên thành công!`, 'success', 3000);
+        showToast(`Tải ${successfulUrls.length} ảnh lên thành công!`, 'success', 3000);
       }
       
       // Clean up failed upload blob URLs
