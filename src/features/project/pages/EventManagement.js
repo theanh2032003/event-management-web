@@ -178,6 +178,11 @@ const EventManagement = ({ hasPermission = true }) => {
     setEditingEvent(null);
   };
 
+  // Edit handler for mobile view
+  const handleEdit = (event) => {
+    handleOpenDialog(event);
+  };
+
   // Row click handler - navigate to event detail
   const handleRowClick = (row) => {
     if (row.id && enterpriseId) {

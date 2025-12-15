@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -39,6 +39,13 @@ import PermissionGate from "../../../shared/components/PermissionGate";
 import { CommonDialog } from "../../../shared/components/CommonDialog";
 import projectApi from "../api/project.api";
 import { useToast } from "../../../app/providers/ToastContext";
+import EventDialog from "../components/EventDialog";
+import locationApi from "../../location/api/location.api";
+import axiosClient from "../../../app/axios/axiosClient";
+import {
+  formatDateTimeLocal,
+  getCurrentDateTimeLocal,
+} from "../../../shared/utils/dateFormatter";
 
 // Styled Components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -173,7 +180,6 @@ export default function EventOverview({
 }) {
   const toast = useToast();
   const [anchorEl, setAnchorEl] = useState(null);
-  const [editingEvent, setEditingEvent] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [imageCarouselPage, setImageCarouselPage] = useState(0);
   const [images, setImages] = useState(eventData.images);
@@ -181,6 +187,82 @@ export default function EventOverview({
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [currentEventData, setCurrentEventData] = useState(eventData);
+  
+  // Dialog states
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEventForDialog, setEditingEventForDialog] = useState(null);
+  
+  // Dropdown data for dialog
+  const [groupTaskTypes, setGroupTaskTypes] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [loadingDropdowns, setLoadingDropdowns] = useState(false);
+
+  // Fetch dropdown data for dialog
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        setLoadingDropdowns(true);
+        const token = localStorage.getItem("token");
+        
+        if (!token) {
+          console.error("No access token found");
+          return;
+        }
+
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "enterprise-id": eventData.enterpriseId || getCurrentEnterpriseId(),
+        };
+        
+        // Fetch group task types using axiosClient
+        const typesResponse = await axiosClient.get("/group-task-type", { headers });
+        const typesData = typesResponse?.data || typesResponse;
+        setGroupTaskTypes(Array.isArray(typesData) ? typesData : []);
+        
+        // Fetch locations
+        const locationsResponse = await locationApi.getLocations(eventData.enterpriseId);
+        const locationsData = locationsResponse?.data || locationsResponse;
+        setLocations(Array.isArray(locationsData) ? locationsData : []);
+        
+      } catch (error) {
+        console.error('Error fetching dropdown data:', error);
+        toast.error('Không thể tải dữ liệu danh sách');
+      } finally {
+        setLoadingDropdowns(false);
+      }
+    };
+
+    if (eventData.enterpriseId) {
+      fetchDropdownData();
+    }
+  }, [eventData.enterpriseId]);
+
+  // Helper functions
+  const getCurrentUserId = () => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        return userData.id || 1;
+      } catch (e) {
+        return 1;
+      }
+    }
+    return 1;
+  };
+
+  const getCurrentEnterpriseId = () => {
+    const enterprise = localStorage.getItem("enterprise");
+    if (enterprise) {
+      try {
+        const enterpriseData = JSON.parse(enterprise);
+        return enterpriseData.id || 1;
+      } catch (e) {
+        return 1;
+      }
+    }
+    return 1;
+  };
 
   // Format date
   const formatDate = (dateString) => {
@@ -261,8 +343,14 @@ export default function EventOverview({
   };
 
   const handleEditClick = () => {
-    setEditingEvent({ ...eventData });
+    setEditingEventForDialog({ ...eventData });
+    setDialogOpen(true);
     handleMenuClose();
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setEditingEventForDialog(null);
   };
 
   const handleDeleteClick = () => {
@@ -287,64 +375,118 @@ export default function EventOverview({
     }
   };
 
-  const handleEditSave = async () => {
-    if (!editingEvent.name.trim()) {
-      toast.error('Tên sự kiện không được để trống');
-      return;
-    }
-
-    if (new Date(editingEvent.startedAt) >= new Date(editingEvent.endedAt)) {
-      toast.error('Thời gian kết thúc phải sau thời gian bắt đầu');
-      return;
-    }
-
-    setSubmitting(true);
+  const handleSaveEvent = async (eventForm, editingEvent) => {
     try {
-      const updateData = {
-        name: editingEvent.name.trim(),
-        description: editingEvent.description?.trim() || null,
-        startedAt: new Date(editingEvent.startedAt).toISOString(),
-        endedAt: new Date(editingEvent.endedAt).toISOString(),
-        avatar: editingEvent.avatar || null,
-        images: editingEvent.images || [],
-        category: editingEvent.category,
-        feeType: editingEvent.feeType,
-        visibility: editingEvent.visibility,
-        accessType: editingEvent.accessType,
-        locationId: editingEvent.locationId,
-        groupTaskTypeId: editingEvent.groupTaskTypeId,
+      // Validate form
+      if (!eventForm.name || !eventForm.name.trim()) {
+        throw new Error("Vui lòng nhập tên sự kiện");
+      }
+
+      if (!eventForm.groupTaskTypeId) {
+        throw new Error("Vui lòng chọn nhóm loại công việc");
+      }
+
+      if (!eventForm.startedAt) {
+        throw new Error("Vui lòng chọn thời gian bắt đầu");
+      }
+
+      if (!eventForm.endedAt) {
+        throw new Error("Vui lòng chọn thời gian kết thúc");
+      }
+
+      const startDate = new Date(eventForm.startedAt);
+      const endDate = new Date(eventForm.endedAt);
+      if (endDate <= startDate) {
+        throw new Error("Thời gian kết thúc phải sau thời gian bắt đầu");
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
+      }
+
+      const userId = getCurrentUserId();
+
+      const toISOStringLocal = (dateTimeLocalStr) => {
+        if (!dateTimeLocalStr) return new Date().toISOString();
+        const withSeconds =
+          dateTimeLocalStr.includes(":") && dateTimeLocalStr.split(":").length === 2
+            ? `${dateTimeLocalStr}:00`
+            : dateTimeLocalStr;
+        const date = new Date(withSeconds);
+        return date.toISOString();
       };
 
-      await projectApi.update(eventData.id, updateData);
-      
+      const requestBody = {
+        name: eventForm.name.trim(),
+        avatar: eventForm.avatar.trim() || null,
+        images: eventForm.images.filter((img) => img.trim()),
+        description: eventForm.description.trim() || null,
+        locationId: eventForm.locationId ? parseInt(eventForm.locationId) : null,
+        visibility: eventForm.visibility,
+        accessType: eventForm.accessType,
+        feeType: eventForm.feeType,
+        startedAt: toISOStringLocal(eventForm.startedAt),
+        endedAt: toISOStringLocal(eventForm.endedAt),
+        groupTaskTypeId: parseInt(eventForm.groupTaskTypeId),
+        category: eventForm.category,
+      };
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "user-id": userId.toString(),
+        "enterprise-id": eventData.enterpriseId || getCurrentEnterpriseId(),
+        "Content-Type": "application/json",
+      };
+
+      // Always update since we're editing existing event
+      await projectApi.update(eventData.id, requestBody, { headers });
+
       // Fetch lại dữ liệu chi tiết sự kiện
       const updatedEvent = await projectApi.getById(eventData.id);
       setCurrentEventData(updatedEvent?.data || updatedEvent);
       
       toast.success('Sự kiện đã được cập nhật thành công');
-      setEditingEvent(null);
+      setDialogOpen(false);
+      setEditingEventForDialog(null);
       
       if (onRefresh) {
         onRefresh();
       }
-    } catch (error) {
-      console.error('Error updating event:', error);
-      const errorMessage = error?.response?.data?.message || 'Không thể cập nhật sự kiện. Vui lòng thử lại.';
+      return { success: true };
+    } catch (err) {
+      console.error("❌ Error saving event:", err);
+      console.error("❌ Error response:", err?.response?.data);
+      console.error("❌ Error status:", err?.response?.status);
+
+      let errorMessage = "Không thể lưu sự kiện.";
+      
+      // Check for 401 Unauthorized
+      if (err.response?.status === 401) {
+        errorMessage = err.response?.data?.message || "Không có quyền thực hiện thao tác này.";
+      }
+      // Check for validation errors from form
+      else if (err.message && err.message.startsWith("Vui lòng")) {
+        errorMessage = err.message;
+      }
+      // Check for other API errors
+      else if (err.response?.data) {
+        const errorData = err.response.data;
+        if (typeof errorData === "string") {
+          errorMessage = errorData;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      }
+      // Fallback to general error message
+      else if (err.message) {
+        errorMessage = err.message;
+      }
       toast.error(errorMessage);
-    } finally {
-      setSubmitting(false);
+      throw err;
     }
-  };
-
-  const handleEditCancel = () => {
-    setEditingEvent(null);
-  };
-
-  const handleEditChange = (field, value) => {
-    setEditingEvent(prev => ({
-      ...prev,
-      [field]: value
-    }));
   };
 
   // Get number of images to display based on screen size
@@ -501,85 +643,9 @@ export default function EventOverview({
 
         {/* Card Content - Description, Attributes, Gallery, Tasks */}
         <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-          {/* Edit Form */}
-          {editingEvent && (
-            <Box sx={{ mb: 4, p: 3, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                Chỉnh sửa
-              </Typography>
-              <Stack spacing={2}>
-                <TextField
-                  label="Tên sự kiện"
-                  fullWidth
-                  size="small"
-                  value={editingEvent?.name || ''}
-                  onChange={(e) => handleEditChange('name', e.target.value)}
-                />
-                <TextField
-                  label="Mô tả"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  size="small"
-                  value={editingEvent?.description || ''}
-                  onChange={(e) => handleEditChange('description', e.target.value)}
-                />
-                <TextField
-                  label="Thời gian bắt đầu"
-                  type="datetime-local"
-                  fullWidth
-                  size="small"
-                  value={editingEvent?.startedAt || ''}
-                  onChange={(e) => handleEditChange('startedAt', e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                  label="Thời gian kết thúc"
-                  type="datetime-local"
-                  fullWidth
-                  size="small"
-                  value={editingEvent?.endedAt || ''}
-                  onChange={(e) => handleEditChange('endedAt', e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                />
-                <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end', pt: 1 }}>
-                  <Button 
-                    onClick={handleEditCancel} 
-                    variant="outlined"
-                    disabled={submitting}
-                    sx={{
-                      borderColor: '#cbd5e1',
-                      color: '#64748b',
-                      '&:hover': {
-                        borderColor: '#94a3b8',
-                        backgroundColor: '#f1f5f9',
-                      },
-                    }}
-                  >
-                    Hủy
-                  </Button>
-                  <Button 
-                    onClick={handleEditSave} 
-                    variant="contained"
-                    disabled={submitting}
-                    sx={{
-                      backgroundColor: '#3b82f6',
-                      color: '#fff',
-                      '&:hover': {
-                        backgroundColor: '#2563eb',
-                      },
-                    }}
-                  >
-                    {submitting ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Lưu'}
-                  </Button>
-                </Stack>
-              </Stack>
-              <Divider sx={{ my: 3 }} />
-            </Box>
-          )}
 
           {/* Description Section */}
-          {currentEventData.description && !editingEvent && (
+          {currentEventData.description && (
             <Box sx={{ mb: 4 }}>
               <SectionTitle sx={{ mt: 0 }}>Mô tả</SectionTitle>
               <Typography
@@ -597,9 +663,8 @@ export default function EventOverview({
           )}
 
           {/* Attributes Section */}
-          {!editingEvent && (
-            <Box sx={{ mb: 4 }}>
-              <SectionTitle>Thuộc tính</SectionTitle>
+          <Box sx={{ mb: 4 }}>
+            <SectionTitle>Thuộc tính</SectionTitle>
               <Stack direction="column" spacing={2}>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                   <Typography variant="caption" sx={{ color: '#000000ff', fontWeight: 600, fontSize: '0.95rem', minWidth: 100 }}>
@@ -620,10 +685,10 @@ export default function EventOverview({
               
               </Stack>
             </Box>
-          )}
+        
 
           {/* Gallery Section */}
-          {currentEventData.images?.length > 0 && !editingEvent && (
+          {currentEventData.images?.length > 0 && (
             <Box sx={{ mb: 4 }}>
               <SectionTitle>Hình ảnh</SectionTitle>
 
@@ -710,7 +775,7 @@ export default function EventOverview({
           )}
 
           {/* Task Type Section */}
-          {currentEventData.groupTaskType && !editingEvent && (
+          {currentEventData.groupTaskType && (
             <Box>
               <SectionTitle>Thông tin bổ sung</SectionTitle>
 
@@ -752,6 +817,19 @@ export default function EventOverview({
           )}
         </CardContent>
       </StyledCard>
+
+      {/* Event Dialog */}
+      <EventDialog
+        open={dialogOpen}
+        onClose={handleDialogClose}
+        event={editingEventForDialog}
+        groupTaskTypes={groupTaskTypes}
+        locations={locations}
+        loadingDropdowns={loadingDropdowns}
+        onSave={handleSaveEvent}
+        formatDateTimeLocal={formatDateTimeLocal}
+        getCurrentDateTimeLocal={getCurrentDateTimeLocal}
+      />
 
       {/* Delete Confirmation Dialog */}
       <CommonDialog

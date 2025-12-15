@@ -438,9 +438,16 @@ const EventDialog = ({
 
     setSubmitting(true);
     try {
-      await onSave(eventForm, event);
-      handleClose();
+      const result = await onSave(eventForm, event);
+      if (result?.success === false) {
+        // Show error from the save operation
+        setError(result.error || "Có lỗi xảy ra khi lưu sự kiện");
+      } else {
+        handleClose();
+      }
     } catch (err) {
+      // Handle unexpected errors
+      console.error("Error in handleSubmit:", err);
       setError(err.message || "Có lỗi xảy ra khi lưu sự kiện");
     } finally {
       setSubmitting(false);
