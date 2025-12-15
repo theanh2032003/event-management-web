@@ -8,13 +8,6 @@ import {
   CircularProgress,
   Alert,
   Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
   Select,
   MenuItem,
   IconButton,
@@ -28,7 +21,6 @@ import {
   CardContent,
   Autocomplete,
 } from "@mui/material";
-import { useSnackbar } from "notistack";
 import {
   RequestQuote as RequestQuoteIcon,
   Inbox as InboxIcon,
@@ -36,12 +28,15 @@ import {
   Edit as EditIcon,
   Add as AddIcon,
   CheckCircle as CheckCircleIcon,
+  Delete as DeleteIcon,
 } from "@mui/icons-material";
 import useEnterpriseUserPermissions from "../../permission/hooks/useEnterpriseUserPermissions";
+import { useToast } from "../../../app/providers/ToastContext";
 import rfqApi from "../api/rfq.api";
 import QuoteRequestModal from "../../product/components/QuoteRequestModal";
 import QuoteRequestDetail from "./RfqEnterpriseDetail";
 import { CommonTable } from "../../../shared/components/CommonTable";
+import { CommonDialog } from "../../../shared/components/CommonDialog";
 import projectApi from "../../project/api/project.api";
 import supplierApi from "../../supplier/api/supplier.api";
 
@@ -100,7 +95,7 @@ const ActionButton = styled(IconButton)(({ theme }) => ({
 export default function QuoteRequests() {
   const { id: enterpriseId } = useParams();
   const navigate = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -145,6 +140,9 @@ export default function QuoteRequests() {
   const [viewMode, setViewMode] = useState("list"); // "list" or "detail"
   const [selectedRfq, setSelectedRfq] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingRfqId, setDeletingRfqId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Check permission
   if (!permissionsLoading && !isOwner) {
@@ -157,49 +155,6 @@ export default function QuoteRequests() {
     );
   }
 
-  // Fetch projects and suppliers
-  useEffect(() => {
-    const fetchDropdownData = async () => {
-      try {
-        const [projectRes, supplierRes] = await Promise.all([
-          projectApi.getProjects(projectKeyword ? { keyword: projectKeyword } : {}, 0, 100),
-          supplierApi.getSuppliers(supplierKeyword || '', 0, 100),
-        ]);
-
-        // Handle projects
-        let projectData = [];
-        if (projectRes?.content && Array.isArray(projectRes.content)) {
-          projectData = projectRes.content;
-        } else if (Array.isArray(projectRes)) {
-          projectData = projectRes;
-        } else if (projectRes?.data) {
-          projectData = Array.isArray(projectRes.data) ? projectRes.data : projectRes.data.content || [];
-        }
-        setProjects(projectData);
-
-        // Handle suppliers
-        let supplierData = [];
-        if (supplierRes?.content && Array.isArray(supplierRes.content)) {
-          supplierData = supplierRes.content;
-        } else if (Array.isArray(supplierRes)) {
-          supplierData = supplierRes;
-        } else if (supplierRes?.data) {
-          supplierData = Array.isArray(supplierRes.data) ? supplierRes.data : supplierRes.data.content || [];
-        }
-        setSuppliers(supplierData);
-      } catch (error) {
-        console.error("Error fetching dropdown data:", error);
-      }
-    };
-
-    if (!permissionsLoading && isOwner) {
-      const timer = setTimeout(() => {
-        fetchDropdownData();
-      }, 300); // Debounce 300ms
-      
-      return () => clearTimeout(timer);
-    }
-  }, [permissionsLoading, isOwner, projectKeyword, supplierKeyword]);
 
   // Fetch quote requests
   useEffect(() => {
@@ -239,7 +194,7 @@ export default function QuoteRequests() {
         setTotalCount(total);
       } catch (error) {
         const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách yêu cầu báo giá";
-        enqueueSnackbar(errorMessage, { variant: "error" });
+        showToast(errorMessage, 'error');
         setQuoteRequests([]);
         setTotalCount(0);
       } finally {
@@ -250,7 +205,7 @@ export default function QuoteRequests() {
     if (!permissionsLoading && isOwner) {
       fetchQuoteRequests();
     }
-  }, [enterpriseId, permissionsLoading, isOwner, enqueueSnackbar, page, rowsPerPage, filters]);
+  }, [enterpriseId, permissionsLoading, isOwner, showToast, page, rowsPerPage, filters]);
 
   const handleOpenDetail = (rfq) => {
     setSelectedRfq(rfq);
@@ -269,6 +224,56 @@ export default function QuoteRequests() {
 
   const handleEditFromDetail = () => {
     setEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (rfq) => {
+    setSelectedRfq(rfq);
+    setDeletingRfqId(rfq.id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingRfqId) return;
+    
+    try {
+      setDeleteLoading(true);
+      await rfqApi.deleteRfq(deletingRfqId);
+      
+      // Reload data from server
+      const response = await rfqApi.getRfqs({}, page, rowsPerPage);
+      
+      let data = [];
+      let total = 0;
+      
+      if (response?.content && Array.isArray(response.content)) {
+        data = response.content;
+        total = response.totalElements || response.total || 0;
+      } else if (Array.isArray(response)) {
+        data = response;
+        total = response.length;
+      } else if (response?.data) {
+        data = Array.isArray(response.data) ? response.data : response.data.content || [];
+        total = response.data.totalElements || response.data.total || data.length;
+      }
+      
+      setQuoteRequests(Array.isArray(data) ? data : []);
+      setTotalCount(total);
+      
+      // Close modal first
+      setDeleteLoading(false);
+      setDeleteModalOpen(false);
+      setDeletingRfqId(null);
+      setSelectedRfq(null);
+      
+      // Show success toast after modal is closed
+      setTimeout(() => {
+        showToast("Xóa yêu cầu báo giá thành công", 'success', 4000);
+      }, 600);
+    } catch (error) {
+      const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi xóa yêu cầu báo giá";
+      showToast( errorMessage, 'error', 5000);
+      setDeleteLoading(false);
+    }
   };
 
   const handleSaveEdit = async (updatedData) => {
@@ -297,7 +302,7 @@ export default function QuoteRequests() {
       
       setQuoteRequests(Array.isArray(data) ? data : []);
       setTotalCount(total);
-      enqueueSnackbar("✅ Đã cập nhật và tải lại danh sách", { variant: "success" });
+      showToast("✅ Đã cập nhật và tải lại danh sách", 'success');
     } catch (error) {
       // Fallback to old way if reload fails
       setQuoteRequests(prev =>
@@ -312,7 +317,7 @@ export default function QuoteRequests() {
     try {
       setStateChanging(rfqId);
       await rfqApi.enterpriseChangeState(rfqId, { state: newState });
-      enqueueSnackbar("✅ Cập nhật trạng thái thành công", { variant: "success" });
+      showToast("Cập nhật trạng thái thành công", 'success');
       
       // Reload data to get updated list
       const response = await rfqApi.getRfqs({}, page, rowsPerPage);
@@ -339,9 +344,8 @@ export default function QuoteRequests() {
       setQuoteRequests(Array.isArray(data) ? data : []);
       setTotalCount(total);
     } catch (error) {
-      console.error("[RFQ STATE CHANGE] Error:", error);
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi cập nhật trạng thái";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(errorMessage, 'error');
     } finally {
       setStateChanging(null);
     }
@@ -703,7 +707,7 @@ export default function QuoteRequests() {
               align: 'center',
               render: (value, row) => (
                 <Box sx={{ display: "flex", gap: 1, justifyContent: "center", alignItems: "center" }}>
-                  <Tooltip title="Xem chi tiết yêu cầu báo giá" arrow>
+                  <Tooltip title="Xem chi tiết" arrow>
                     <ActionButton 
                       size="small"
                       onClick={() => handleOpenDetail(row)}
@@ -718,7 +722,7 @@ export default function QuoteRequests() {
                     </ActionButton>
                   </Tooltip>
                   {row.state === "DRAFT" && (
-                    <Tooltip title="Chỉnh sửa yêu cầu báo giá" arrow>
+                    <Tooltip title="Chỉnh sửa" arrow>
                       <ActionButton 
                         size="small"
                         color="primary"
@@ -731,6 +735,23 @@ export default function QuoteRequests() {
                         }}
                       >
                         <EditIcon fontSize="small" />
+                      </ActionButton>
+                    </Tooltip>
+                  )}
+                  {row.state === "DRAFT" && (
+                    <Tooltip title="Xoá" arrow>
+                      <ActionButton 
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteClick(row)}
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: alpha(theme.palette.error.main, 0.1),
+                            transform: 'scale(1.1)',
+                          },
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
                       </ActionButton>
                     </Tooltip>
                   )}
@@ -767,6 +788,41 @@ export default function QuoteRequests() {
           onSave={handleSaveEdit}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <CommonDialog
+        open={deleteModalOpen}
+        title="Xác nhận xóa yêu cầu báo giá"
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setDeletingRfqId(null);
+          setSelectedRfq(null);
+        }}
+        onSubmit={handleConfirmDelete}
+        loading={deleteLoading}
+        submitLabel="Xóa"
+        submitColor="error"
+        cancelLabel="Hủy"
+        centerButtons={true}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            maxWidth: 400,
+          },
+        }}
+      >
+        <Box sx={{ textAlign: 'center', py: 2 }}>
+          <Typography variant="body1" sx={{ mb: 1, color: 'text.secondary' }}>
+            Bạn có chắc chắn muốn xóa yêu cầu báo giá này?
+          </Typography>
+          <Typography 
+            variant="caption" 
+            sx={{ display: 'block', mt: 2, color: 'text.secondary' }}
+          >
+            Hành động này không thể hoàn tác
+          </Typography>
+        </Box>
+      </CommonDialog>
     </Box>
   );
 }
