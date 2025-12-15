@@ -70,6 +70,7 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
   // Statistics
   const [totalSold, setTotalSold] = useState(0);
   const [totalCheckedIn, setTotalCheckedIn] = useState(0);
+  const [totalIssued, setTotalIssued] = useState(0);
 
   // Fetch ticket types and total sold tickets
   useEffect(() => {
@@ -79,6 +80,10 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
         const typesResponse = await ticketApi.getTicketTypes(eventId);
         const types = typesResponse.data || typesResponse || [];
         setTicketTypes(types);
+        
+        // Calculate total issued tickets from ticket types
+        const totalIssuedCount = types.reduce((sum, type) => sum + (type.total || 0), 0);
+        setTotalIssued(totalIssuedCount);
         
         // Fetch all sold tickets to get total count
         const ticketsResponse = await ticketApi.getEventTickets(eventId, { page: 0, size: 1 });
@@ -231,7 +236,27 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
 
       {/* Statistics Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
+          <StyledCard>
+            <CardContent sx={{ p: 2 }}>
+              <StatBox>
+                <StatIcon sx={{ backgroundColor: alpha('#9C27B0', 0.1), color: '#9C27B0' }}>
+                  <TicketIcon fontSize="large" />
+                </StatIcon>
+                <StatContent>
+                  <Typography variant="body2" color="text.secondary">
+                    Số vé đã phát hành
+                  </Typography>
+                  <Typography variant="h4" fontWeight={700}>
+                    {totalIssued.toLocaleString()}
+                  </Typography>
+                </StatContent>
+              </StatBox>
+            </CardContent>
+          </StyledCard>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
           <StyledCard>
             <CardContent sx={{ p: 2 }}>
               <StatBox>
@@ -240,7 +265,7 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
                 </StatIcon>
                 <StatContent>
                   <Typography variant="body2" color="text.secondary">
-                    Tổng vé đã bán
+                    Số vé đã bán
                   </Typography>
                   <Typography variant="h4" fontWeight={700}>
                     {totalSold.toLocaleString()}
@@ -251,7 +276,7 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
           </StyledCard>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <StyledCard>
             <CardContent sx={{ p: 2 }}>
               <StatBox>
@@ -271,7 +296,7 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
           </StyledCard>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <StyledCard>
             <CardContent sx={{ p: 2 }}>
               <StatBox>
