@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Form, useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -23,8 +23,10 @@ import {
   useTheme,
   useMediaQuery,
   alpha,
+  FormControl,
+  InputLabel
 } from "@mui/material";
-import { useSnackbar } from "notistack";
+import { useToast } from "../../../app/providers/ToastContext";
 import { 
   Edit as EditIcon, 
   Info as InfoIcon, 
@@ -117,7 +119,8 @@ const ContentScroll = styled(Box)(({ theme }) => ({
 
 export default function PaymentApproval() {
   const { id: enterpriseId } = useParams();
-  const { enqueueSnackbar } = useSnackbar();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -203,29 +206,20 @@ export default function PaymentApproval() {
         setProjects(Array.isArray(projectsList) ? projectsList : []);
       } catch (error) {
         const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách dự án";
-        enqueueSnackbar(errorMessage, { variant: "error" });
+        showToast(`${errorMessage}`, "error", 3000);
       }
     };
 
     if (!permissionsLoading && isOwner) {
       loadProjects();
     }
-  }, [enterpriseId, permissionsLoading, isOwner]);
+  }, [enterpriseId, permissionsLoading, isOwner, showToast]);
 
   // Helper function to fetch payments
   const refreshPayments = async (newPage = 0, newRowsPerPage = rowsPerPage) => {
     try {
       setLoading(true);
-      console.log("[PAYMENT_APPROVAL] 📡 Fetching payments with filters:", {
-        projectId: selectedProjectId,
-        states: filterStates,
-        type: filterType,
-        keyword: filterKeyword,
-        supplierIds: filterSupplierIds,
-        page: newPage,
-        rowsPerPage: newRowsPerPage,
-      });
-      
+
       const filters = {};
       if (filterStates.length > 0) filters.states = filterStates;
       if (filterType) filters.type = filterType;
@@ -254,18 +248,12 @@ export default function PaymentApproval() {
         }
       }
       
-      console.log("[PAYMENT_APPROVAL] ✅ Payments fetched:", data);
       setPayments(Array.isArray(data) ? data : []);
       setTotalCount(total);
       setPage(newPage);
     } catch (error) {
-      console.error("[PAYMENT_APPROVAL] ❌ Error fetching payments:", {
-        message: error?.response?.data?.message || error.message,
-        status: error?.response?.status,
-        data: error?.response?.data,
-      });
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách phê duyệt thanh toán";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
       setPayments([]);
       setTotalCount(0);
     } finally {
@@ -278,113 +266,36 @@ export default function PaymentApproval() {
     if (!permissionsLoading && isOwner) {
       refreshPayments(page, rowsPerPage);
     }
-  }, [selectedProjectId, filterStates, filterType, filterKeyword, filterSupplierIds, page, rowsPerPage, permissionsLoading, isOwner, enqueueSnackbar]);
+  }, [selectedProjectId, filterStates, filterType, filterKeyword, filterSupplierIds, page, rowsPerPage, permissionsLoading, isOwner, showToast]);
 
-  // Handle quote/task selection - call API to filter
-  // Handle quote selection in create form - call API to filter
+  // Handle quote selection in create form - auto-fill amount from selected quote
   useEffect(() => {
-    const filterQuotes = async () => {
-      if (!createOpen || !createFormData.projectId || !createFormData.quoteId) return;
-
-      try {
-        console.log("[PAYMENT_FORM] 📡 Filtering quotes by ID:", createFormData.quoteId);
-        const quotesResponse = await quoteApi.getQuotes({ 
-          projectId: createFormData.projectId,
-          quoteId: createFormData.quoteId 
-        }, 0, 100);
-        const quotesData = quotesResponse?.data || quotesResponse || [];
-        console.log("[PAYMENT_FORM] ✅ Quotes filtered:", quotesData);
-        
-        // Auto-fill amount from selected quote if available
-        const selectedQuote = Array.isArray(quotesData) ? quotesData[0] : null;
-        if (selectedQuote?.totalAmount && !createFormData.amount) {
-          setCreateFormData(prev => ({
-            ...prev,
-            amount: selectedQuote.totalAmount.toString()
-          }));
-        }
-      } catch (error) {
-        console.error("[PAYMENT_FORM] ❌ Error filtering quotes:", error);
-        const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải thông tin báo giá";
-        enqueueSnackbar(errorMessage, { variant: "error" });
+    if (createFormData.quoteId && quotes.length > 0) {
+      const selectedQuote = quotes.find(q => q.id.toString() === createFormData.quoteId);
+      if (selectedQuote && selectedQuote.finalPrice) {
+        setCreateFormData(prev => ({
+          ...prev,
+          amount: selectedQuote.finalPrice.toString()
+        }));
       }
-    };
+    }
+  }, [createFormData.quoteId, quotes]);
 
-    filterQuotes();
-  }, [createFormData.quoteId, createOpen, createFormData.projectId]);
-
-  // Handle task selection in create form - call API to filter
+  // Handle quote selection in edit form - auto-fill amount from selected quote
   useEffect(() => {
-    const filterTasks = async () => {
-      if (!createOpen || !createFormData.projectId || !createFormData.taskId) return;
-
-      try {
-        console.log("[PAYMENT_FORM] 📡 Filtering tasks by ID:", createFormData.taskId);
-        const tasksResponse = await taskApi.getTasks({ 
-          projectId: createFormData.projectId,
-          taskId: createFormData.taskId 
-        }, 0, 100);
-        const tasksData = tasksResponse?.data || tasksResponse || [];
-        console.log("[PAYMENT_FORM] ✅ Tasks filtered:", tasksData);
-      } catch (error) {
-        console.error("[PAYMENT_FORM] ❌ Error filtering tasks:", error);
-        const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải thông tin công việc";
-        enqueueSnackbar(errorMessage, { variant: "error" });
+    if (editFormData?.quoteId && quotes.length > 0) {
+      const selectedQuote = quotes.find(q => q.id.toString() === editFormData.quoteId);
+      if (selectedQuote && selectedQuote.finalPrice) {
+        setEditFormData(prev => ({
+          ...prev,
+          amount: selectedQuote.finalPrice.toString()
+        }));
       }
-    };
-
-    filterTasks();
-  }, [createFormData.taskId, createOpen, createFormData.projectId]);
-
-  // Handle quote selection in edit form - call API to filter
-  useEffect(() => {
-    const filterQuotes = async () => {
-      if (!editOpen || !editFormData?.projectId || !editFormData?.quoteId) return;
-
-      try {
-        console.log("[PAYMENT_EDIT_FORM] 📡 Filtering quotes by ID:", editFormData.quoteId);
-        const quotesResponse = await quoteApi.getQuotes({ 
-          projectId: editFormData.projectId,
-          quoteId: editFormData.quoteId 
-        }, 0, 100);
-        const quotesData = quotesResponse?.data || quotesResponse || [];
-        console.log("[PAYMENT_EDIT_FORM] ✅ Quotes filtered:", quotesData);
-      } catch (error) {
-        console.error("[PAYMENT_EDIT_FORM] ❌ Error filtering quotes:", error);
-        const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải thông tin báo giá";
-        enqueueSnackbar(errorMessage, { variant: "error" });
-      }
-    };
-
-    filterQuotes();
-  }, [editFormData?.quoteId, editOpen, editFormData?.projectId]);
-
-  // Handle task selection in edit form - call API to filter
-  useEffect(() => {
-    const filterTasks = async () => {
-      if (!editOpen || !editFormData?.projectId || !editFormData?.taskId) return;
-
-      try {
-        console.log("[PAYMENT_EDIT_FORM] 📡 Filtering tasks by ID:", editFormData.taskId);
-        const tasksResponse = await taskApi.getTasks({ 
-          projectId: editFormData.projectId,
-          taskId: editFormData.taskId 
-        }, 0, 100);
-        const tasksData = tasksResponse?.data || tasksResponse || [];
-        console.log("[PAYMENT_EDIT_FORM] ✅ Tasks filtered:", tasksData);
-      } catch (error) {
-        console.error("[PAYMENT_EDIT_FORM] ❌ Error filtering tasks:", error);
-        const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải thông tin công việc";
-        enqueueSnackbar(errorMessage, { variant: "error" });
-      }
-    };
-
-    filterTasks();
-  }, [editFormData?.taskId, editOpen, editFormData?.projectId]);
+    }
+  }, [editFormData?.quoteId, quotes]);
 
   const handleOpenDetail = (payment) => {
-    setSelectedPayment(payment);
-    setViewMode("detail");
+    navigate(`/enterprise/${enterpriseId}/payment-approvals/${payment.id}`);
   };
 
   const handleCloseDetail = () => {
@@ -402,12 +313,11 @@ export default function PaymentApproval() {
     if (newState === "PENDING") {
       try {
         setStateChanging(paymentId);
-        console.log("[PAYMENT SUBMIT] 📤 Submitting payment to approval level 1", { paymentId });
         
         // Gọi hàm submit
         await paymentApprovalApi.submit(paymentId);
         
-        enqueueSnackbar("✅ Gửi duyệt cấp 1 thành công", { variant: "success" });
+        showToast("Gửi duyệt cấp 1 thành công", "success", 3000);
         
         // Cập nhật payment trong list
         setPayments(prev => 
@@ -419,9 +329,8 @@ export default function PaymentApproval() {
           setSelectedPayment(prev => ({ ...prev, state: "PENDING" }));
         }
       } catch (error) {
-        console.error("[PAYMENT SUBMIT] ❌ Error submitting payment:", error);
         const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi gửi duyệt";
-        enqueueSnackbar(errorMessage, { variant: "error" });
+        showToast(`${errorMessage}`, "error", 3000);
       } finally {
         setStateChanging(null);
       }
@@ -502,16 +411,15 @@ export default function PaymentApproval() {
   const handleEditSubmit = async () => {
     try {
       if (!editFormData.name.trim()) {
-        enqueueSnackbar("Vui lòng nhập tên phê duyệt", { variant: "error" });
+        showToast("Vui lòng nhập tên phê duyệt", "error", 3000);
         return;
       }
       if (!editFormData.amount || isNaN(editFormData.amount) || parseFloat(editFormData.amount) <= 0) {
-        enqueueSnackbar("Vui lòng nhập số tiền hợp lệ", { variant: "error" });
+        showToast("Vui lòng nhập số tiền hợp lệ", "error", 3000);
         return;
       }
 
       setEditSubmitting(true);
-      console.log("[PAYMENT UPDATE] 💾 Updating payment approval...");
 
       const updateData = {
         name: editFormData.name.trim(),
@@ -524,7 +432,7 @@ export default function PaymentApproval() {
 
       await paymentApprovalApi.updatePaymentApproval(editProjectId, editPaymentId, updateData);
 
-      enqueueSnackbar("✅ Cập nhật phê duyệt thanh toán thành công", { variant: "success" });
+      showToast("Cập nhật phê duyệt thanh toán thành công", "success", 3000);
       
       // Fetch lại data từ đầu
       await refreshPayments(0, rowsPerPage);
@@ -534,9 +442,8 @@ export default function PaymentApproval() {
       setEditPaymentId(null);
       setEditProjectId(null);
     } catch (error) {
-      console.error("[PAYMENT UPDATE] ❌ Error updating payment:", error);
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi cập nhật phê duyệt thanh toán";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
     } finally {
       setEditSubmitting(false);
     }
@@ -550,11 +457,10 @@ export default function PaymentApproval() {
   const handleDeleteConfirm = async () => {
     try {
       setDeleteSubmitting(true);
-      console.log("[PAYMENT DELETE] 🗑️ Deleting payment approval:", deleteTargetId);
 
       await paymentApprovalApi.deletePaymentApproval(deleteTargetId);
 
-      enqueueSnackbar("✅ Xoá phê duyệt thanh toán thành công", { variant: "success" });
+      showToast("Xoá phê duyệt thanh toán thành công", "success", 3000);
       
       // Fetch lại data từ đầu
       await refreshPayments(0, rowsPerPage);
@@ -565,9 +471,8 @@ export default function PaymentApproval() {
         handleCloseDetail();
       }
     } catch (error) {
-      console.error("[PAYMENT DELETE] ❌ Error deleting payment:", error);
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi xoá phê duyệt thanh toán";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
     } finally {
       setDeleteSubmitting(false);
     }
@@ -597,7 +502,7 @@ export default function PaymentApproval() {
       setProjects(Array.isArray(projectsData) ? projectsData : []);
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách dự án";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
     }
   };
 
@@ -605,15 +510,12 @@ export default function PaymentApproval() {
   const handleCreateQuotesOpen = async () => {
     if (!createFormData.projectId) return;
     try {
-      console.log("[PAYMENT_FORM] 📡 Filtering quotes for project:", createFormData.projectId);
       const quotesResponse = await quoteApi.getQuotes({ projectId: createFormData.projectId }, 0, 100);
       const quotesData = quotesResponse?.data || quotesResponse || [];
       setQuotes(Array.isArray(quotesData) ? quotesData : []);
-      console.log("[PAYMENT_FORM] ✅ Quotes filtered:", quotesData.length);
     } catch (error) {
-      console.error("[PAYMENT_FORM] ❌ Error filtering quotes:", error);
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách báo giá";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
     }
   };
 
@@ -621,15 +523,12 @@ export default function PaymentApproval() {
   const handleCreateTasksOpen = async () => {
     if (!createFormData.projectId) return;
     try {
-      console.log("[PAYMENT_FORM] 📡 Filtering tasks for project:", createFormData.projectId);
       const tasksResponse = await taskApi.getTasks({ projectId: createFormData.projectId }, 0, 100);
       const tasksData = tasksResponse?.data || tasksResponse || [];
       setTasks(Array.isArray(tasksData) ? tasksData : []);
-      console.log("[PAYMENT_FORM] ✅ Tasks filtered:", tasksData.length);
     } catch (error) {
-      console.error("[PAYMENT_FORM] ❌ Error filtering tasks:", error);
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách công việc";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
     }
   };
 
@@ -641,7 +540,7 @@ export default function PaymentApproval() {
       setProjects(Array.isArray(projectsData) ? projectsData : []);
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách dự án";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
     }
   };
 
@@ -649,15 +548,12 @@ export default function PaymentApproval() {
   const handleEditQuotesOpen = async () => {
     if (!editFormData?.projectId) return;
     try {
-      console.log("[PAYMENT_EDIT_FORM] 📡 Filtering quotes for project:", editFormData.projectId);
       const quotesResponse = await quoteApi.getQuotes({ projectId: editFormData.projectId }, 0, 100);
       const quotesData = quotesResponse?.data || quotesResponse || [];
       setQuotes(Array.isArray(quotesData) ? quotesData : []);
-      console.log("[PAYMENT_EDIT_FORM] ✅ Quotes filtered:", quotesData.length);
     } catch (error) {
-      console.error("[PAYMENT_EDIT_FORM] ❌ Error filtering quotes:", error);
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách báo giá";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
     }
   };
 
@@ -665,48 +561,33 @@ export default function PaymentApproval() {
   const handleEditTasksOpen = async () => {
     if (!editFormData?.projectId) return;
     try {
-      console.log("[PAYMENT_EDIT_FORM] 📡 Filtering tasks for project:", editFormData.projectId);
       const tasksResponse = await taskApi.getTasks({ projectId: editFormData.projectId }, 0, 100);
       const tasksData = tasksResponse?.data || tasksResponse || [];
       setTasks(Array.isArray(tasksData) ? tasksData : []);
-      console.log("[PAYMENT_EDIT_FORM] ✅ Tasks filtered:", tasksData.length);
     } catch (error) {
-      console.error("[PAYMENT_EDIT_FORM] ❌ Error filtering tasks:", error);
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách công việc";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
     }
   };
 
   const handleApproveSubmit = async () => {
     try {
       if (!approveNewState) {
-        enqueueSnackbar("❌ Vui lòng chọn trạng thái duyệt", { variant: "warning" });
-        return;
-      }
-      
-      if (!approveNote.trim()) {
-        enqueueSnackbar("❌ Vui lòng nhập ghi chú duyệt", { variant: "warning" });
+        showToast("Vui lòng chọn trạng thái duyệt", "error", 3000);
         return;
       }
 
       setApproveSubmitting(true);
-      console.log("[PAYMENT APPROVE] 💾 Approving payment", {
-        paymentId: approvePaymentId,
-        newState: approveNewState,
-        note: approveNote
-      });
 
       // Gọi API duyệt dựa trên trạng thái được chọn
       if (["APPROVED_LV1", "REJECTED_LV1"].includes(approveNewState)) {
         // Duyệt cấp 1
-        console.log("[PAYMENT APPROVE] 🟢 Calling approvalLv1");
         await paymentApprovalApi.approvalLv1(approvePaymentId, {
           state: approveNewState,
           note: approveNote.trim()
         });
       } else if (["APPROVED_ALL", "REJECTED_LV2"].includes(approveNewState)) {
         // Duyệt cấp 2
-        console.log("[PAYMENT APPROVE] 🔵 Calling approvalLv2");
         await paymentApprovalApi.approvalLv2(approvePaymentId, {
           state: approveNewState,
           note: approveNote.trim()
@@ -715,7 +596,7 @@ export default function PaymentApproval() {
         throw new Error("Trạng thái duyệt không hợp lệ");
       }
 
-      enqueueSnackbar("Duyệt phê duyệt thanh toán thành công", { variant: "success" });
+      showToast("Duyệt phê duyệt thanh toán thành công", "success", 3000);
       
       // Cập nhật payment trong list
       setPayments(prev =>
@@ -737,7 +618,7 @@ export default function PaymentApproval() {
       setApproveNote("");
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi duyệt phê duyệt thanh toán";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
     } finally {
       setApproveSubmitting(false);
     }
@@ -746,16 +627,15 @@ export default function PaymentApproval() {
   const handleCreateSubmit = async () => {
     try {
       if (!createFormData.name.trim()) {
-        enqueueSnackbar("Vui lòng nhập tên phê duyệt", { variant: "error" });
+        showToast("Vui lòng nhập tên phê duyệt", "error", 3000);
         return;
       }
       if (!createFormData.amount || isNaN(createFormData.amount) || parseFloat(createFormData.amount) <= 0) {
-        enqueueSnackbar("Vui lòng nhập số tiền hợp lệ", { variant: "error" });
+        showToast("Vui lòng nhập số tiền hợp lệ", "error", 3000);
         return;
       }
 
       setCreateSubmitting(true);
-      console.log("[PAYMENT CREATE] 💾 Creating payment approval...");
 
       const paymentData = {
         name: createFormData.name.trim(),
@@ -769,7 +649,7 @@ export default function PaymentApproval() {
       const projectIdToUse = createFormData.projectId || selectedProjectId;
       await paymentApprovalApi.createPaymentApproval(projectIdToUse, paymentData);
 
-      enqueueSnackbar("✅ Tạo phê duyệt thanh toán thành công", { variant: "success" });
+      showToast("Tạo phê duyệt thanh toán thành công", "success", 3000);
       
       // Fetch lại data từ đầu
       await refreshPayments(0, rowsPerPage);
@@ -787,7 +667,7 @@ export default function PaymentApproval() {
       setCreateOpen(false);
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tạo phê duyệt thanh toán";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(`${errorMessage}`, "error", 3000);
     } finally {
       setCreateSubmitting(false);
     }
@@ -1025,24 +905,6 @@ export default function PaymentApproval() {
                       size="small"
                       variant="outlined"
                     />
-                    {(row.noteLv1 || row.noteLv2) && (
-                      <Tooltip title={`Duyệt: ${row.noteLv1 || row.noteLv2}`}>
-                        <Box sx={{ 
-                          fontSize: "0.75rem", 
-                          bgcolor: alpha(theme.palette.info.main, 0.1),
-                          color: "info.main",
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: 1,
-                          fontWeight: 500
-                        }}>
-                          {row.approvedByLv1 ? "Lv1 ✓" : ""}
-                          {row.approvedByLv2 ? "Lv2 ✓" : ""}
-                          {row.rejectedByLv1 ? "Lv1 ✗" : ""}
-                          {row.rejectedByLv2 ? "Lv2 ✗" : ""}
-                        </Box>
-                      </Tooltip>
-                    )}
                   </Box>
                 ),
               },
@@ -1133,7 +995,7 @@ export default function PaymentApproval() {
                         </ActionButton>
                       </Tooltip>
                     )}
-                    {payment.state === "DRAFT" && (
+                    {(payment.state === "DRAFT" || payment.state === "PENDING") && (
                       <Tooltip title="Xoá" arrow>
                         <ActionButton 
                           size="small"
@@ -1185,27 +1047,27 @@ export default function PaymentApproval() {
 
         <DialogContent sx={{ pt: 2 }}>
           {editFormData && (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
               {/* Chọn Project */}
-              <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Dự Án *
-                </Typography>
-                <Select
-                  name="projectId"
-                  value={editFormData.projectId}
-                  onChange={handleEditInputChange}
-                  size="small"
-                  fullWidth
-                  disabled
-                >
-                  {projects.map((project) => (
-                    <MenuItem key={project.id} value={project.id.toString()}>
-                      {project.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
+              <FormControl fullWidth size="small">
+                <InputLabel id="project-label">Sự kiện</InputLabel>
+              <Select
+                labelId="project-label"
+                label="Sự kiện *"
+                name="projectId"
+                value={editFormData.projectId}
+                onChange={handleEditInputChange}
+                size="small"
+                fullWidth
+                disabled
+              >
+                {projects.map((project) => (
+                  <MenuItem key={project.id} value={project.id.toString()}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              </FormControl>
 
               {/* Tên phê duyệt */}
               <TextField
@@ -1217,34 +1079,52 @@ export default function PaymentApproval() {
                 size="small"
               />
 
-              {/* Chọn Quote */}
-              <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Báo Giá (Tùy chọn)
-                </Typography>
-                <Select
-                  name="quoteId"
-                  value={editFormData.quoteId}
-                  onChange={handleEditInputChange}
-                  onOpen={handleEditQuotesOpen}
-                  size="small"
-                  fullWidth
-                >
-                  <MenuItem value="">-- Không chọn --</MenuItem>
-                  {quotes.map((quote) => (
-                    <MenuItem key={quote.id} value={quote.id.toString()}>
-                      {`${quote.name || `Quote #${quote.id}`} - ${quote.finalPrice ? quote.finalPrice.toLocaleString("vi-VN") : 0}₫`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
+              {/* Loại */}
+              <FormControl fullWidth size="small">
+                <InputLabel id="type-label">Loại</InputLabel>
+              <Select
+                labelId="type-label"
+                label="Loại *"
+                name="type"
+                value={editFormData.type}
+                onChange={handleEditInputChange}
+                size="small"
+                fullWidth
+              >
+                <MenuItem value="QUOTE">Báo Giá</MenuItem>
+                <MenuItem value="TASK">Công Việc</MenuItem>
+              </Select>
+              </FormControl>
 
-              {/* Chọn Task */}
-              <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Công Việc (Tùy chọn)
-                </Typography>
+              {/* Chọn Quote - Chỉ hiển thị nếu loại là QUOTE */}
+              {editFormData.type === "QUOTE" && (
+                <FormControl>
+                  <InputLabel id="quote-label">Báo Giá</InputLabel>
+                  <Select
+                    labelId="quote-label"
+                    label="Báo Giá *"
+                    name="quoteId"
+                    value={editFormData.quoteId}
+                    onChange={handleEditInputChange}
+                    onOpen={handleEditQuotesOpen}
+                    size="small"
+                    fullWidth
+                  >
+                    {quotes.map((quote) => (
+                      <MenuItem key={quote.id} value={quote.id.toString()}>
+                        {`${quote.name || `Quote #${quote.id}`} - ${quote.finalPrice ? quote.finalPrice.toLocaleString("vi-VN") : 0}₫`}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
+              {/* Chọn Task - Chỉ hiển thị nếu loại là TASK */}
+              {editFormData.type === "TASK" && (
+                <FormControl fullWidth size="small">
+                  <InputLabel id="task-label">Công Việc</InputLabel>
                 <Select
+                  label="Công Việc *"
                   name="taskId"
                   value={editFormData.taskId}
                   onChange={handleEditInputChange}
@@ -1252,35 +1132,18 @@ export default function PaymentApproval() {
                   size="small"
                   fullWidth
                 >
-                  <MenuItem value="">-- Không chọn --</MenuItem>
                   {tasks.map((task) => (
                     <MenuItem key={task.id} value={task.id.toString()}>
                       {task.name}
                     </MenuItem>
                   ))}
                 </Select>
-              </Box>
-
-              {/* Loại */}
-              <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Loại *
-                </Typography>
-                <Select
-                  name="type"
-                  value={editFormData.type}
-                  onChange={handleEditInputChange}
-                  size="small"
-                  fullWidth
-                >
-                  <MenuItem value="QUOTE">Báo Giá</MenuItem>
-                  <MenuItem value="TASK">Công Việc</MenuItem>
-                </Select>
-              </Box>
+                </FormControl>
+              )}
 
               {/* Số tiền */}
               <TextField
-                label="Số Tiền *"
+                label="Số Tiền"
                 name="amount"
                 type="number"
                 value={editFormData.amount}
@@ -1363,88 +1226,37 @@ export default function PaymentApproval() {
         fullWidth
       >
         <DialogTitle sx={{ fontWeight: 600, fontSize: "1.1rem" }}>
-          Duyệt Phê Duyệt Thanh Toán
+          Phê Duyệt Thanh Toán {approvePayment ? approvePayment.name : ""}
         </DialogTitle>
 
         <DialogContent sx={{ pt: 2 }}>
           {approvePayment && (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {/* Hiển thị thông tin hiện tại */}
-              <Box sx={{ p: 2, backgroundColor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
-                <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary" }}>
-                  Thông tin phê duyệt
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  <strong>Tên:</strong> {approvePayment.name}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Trạng thái hiện tại:</strong> {getStateLabel(approvePayment.state)}
-                </Typography>
-                
-                {/* Hiển thị state duyệt từ các cấp */}
-                {(approvePayment.noteLv1 || approvePayment.approvedByLv1 || approvePayment.rejectedByLv1) && (
-                  <Box sx={{ mt: 1.5, pt: 1.5, borderTop: "1px solid rgba(0,0,0,0.1)" }}>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary" }}>
-                      Duyệt Cấp 1:
-                    </Typography>
-                    <Typography variant="body2" sx={{ 
-                      color: approvePayment.approvedByLv1 ? "success.main" : approvePayment.rejectedByLv1 ? "error.main" : "default",
-                      fontWeight: 500
-                    }}>
-                      {approvePayment.approvedByLv1 ? "✓ Đã duyệt" : approvePayment.rejectedByLv1 ? "✗ Bị từ chối" : ""}
-                    </Typography>
-                    {approvePayment.noteLv1 && (
-                      <Typography variant="caption" sx={{ color: "text.secondary", display: "block", mt: 0.5 }}>
-                        Ghi chú: {approvePayment.noteLv1}
-                      </Typography>
-                    )}
-                  </Box>
-                )}
-
-                {/* Hiển thị state duyệt cấp 2 */}
-                {(approvePayment.noteLv2 || approvePayment.approvedByLv2 || approvePayment.rejectedByLv2) && (
-                  <Box sx={{ mt: 1, pt: 1, borderTop: "1px solid rgba(0,0,0,0.1)" }}>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary" }}>
-                      Duyệt Cấp 2:
-                    </Typography>
-                    <Typography variant="body2" sx={{ 
-                      color: approvePayment.approvedByLv2 ? "success.main" : approvePayment.rejectedByLv2 ? "error.main" : "default",
-                      fontWeight: 500
-                    }}>
-                      {approvePayment.approvedByLv2 ? "✓ Đã duyệt" : approvePayment.rejectedByLv2 ? "✗ Bị từ chối" : ""}
-                    </Typography>
-                    {approvePayment.noteLv2 && (
-                      <Typography variant="caption" sx={{ color: "text.secondary", display: "block", mt: 0.5 }}>
-                        Ghi chú: {approvePayment.noteLv2}
-                      </Typography>
-                    )}
-                  </Box>
-                )}
-              </Box>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
 
               {/* Chọn trạng thái duyệt */}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Chọn hành động duyệt *
-                </Typography>
+                <FormControl fullWidth size="small" sx={{ mb: 1 }}>
+                  <InputLabel id="approve-new-state-label">Hành động duyệt</InputLabel>
                 <Select
+                  labelId="approve-new-state-label"
+                  label="Hành động duyệt *"
                   value={approveNewState}
                   onChange={(e) => setApproveNewState(e.target.value)}
                   size="small"
                   fullWidth
                 >
-                  <MenuItem value="">-- Chọn hành động --</MenuItem>
                   {approveAvailableChanges.map(change => (
                     <MenuItem key={change.value} value={change.value}>
                       {change.label}
                     </MenuItem>
                   ))}
                 </Select>
+                </FormControl>
               </Box>
 
               {/* Ghi chú duyệt */}
               <TextField
-                label="Ghi chú duyệt *"
+                label="Ghi chú duyệt"
                 value={approveNote}
                 onChange={(e) => setApproveNote(e.target.value)}
                 fullWidth
@@ -1477,7 +1289,21 @@ export default function PaymentApproval() {
       {/* Create Payment Modal */}
       <Dialog 
         open={createOpen} 
-        onClose={() => setCreateOpen(false)} 
+        onClose={() => {
+          setCreateOpen(false);
+          // Reset form when closing
+          setCreateFormData({
+            projectId: "",
+            name: "",
+            quoteId: "",
+            taskId: "",
+            type: "QUOTE",
+            amount: "",
+            purpose: "",
+          });
+          setQuotes([]);
+          setTasks([]);
+        }} 
         maxWidth="sm" 
         fullWidth
       >
@@ -1486,68 +1312,89 @@ export default function PaymentApproval() {
         </DialogTitle>
 
         <DialogContent sx={{ pt: 2 }}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
             {/* Chọn Project */}
-            <Box>
-              <Typography variant="caption" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                Dự Án *
-              </Typography>
-              <Select
-                name="projectId"
-                value={createFormData.projectId}
-                onChange={handleCreateInputChange}
-                onOpen={handleCreateProjectOpen}
-                size="small"
-                fullWidth
-              >
-                {projects.map((project) => (
-                  <MenuItem key={project.id} value={project.id.toString()}>
-                    {project.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Box>
+            <FormControl fullWidth size="small">
+              <InputLabel id="create-project-label">Sự kiện</InputLabel>
+            <Select
+              labelId="create-project-label"
+              label="Sự kiện"
+              name="projectId"
+              value={createFormData.projectId}
+              onChange={handleCreateInputChange}
+              onOpen={handleCreateProjectOpen}
+              size="small"
+              fullWidth
+            >
+              {projects.map((project) => (
+                <MenuItem key={project.id} value={project.id.toString()}>
+                  {project.name}
+                </MenuItem>
+              ))}
+            </Select>
+            </FormControl>
 
             {/* Tên phê duyệt */}
             <TextField
-              label="Tên Phê Duyệt *"
+              label="Tên Phê Duyệt"
               name="name"
               value={createFormData.name}
               onChange={handleCreateInputChange}
               fullWidth
+              required
               size="small"
               placeholder="VD: Thanh toán tháng 11"
             />
 
-            {/* Chọn Quote */}
-            <Box>
-              <Typography variant="caption" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                Báo Giá (Tùy chọn)
-              </Typography>
-              <Select
-                name="quoteId"
-                value={createFormData.quoteId}
-                onChange={handleCreateInputChange}
-                onOpen={handleCreateQuotesOpen}
-                size="small"
-                fullWidth
-                disabled={!createFormData.projectId || loadingQuotesAndTasks}
-              >
-                <MenuItem value="">-- Không chọn --</MenuItem>
-                {quotes.map((quote) => (
-                  <MenuItem key={quote.id} value={quote.id.toString()}>
-                    {`${quote.name || `Quote #${quote.id}`} - ${quote.finalPrice ? quote.finalPrice.toLocaleString("vi-VN") : 0}₫`}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Box>
+            {/* Loại */}
+            <FormControl fullWidth size="small">
+              <InputLabel id="create-type-label">Loại</InputLabel>
+            <Select
+              labelId="create-type-label"
+              label="Loại"
+              name="type"
+              value={createFormData.type}
+              onChange={handleCreateInputChange}
+              size="small"
+              fullWidth
+            >
+              <MenuItem value="QUOTE">Báo Giá</MenuItem>
+              <MenuItem value="TASK">Công Việc</MenuItem>
+            </Select>
+            </FormControl>
 
-            {/* Chọn Task */}
-            <Box>
-              <Typography variant="caption" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                Công Việc (Tùy chọn)
-              </Typography>
+            {/* Chọn Quote - Chỉ hiển thị nếu loại là QUOTE */}
+            {createFormData.type === "QUOTE" && (
+              <FormControl fullWidth size="small">
+                <InputLabel id="create-quote-label" sx={{textAlign: 'center'}}>Báo Giá</InputLabel>
+                <Select
+                  labelId="create-quote-label"
+                  label="Báo Giá"
+                  name="quoteId"
+                  value={createFormData.quoteId}
+                  onChange={handleCreateInputChange}
+                  onOpen={handleCreateQuotesOpen}
+                  size="small"
+                  fullWidth
+                  disabled={!createFormData.projectId || loadingQuotesAndTasks}
+                >
+                  <MenuItem value="">-- Không chọn --</MenuItem>
+                  {quotes.map((quote) => (
+                    <MenuItem key={quote.id} value={quote.id.toString()}>
+                      {`${quote.name || `Quote #${quote.id}`} - ${quote.finalPrice ? quote.finalPrice.toLocaleString("vi-VN") : 0}₫`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+
+            {/* Chọn Task - Chỉ hiển thị nếu loại là TASK */}
+            {createFormData.type === "TASK" && (
+              <FormControl fullWidth size="small">
+                <InputLabel id="create-task-label" sx={{textAlign: 'center'}}>Công Việc</InputLabel>
               <Select
+                labelId="create-task-label"
+                label="Công Việc"
                 name="taskId"
                 value={createFormData.taskId}
                 onChange={handleCreateInputChange}
@@ -1556,31 +1403,15 @@ export default function PaymentApproval() {
                 fullWidth
                 disabled={!createFormData.projectId}
               >
-                <MenuItem value="">-- Không chọn --</MenuItem>
                 {tasks.map((task) => (
                   <MenuItem key={task.id} value={task.id.toString()}>
                     {task.name}
                   </MenuItem>
                 ))}
               </Select>
-            </Box>
+              </FormControl>
+            )}
 
-            {/* Loại */}
-            <Box>
-              <Typography variant="caption" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                Loại *
-              </Typography>
-              <Select
-                name="type"
-                value={createFormData.type}
-                onChange={handleCreateInputChange}
-                size="small"
-                fullWidth
-              >
-                <MenuItem value="QUOTE">Báo Giá</MenuItem>
-                <MenuItem value="TASK">Công Việc</MenuItem>
-              </Select>
-            </Box>
 
             {/* Số tiền */}
             <TextField
@@ -1611,7 +1442,21 @@ export default function PaymentApproval() {
 
         <DialogActions sx={{ p: 2, gap: 1 }}>
           <Button 
-            onClick={() => setCreateOpen(false)}
+            onClick={() => {
+              setCreateOpen(false);
+              // Reset form when closing
+              setCreateFormData({
+                projectId: "",
+                name: "",
+                quoteId: "",
+                taskId: "",
+                type: "QUOTE",
+                amount: "",
+                purpose: "",
+              });
+              setQuotes([]);
+              setTasks([]);
+            }}
             disabled={createSubmitting}
           >
             Hủy

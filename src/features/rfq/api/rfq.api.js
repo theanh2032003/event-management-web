@@ -6,14 +6,13 @@ const rfqApi = {
    * GET /rfq
    * Headers: enterprise-id, supplier-id, user-id
    */
-  getRfqs: async (filters = {}, page = 0, size = 10, sort = 'createdAt,desc') => {
+  getRfqs: async (filters = {}, page = 0, size = 10) => {
     try {
 
       const params = {
         ...filters, // projectId, keyword
         page,
         size,
-        sort,
       };
 
       const response = await axiosClient.get('/rfq', { params });

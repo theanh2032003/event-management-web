@@ -34,6 +34,7 @@ import EnterpriseQuoteRequests from './features/rfq/pages/RfqEnterprise';
 import EnterpriseQuotations from './features/quote/pages/QuotationEnterprises';
 import EnterpriseContracts from './features/contract/pages/ContractEnterprises';
 import EnterprisePaymentApproval from './features/payment/pages/PaymentApproval';
+import EnterprisePaymentApprovalDetail from './features/payment/pages/PaymentApprovalDetailPage';
 
 // Shared pages
 import Notifications from './features/notification/pages/Notifications';
@@ -82,6 +83,7 @@ function EnterpriseRoutes() {
 
         {/* Payment Approvals */}
         <Route path="payment-approvals" element={<EnterprisePaymentApproval />} />
+        <Route path="payment-approvals/:paymentApprovalId" element={<EnterprisePaymentApprovalDetail />} />
 
       {/* Settings & Profile */}
       <Route path="settings" element={<EnterpriseSettings />} />

@@ -8,9 +8,14 @@ import {
   alpha,
   useTheme,
   CircularProgress,
-  List,
-  ListItem,
-  ListItemText,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  Card,
+  CardContent,
+  Stack,
+  Button,
 } from "@mui/material";
 import {
   AttachMoney as MoneyIcon,
@@ -56,7 +61,6 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
               setQuoteInfo(quoteData[0]);
             }
           } catch (error) {
-            console.error("[PAYMENT_DETAIL] Error fetching quote:", error);
           }
         }
 
@@ -69,11 +73,9 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
               setTaskInfo(taskData[0]);
             }
           } catch (error) {
-            console.error("[PAYMENT_DETAIL] Error fetching task:", error);
           }
         }
       } catch (error) {
-        console.error("[PAYMENT_DETAIL] Error fetching related info:", error);
       } finally {
         setLoadingRelated(false);
       }
@@ -160,373 +162,264 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
 
   return (
     <TemplateDetailLayout
-      title={payment.name}
-      status={getStateLabel(payment.state)}
-      statusColor={getStateColor(payment.state)}
-      createdBy="—"
+      title={`Phiếu duyệt chi ${payment.name}`}
       actions={actions}
-      additionalInfo={additionalInfo}
     >
-      <Grid container spacing={3}>
-        {/* Payment Amount Section */}
-        <Grid item xs={12}>
-          <Box
-            sx={{
-              p: 3,
-              backgroundColor: alpha(theme.palette.success.main, 0.06),
-              borderRadius: 2,
-              borderLeft: `4px solid ${theme.palette.success.main}`,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-              <MoneyIcon sx={{ color: "success.main" }} />
-              <Typography variant="h6" sx={{ fontWeight: 700, color: "success.main" }}>
-                Số Tiền
-              </Typography>
-            </Box>
-            <Divider sx={{ mb: 2, opacity: 0.3 }} />
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Tổng Số Tiền
-                </Typography>
-                <Typography variant="h5" sx={{ fontWeight: 700, color: "success.main" }}>
-                  {formatCurrency(payment.amount)}₫
-                </Typography>
-              </Grid>
-            </Grid>
+      <Stack spacing={3}>
+        {/* ============ THÔNG TIN CHUNG ============ */}
+        <Box>
+          <Box sx={{ mb: 2, pb: 1, borderBottom: `2px dashed ${alpha(theme.palette.divider, 0.5)}` }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>THÔNG TIN CHUNG</Typography>
           </Box>
-        </Grid>
+          <Table size="small" sx={{ '& td': { py: 1.2 } }}>
+            <TableBody>
+              <TableRow>
+                <TableCell sx={{ width: '200px', fontWeight: 600, color: 'text.secondary' }}>Loại phiếu</TableCell>
+                <TableCell>Phiếu duyệt chi {getTypeLabel(payment.type)}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ width: '200px', fontWeight: 600, color: 'text.secondary' }}>Người tạo</TableCell>
+                <TableCell>{payment.createdUser.name || "—"}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Ngày tạo</TableCell>
+                <TableCell>{formatDate(payment.createdAt)}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Trạng thái</TableCell>
+                <TableCell>
+                  <Chip label={getStateLabel(payment.state)} color={getStateColor(payment.state)} size="small" />
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Box>
 
-       
+        <Divider sx={{ opacity: 0.3 }} />
 
-        {/* Purpose Section */}
-        {payment.purpose && (
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 3,
-                backgroundColor: alpha(theme.palette.primary.main, 0.06),
-                borderRadius: 2,
-                borderLeft: `4px solid ${theme.palette.primary.main}`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <DescriptionIcon sx={{ color: "primary.main" }} />
-                <Typography variant="h6" sx={{ fontWeight: 700, color: "primary.main" }}>
-                  Mục Đích
-                </Typography>
-              </Box>
-              <Divider sx={{ mb: 2, opacity: 0.3 }} />
-              <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
-                {payment.purpose}
-              </Typography>
-            </Box>
-          </Grid>
-        )}
-
-        {/* Approval Level 1 Section */}
-        {(payment.userLv1Id || payment.noteLv1 || payment.approvedLv1At) && (
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 3,
-                backgroundColor: alpha(
-                  payment.state === "REJECTED_LV1" 
-                    ? theme.palette.error.main 
-                    : theme.palette.info.main, 
-                  0.06
-                ),
-                borderRadius: 2,
-                borderLeft: `4px solid ${
-                  payment.state === "REJECTED_LV1" 
-                    ? theme.palette.error.main 
-                    : theme.palette.info.main
-                }`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                {payment.state === "REJECTED_LV1" ? (
-                  <RejectedIcon sx={{ color: "error.main" }} />
-                ) : (
-                  <ApprovedIcon sx={{ color: "info.main" }} />
-                )}
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    fontWeight: 700, 
-                    color: payment.state === "REJECTED_LV1" ? "error.main" : "info.main" 
-                  }}
-                >
-                  Phê Duyệt Cấp 1
-                </Typography>
-              </Box>
-              <Divider sx={{ mb: 2, opacity: 0.3 }} />
-              <Grid container spacing={2}>
-                {payment.userLv1Id && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                      Người Duyệt
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      User #{payment.userLv1Id}
-                    </Typography>
-                  </Grid>
-                )}
-                {payment.approvedLv1At && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                      Thời Gian Duyệt
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {formatDate(payment.approvedLv1At)}
-                    </Typography>
-                  </Grid>
-                )}
-                {payment.noteLv1 && (
-                  <Grid item xs={12}>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                      Ghi Chú
-                    </Typography>
-                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
-                      {payment.noteLv1}
-                    </Typography>
-                  </Grid>
-                )}
-              </Grid>
-            </Box>
-          </Grid>
-        )}
-
-        {/* Approval Level 2 Section */}
-        {(payment.userLv2Id || payment.noteLv2 || payment.approvedLv2At) && (
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 3,
-                backgroundColor: alpha(
-                  payment.state === "REJECTED_LV2" 
-                    ? theme.palette.error.main 
-                    : theme.palette.success.main, 
-                  0.06
-                ),
-                borderRadius: 2,
-                borderLeft: `4px solid ${
-                  payment.state === "REJECTED_LV2" 
-                    ? theme.palette.error.main 
-                    : theme.palette.success.main
-                }`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                {payment.state === "REJECTED_LV2" ? (
-                  <RejectedIcon sx={{ color: "error.main" }} />
-                ) : (
-                  <ApprovedIcon sx={{ color: "success.main" }} />
-                )}
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    fontWeight: 700, 
-                    color: payment.state === "REJECTED_LV2" ? "error.main" : "success.main" 
-                  }}
-                >
-                  Phê Duyệt Cấp 2
-                </Typography>
-              </Box>
-              <Divider sx={{ mb: 2, opacity: 0.3 }} />
-              <Grid container spacing={2}>
-                {payment.userLv2Id && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                      Người Duyệt
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      User #{payment.userLv2Id}
-                    </Typography>
-                  </Grid>
-                )}
-                {payment.approvedLv2At && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                      Thời Gian Duyệt
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {formatDate(payment.approvedLv2At)}
-                    </Typography>
-                  </Grid>
-                )}
-                {payment.noteLv2 && (
-                  <Grid item xs={12}>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                      Ghi Chú
-                    </Typography>
-                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
-                      {payment.noteLv2}
-                    </Typography>
-                  </Grid>
-                )}
-              </Grid>
-            </Box>
-          </Grid>
-        )}
-
-        {/* Timestamps Section */}
-        <Grid item xs={12}>
-          <Box
-            sx={{
-              p: 3,
-              backgroundColor: alpha(theme.palette.grey[500], 0.06),
-              borderRadius: 2,
-              borderLeft: `4px solid ${theme.palette.grey[500]}`,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-              <CalendarIcon sx={{ color: "text.secondary" }} />
-              <Typography variant="h6" sx={{ fontWeight: 700, color: "text.secondary" }}>
-                Thời gian cập nhật
-              </Typography>
-            </Box>
-            <Divider sx={{ mb: 2, opacity: 0.3 }} />
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Ngày Tạo
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {formatDate(payment.createdAt)}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Cập Nhật Lần Cuối
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {formatDate(payment.updatedAt)}
-                </Typography>
-              </Grid>
-            </Grid>
+        {/* ============ THÔNG TIN KHOẢN CHI ============ */}
+        <Box>
+          <Box sx={{ mb: 2, pb: 1, borderBottom: `2px dashed ${alpha(theme.palette.divider, 0.5)}` }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>THÔNG TIN KHOẢN CHI</Typography>
           </Box>
-        </Grid>
-         {/* Related Info Section - Quote or Task */}
-        {(payment.quoteId || payment.taskId) && (
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 3,
-                backgroundColor: alpha(theme.palette.info.main, 0.06),
-                borderRadius: 2,
-                borderLeft: `4px solid ${theme.palette.info.main}`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                {payment.type === "QUOTE" ? (
-                  <QuoteIcon sx={{ color: "info.main" }} />
-                ) : (
-                  <TaskIcon sx={{ color: "info.main" }} />
-                )}
-                <Typography variant="h6" sx={{ fontWeight: 700, color: "info.main" }}>
-                  {payment.type === "QUOTE" ? "Thông Tin Báo Giá" : "Thông Tin Công Việc"}
-                </Typography>
-              </Box>
-              <Divider sx={{ mb: 2, opacity: 0.3 }} />
-              
-              {loadingRelated ? (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
-                  <CircularProgress size={20} />
-                  <Typography variant="body2" color="text.secondary">
-                    Đang tải thông tin...
+          <Table size="small" sx={{ '& td': { py: 1.2 } }}>
+            <TableBody>
+              <TableRow>
+                <TableCell sx={{ width: '200px', fontWeight: 600, color: 'text.secondary' }}>Số tiền đề nghị</TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.main', fontSize: '1.1rem' }}>
+                    {formatCurrency(payment.amount)}₫
+                  </Typography>
+                </TableCell>
+              </TableRow>
+              {payment.purpose && (
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, color: 'text.secondary', verticalAlign: 'top' }}>Mục đích chi</TableCell>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {payment.purpose}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Box>
+
+        <Divider sx={{ opacity: 0.3 }} />
+
+        {/* ============ ĐỐI TƯỢNG CHI (BÁOO GIÁ / CÔNG VIỆC) ============ */}
+        <Box>
+          <Box sx={{ mb: 2, pb: 1, borderBottom: `2px dashed ${alpha(theme.palette.divider, 0.5)}` }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              ĐỐI TƯỢNG CHI: {payment.type === "QUOTE" ? "BÁO GIÁ" : "CÔNG VIỆC"}
+            </Typography>
+          </Box>
+          
+          {loadingRelated ? (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
+              <CircularProgress size={20} />
+              <Typography variant="body2" color="text.secondary">Đang tải thông tin...</Typography>
+            </Box>
+          ) : payment.type === "QUOTE" ? (
+            <Box>
+              <Table size="small" sx={{ '& td': { py: 1.2 } }}>
+                <TableBody>
+                  {quoteInfo && (
+                    <>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Tên báo giá</TableCell>
+                        <TableCell>{quoteInfo.name || "—"}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Số lượng</TableCell>
+                        <TableCell>{quoteInfo.quantity || "—"}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Tổng giá</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ color: 'text.main' }}>
+                            {formatCurrency(quoteInfo.finalPrice)}₫
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                      {quoteInfo.paymentMethod && (
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Phương thức TT</TableCell>
+                          <TableCell>{quoteInfo.paymentMethod}</TableCell>
+                        </TableRow>
+                      )}
+                    </>
+                  )}
+                </TableBody>
+              </Table>
+            </Box>
+          ) : (
+            <Box>
+              <Table size="small" sx={{ '& td': { py: 1.2 } }}>
+                <TableBody>
+                  <TableRow>
+                    <TableCell sx={{ width: '200px', fontWeight: 600, color: 'text.secondary' }}>Mã công việc</TableCell>
+                    <TableCell>#{payment.taskId}</TableCell>
+                  </TableRow>
+                  {taskInfo && (
+                    <>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Tên công việc</TableCell>
+                        <TableCell>{taskInfo.name || "—"}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Ngân sách task</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
+                            {formatCurrency(taskInfo.budget || 0)}₫
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  )}
+                </TableBody>
+              </Table>
+            </Box>
+          )}
+        </Box>
+
+        <Divider sx={{ opacity: 0.3 }} />
+
+        {/* ============ QUY TRÌNH DUYỆT ============ */}
+        <Box>
+          <Box sx={{ mb: 2, pb: 1, borderBottom: `2px dashed ${alpha(theme.palette.divider, 0.5)}` }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>QUY TRÌNH DUYỆT</Typography>
+          </Box>
+
+          <Stack spacing={3} sx={{ pl: 2 }}>
+            {/* NGƯỜI ĐỀ XUẤT */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <ApprovedIcon sx={{ color: 'success.main', fontSize: 24 }} />
+                  <Box sx={{ width: 2, height: 40, backgroundColor: alpha(theme.palette.divider, 0.5), my: 1 }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Người đề xuất</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                    {payment?.createdUser.name || "—"}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                    {formatDate(payment.createdAt)}
                   </Typography>
                 </Box>
-              ) : (
-                <Grid container spacing={2}>
-                  {payment.type === "QUOTE" && payment.quoteId && (
-                    <>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                          Mã Báo Giá
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          #{payment.quoteId}
-                        </Typography>
-                      </Grid>
-                      {quoteInfo && (
-                        <>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                              Tên Báo Giá
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              {quoteInfo.name || "—"}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                              Giá Cuối Cùng
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: "success.main" }}>
-                              {formatCurrency(quoteInfo.finalPrice)}₫
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                              Số Lượng
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              {quoteInfo.quantity || "—"}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                              Phương Thức Thanh Toán
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              {quoteInfo.paymentMethod || "—"}
-                            </Typography>
-                          </Grid>
-                          {quoteInfo.paymentTerms && (
-                            <Grid item xs={12}>
-                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                                Điều Khoản Thanh Toán
-                              </Typography>
-                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                {quoteInfo.paymentTerms}
-                              </Typography>
-                            </Grid>
-                          )}
-                        </>
-                      )}
-                    </>
-                  )}
-
-                  {payment.type === "TASK" && payment.taskId && (
-                    <>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                          Mã Công Việc
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          #{payment.taskId}
-                        </Typography>
-                      </Grid>
-                      {taskInfo && (
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                            Tên Công Việc
-                          </Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {taskInfo.name || "—"}
-                          </Typography>
-                        </Grid>
-                      )}
-                    </>
-                  )}
-                </Grid>
-              )}
+              </Box>
             </Box>
-          </Grid>
-        )}
-      </Grid>
+
+            {/* LV1 APPROVAL - LUÔN HIỂN THỊ */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  {payment.state === "REJECTED_LV1" ? (
+                    <RejectedIcon sx={{ color: 'error.main', fontSize: 24 }} />
+                  ) : payment.approvedLv1At ? (
+                    <ApprovedIcon sx={{ color: 'success.main', fontSize: 24 }} />
+                  ) : (
+                    <Box sx={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${alpha(theme.palette.divider, 0.5)}` }} />
+                  )}
+                  <Box sx={{ width: 2, height: 40, backgroundColor: alpha(theme.palette.divider, 0.5), my: 1 }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Duyệt cấp 1</Typography>
+                  {payment.approvedLv1At && (
+                    <>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                        {payment?.projectOwnerName || "—"}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                        {formatDate(payment.approvedLv1At)}
+                      </Typography>
+                      {payment.noteLv1 && (
+                        <Typography variant="caption" sx={{ display: 'block', mt: 1, whiteSpace: 'pre-wrap' }}>
+                          Ghi chú: {payment.noteLv1}
+                        </Typography>
+                      )}
+                    </>
+                  )}
+                  {!payment.approvedLv1At && (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                      {payment.userLv1Id ? "Chưa thực hiện" : "Không áp dụng"}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+
+            {/* LV2 APPROVAL */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  {payment.state === "REJECTED_LV2" ? (
+                    <RejectedIcon sx={{ color: 'error.main', fontSize: 24 }} />
+                  ) : payment.approvedLv2At ? (
+                    <ApprovedIcon sx={{ color: 'success.main', fontSize: 24 }} />
+                  ) : (
+                    <Box sx={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${alpha(theme.palette.divider, 0.5)}` }} />
+                  )}
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Duyệt cấp 2</Typography>
+                  {payment.approvedLv2At && (
+                    <>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                        {payment?.enterpriseOwnerName || "—"}
+                      </Typography>  
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                        {formatDate(payment.approvedLv2At)}
+                      </Typography>
+                      {payment.noteLv2 && (
+                        <Typography variant="caption" sx={{ display: 'block', mt: 1, whiteSpace: 'pre-wrap' }}>
+                          Ghi chú: {payment.noteLv2}
+                        </Typography>
+                      )}
+                    </>
+                  )}
+                  {!payment.approvedLv2At && (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                      {payment.userLv2Id ? "Chưa thực hiện" : "Không áp dụng"}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+
+          </Stack>
+        </Box>
+
+        {/* ============ GHI CHÚ KHÁC ============ */}
+        <Box>
+          <Box sx={{ mb: 2, pb: 1, borderBottom: `2px dashed ${alpha(theme.palette.divider, 0.5)}` }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>GHI CHÚ KHÁC</Typography>
+          </Box>
+          <Typography variant="body2">—</Typography>
+        </Box>
+      </Stack>
     </TemplateDetailLayout>
   );
 };
