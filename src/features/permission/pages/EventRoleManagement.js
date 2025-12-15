@@ -49,32 +49,6 @@ import { useToast } from "../../../app/providers/ToastContext";
 import useProjectUserPermissions from "../hooks/useProjectUserPermissions";
 import { CommonTable } from "../../../shared/components/CommonTable";
 
-// Styled Components
-const HeaderBox = styled(Box)(({ theme }) => ({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: theme.spacing(3),
-  padding: theme.spacing(2.5),
-  borderRadius: theme.spacing(2),
-  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.04)} 0%, ${alpha(theme.palette.secondary.main, 0.04)} 100%)`,
-  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-  [theme.breakpoints.down('sm')]: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: theme.spacing(2),
-  },
-}));
-
-const SectionTitle = styled(Typography)(({ theme }) => ({
-  fontWeight: 700,
-  fontSize: '1.25rem',
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(1),
-  color: theme.palette.text.primary,
-}));
-
 const StyledButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
   fontWeight: 600,
@@ -120,7 +94,7 @@ const EmptyStateBox = styled(Paper)(({ theme }) => ({
 export default function EventRoleManagement({ enterpriseId, eventId, eventData }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const toast = useToast();
+  const { showToast } = useToast();
 
   // Permission checking
   const [userId, setUserId] = useState(null);
@@ -216,7 +190,7 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
       } else {
         const message = err?.response?.data?.message || err.message || "Không thể tải danh sách vai trò";
         setTimeout(() => {
-          toast.error(message);
+          showToast(`❌ ${message}`, 'error', 3000);
         }, 300);
         setRoles([]);
       }
@@ -296,18 +270,18 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
 
       // Validate eventId
       if (!eventId) {
-        toast.error("Không thể xác định sự kiện");
+        showToast('Không thể xác định sự kiện', 'error', 3000);
         return;
       }
 
       // Validate form
       if (!roleForm.name || !roleForm.name.trim()) {
-        toast.warning("Vui lòng nhập tên vai trò");
+        showToast('Vui lòng nhập tên vai trò', 'error', 3000);
         return;
       }
 
       if (roleForm.permissionIds.length === 0) {
-        toast.warning("Vui lòng chọn ít nhất một quyền");
+        showToast('Vui lòng chọn ít nhất một quyền', 'error', 3000);
         return;
       }
 
@@ -321,13 +295,13 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
         // Update existing role using roleApi
         await roleApi.updateRole(eventId, editingRole.id, requestBody);
         setTimeout(() => {
-          toast.success("Cập nhật vai trò thành công!");
+          showToast('Cập nhật vai trò thành công!', 'success', 3000);
         }, 300);
       } else {
         // Create new role using roleApi
         await roleApi.createRole(eventId, requestBody);
         setTimeout(() => {
-          toast.success("Tạo vai trò mới thành công!");
+          showToast('Tạo vai trò mới thành công!', 'success', 3000);
         }, 300);
       }
 
@@ -349,7 +323,7 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
       }
 
       setTimeout(() => {
-        toast.error(errorMessage);
+        showToast(`❌ ${errorMessage}`, 'error', 3000);
       }, 300);
     } finally {
       setSubmitting(false);
@@ -366,13 +340,13 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
       // Delete role using roleApi
       await roleApi.deleteRole(eventId, roleId);
       setTimeout(() => {
-        toast.success("Xóa vai trò thành công!");
+        showToast('Xóa vai trò thành công!', 'success', 3000);
       }, 300);
       await fetchRoles(0, rolesPageSize);
     } catch (err) {
       const message = err.response?.data?.message || "Không thể xóa vai trò";
       setTimeout(() => {
-        toast.error(message);
+        showToast(`❌ ${message}`, 'error', 3000);
       }, 300);
     }
   };

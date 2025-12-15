@@ -12,7 +12,7 @@ import {
 import {
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
-import { useSnackbar } from "notistack";
+import { useToast } from '../../../app/providers/ToastContext';
 import useEnterpriseUserPermissions from "../../permission/hooks/useEnterpriseUserPermissions";
 import productApi from "../api/product.api";
 import supplierApi from "../../supplier/api/supplier.api";
@@ -90,7 +90,7 @@ const Section = styled(Box)(({ theme }) => ({
 export default function ProductDetail() {
   const { id: enterpriseId, productId } = useParams();
   const navigate = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
 
   // Get user permissions
   const getUserId = () => {
@@ -128,9 +128,6 @@ export default function ProductDetail() {
         // Call API to get product detail by ID
         const response = await productApi.getProductById(productId);
         
-        // Log full API response for debugging
-        console.log("[PRODUCT DETAIL] 📦 Full API Response:", response);
-     
         // Map API response to component state - only use data from backend
         const productData = {
           id: response.id,
@@ -149,7 +146,6 @@ export default function ProductDetail() {
           createdAt: response.createdAt,
         };
 
-        console.log("[PRODUCT DETAIL] ✅ Mapped Product Data:", productData);
         setProduct(productData);
 
         // Fetch supplier info if supplierId exists
@@ -157,24 +153,21 @@ export default function ProductDetail() {
           try {
             setLoadingSupplier(true);
             const supplierResponse = await supplierApi.getSupplierById(response.supplierId);
-            console.log("[PRODUCT DETAIL] 📦 Supplier Response:", supplierResponse);
             setSupplierInfo(supplierResponse?.data || supplierResponse);
           } catch (error) {
-            console.error("[PRODUCT DETAIL] ❌ Error fetching supplier:", error);
           } finally {
             setLoadingSupplier(false);
           }
         }
       } catch (error) {
-        console.error("[PRODUCT DETAIL] ❌ Error fetching product:", error);
-        enqueueSnackbar("Lỗi khi tải chi tiết sản phẩm", { variant: "error" });
+        showToast("Lỗi khi tải chi tiết sản phẩm", "error", 3000);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProduct();
-  }, [enterpriseId, productId, enqueueSnackbar]);
+  }, [enterpriseId, productId, showToast]);
 
   if (permissionsLoading) {
     return (

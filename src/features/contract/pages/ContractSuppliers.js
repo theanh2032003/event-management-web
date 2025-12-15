@@ -26,7 +26,7 @@ import {
   alpha,
   Button,
 } from "@mui/material";
-import { useSnackbar } from "notistack";
+import { useToast } from "../../../app/providers/ToastContext";
 import {
   Description as ContractIcon,
   Inbox as InboxIcon,
@@ -111,7 +111,7 @@ const formatCurrency = (value) => {
 
 export default function Contracts() {
   const { id: supplierId } = useParams();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -176,9 +176,9 @@ export default function Contracts() {
           setTotalCount(0);
         }
       } catch (error) {
-        enqueueSnackbar(
-          error?.response?.data?.message || "Lỗi khi tải danh sách hợp đồng. Vui lòng thử lại.",
-          { variant: "error" }
+        showToast((error?.response?.data?.message || "Lỗi khi tải danh sách hợp đồng. Vui lòng thử lại."),
+          "error",
+          3000
         );
         setContracts([]);
         setTotalCount(0);
@@ -188,7 +188,7 @@ export default function Contracts() {
     };
 
     fetchContracts();
-  }, [page, rowsPerPage, filterState, filterKeyword, enqueueSnackbar]);
+  }, [page, rowsPerPage, filterState, filterKeyword]);
 
   const handleOpenDetail = async (contract) => {
     setSelectedContract(contract);
@@ -230,7 +230,7 @@ export default function Contracts() {
           
           setSupplierInfo(supplierData);
         } catch (error) {
-          enqueueSnackbar("Không thể tải thông tin nhà cung cấp", { variant: "warning" });
+          showToast("Không thể tải thông tin nhà cung cấp", "error", 3000);
         }
       }
 
@@ -249,7 +249,7 @@ export default function Contracts() {
           
           setEnterpriseInfo(enterpriseData);
         } catch (error) {
-          enqueueSnackbar("Không thể tải thông tin doanh nghiệp", { variant: "warning" });
+          showToast("Không thể tải thông tin doanh nghiệp", "error", 3000);
         }
       }
 
@@ -281,11 +281,10 @@ export default function Contracts() {
           
           setQuoteInfo(quoteData);
         } catch (error) {
-          enqueueSnackbar("Không thể tải thông tin báo giá", { variant: "warning" });
+          showToast("Không thể tải thông tin báo giá", "error", 3000);
         }
       }
     } catch (error) {
-      console.error("[CONTRACTS] Error fetching contract info:", error);
     } finally {
       setLoadingInfo(false);
     }
@@ -312,7 +311,7 @@ export default function Contracts() {
     const contractContent = document.getElementById('contract-pdf-content');
     
     if (!contractContent) {
-      enqueueSnackbar("Không thể tải hợp đồng", { variant: "error" });
+      showToast("Không thể tải hợp đồng", "error", 3000);
       return;
     }
 
@@ -393,13 +392,9 @@ export default function Contracts() {
       printWindow.document.write(fullHTML);
       printWindow.document.close();
       
-      enqueueSnackbar("Đang mở cửa sổ in. Vui lòng chọn 'Lưu dưới dạng PDF' trong dialog in.", { 
-        variant: "info",
-        autoHideDuration: 5000 
-      });
+      showToast("ℹĐang mở cửa sổ in. Vui lòng chọn 'Lưu dưới dạng PDF' trong dialog in.", "success", 5000);
     } catch (error) {
-      console.error("[CONTRACTS] Error generating PDF:", error);
-      enqueueSnackbar("Lỗi khi tạo file PDF. Vui lòng thử lại.", { variant: "error" });
+      showToast("Lỗi khi tạo file PDF. Vui lòng thử lại.", "error", 3000);
     }
   };
 
@@ -411,7 +406,7 @@ export default function Contracts() {
     };
 
     if (!validTransitions[currentState] || !validTransitions[currentState].includes(newState)) {
-      enqueueSnackbar("Chuyển đổi trạng thái không hợp lệ", { variant: "error" });
+      showToast("Chuyển đổi trạng thái không hợp lệ", "error", 3000);
       return;
     }
 
@@ -430,7 +425,7 @@ export default function Contracts() {
       
       await contractApi.updateContractState(contractId, { state: newState });
       
-      enqueueSnackbar("Đã cập nhật trạng thái hợp đồng", { variant: "success" });
+      showToast("Đã cập nhật trạng thái hợp đồng", "success", 3000);
       
       // Refresh list
       const filters = {
@@ -451,9 +446,9 @@ export default function Contracts() {
         setTotalCount(response.length);
       }
     } catch (error) {
-      enqueueSnackbar(
-        error?.response?.data?.message || "Lỗi khi thay đổi trạng thái. Vui lòng thử lại.",
-        { variant: "error" }
+      showToast((error?.response?.data?.message || "Lỗi khi thay đổi trạng thái. Vui lòng thử lại."),
+        "error",
+        3000
       );
     } finally {
       setStateChanging(null);

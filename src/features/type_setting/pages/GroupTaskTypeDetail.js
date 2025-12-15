@@ -27,6 +27,7 @@ import {
 } from "@mui/icons-material";
 import axiosClient from "../../../app/axios/axiosClient";
 import PermissionGate from "../../../shared/components/PermissionGate";
+import { useToast } from "../../../app/providers/ToastContext";
 import CommonDialog from "../../../shared/components/CommonDialog";
 import TaskTypeDialogHookForm from "../components/TaskTypeDialogHookForm";
 import { PERMISSION_CODES } from "../../../shared/constants/permissions";
@@ -64,12 +65,12 @@ export default function GroupTaskTypeDetail() {
   const { id: enterpriseId, groupId } = useParams();
   const navigate = useNavigate();
   const { sidebarCollapsed } = useSidebar();
+  const { showToast } = useToast();
 
   const [group, setGroup] = useState(null);
   const [taskTypes, setTaskTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
   
   // Task Type Dialog
   const [taskTypeDialogOpen, setTaskTypeDialogOpen] = useState(false);
@@ -137,14 +138,15 @@ export default function GroupTaskTypeDetail() {
       const foundGroup = Array.isArray(allGroups) ? allGroups.find(g => g.id === parseInt(groupId)) : null;
       
       if (!foundGroup) {
-        setError("Không tìm thấy nhóm loại công việc");
+        showToast('Không tìm thấy nhóm loại công việc', 'error', 3000);
         setGroup(null);
       } else {
         setGroup(foundGroup);
         await fetchTaskTypes(groupId);
       }
     } catch (err) {
-      setError("Không thể tải dữ liệu. " + (err?.message || ""));
+      const message = "Không thể tải dữ liệu. " + (err?.message || "");
+      showToast(`${message}`, 'error', 3000);
       setGroup(null);
     } finally {
       setLoading(false);
@@ -177,7 +179,7 @@ export default function GroupTaskTypeDetail() {
 
   const handleSaveTaskType = async (data) => {
     if (!data.taskTypeName.trim()) {
-      alert("Vui lòng nhập tên loại công việc");
+      showToast('Vui lòng nhập tên loại công việc', 'error', 3000);
       return;
     }
 
@@ -212,9 +214,11 @@ export default function GroupTaskTypeDetail() {
       }
 
       handleCloseTaskTypeDialog();
+      showToast(`${editingTaskType ? 'Cập nhật loại công việc thành công!' : 'Tạo loại công việc mới thành công!'}`, 'success', 3000);
       await fetchTaskTypes(groupId);
     } catch (err) {
-      alert(err.response?.data?.message || "Không thể lưu loại công việc");
+      const message = err.response?.data?.message || "Không thể lưu loại công việc";
+      showToast(`${message}`, 'error', 3000);
     } finally {
       setSubmitting(false);
     }
@@ -238,11 +242,13 @@ export default function GroupTaskTypeDetail() {
           }
         }
       );
+      showToast('Xóa loại công việc thành công!', 'success', 3000);
       setDeleteDialogOpen(false);
       setTaskTypeToDelete(null);
       await fetchTaskTypes(groupId);
     } catch (err) {
-      alert(err.response?.data?.message || "Không thể xóa loại công việc");
+      const message = err.response?.data?.message || "Không thể xóa loại công việc";
+      showToast(`${message}`, 'error', 3000);
     } finally {
       setIsDeleting(false);
     }

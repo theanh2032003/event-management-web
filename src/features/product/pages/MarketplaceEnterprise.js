@@ -29,7 +29,7 @@ import {
   Inbox as InboxIcon,
   Search as SearchIcon,
 } from "@mui/icons-material";
-import { useSnackbar } from "notistack";
+import { useToast } from '../../../app/providers/ToastContext';
 import useEnterpriseUserPermissions from "../../permission/hooks/useEnterpriseUserPermissions";
 import { debounce } from "lodash";
 import productApi from "../api/product.api";
@@ -366,7 +366,7 @@ StyledProductCard.displayName = "StyledProductCard";
 export default function EnterpriseMarketplace() {
   const { id: enterpriseId } = useParams();
   const navigate = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -415,9 +415,8 @@ export default function EnterpriseMarketplace() {
         const categoryList = Array.isArray(response) ? response : response.data || [];
         setCategories(categoryList);
       } catch (error) {
-        console.error("Error loading categories:", error);
         const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh mục";
-        enqueueSnackbar(errorMessage, { variant: "error" });
+        showToast(errorMessage, "error", 3000);
         setCategories([]);
       }
     };
@@ -462,13 +461,12 @@ export default function EnterpriseMarketplace() {
       setHasMore(pageNum < totalPages - 1);
       setPage(pageNum);
     } catch (error) {
-      console.error("[MARKETPLACE] Error fetching products:", error);
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách sản phẩm";
-      enqueueSnackbar(errorMessage, { variant: "error" });
+      showToast(errorMessage, "error", 3000);
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, keyword, enqueueSnackbar]);
+  }, [selectedCategory, keyword, showToast]);
 
   // Initial fetch
   useEffect(() => {

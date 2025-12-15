@@ -27,7 +27,7 @@ import {
   styled,
   alpha,
 } from "@mui/material";
-import { useSnackbar } from "notistack";
+import { useToast } from '../../../app/providers/ToastContext';
 import {
   Add as AddIcon,
   Description as DescriptionIcon,
@@ -100,7 +100,7 @@ const ActionButton = styled(IconButton)(({ theme }) => ({
 
 export default function Contracts() {
   const { id: enterpriseId } = useParams();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -178,7 +178,7 @@ export default function Contracts() {
         setProjects(Array.isArray(projectsList) ? projectsList : []);
       } catch (error) {
         const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách dự án";
-        enqueueSnackbar(errorMessage, { variant: "error" });
+        showToast(errorMessage, 'error', 3000);
       }
     };
 
@@ -196,7 +196,7 @@ export default function Contracts() {
         setPaymentApprovals(Array.isArray(approvalsList) ? approvalsList : []);
       } catch (error) {
         const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách phê duyệt thanh toán";
-        enqueueSnackbar(errorMessage, { variant: "error" });
+        showToast(errorMessage, 'error', 3000);
       }
     };
 
@@ -245,9 +245,8 @@ export default function Contracts() {
           setTotalCount(0);
         }
       } catch (error) {
-        console.error("[CONTRACTS] ❌ Error fetching contracts:", error);
         const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách hợp đồng";
-        enqueueSnackbar(errorMessage, { variant: "error" });
+        showToast(errorMessage, 'error', 3000);
         setContracts([]);
         setTotalCount(0);
       } finally {
@@ -258,7 +257,7 @@ export default function Contracts() {
     if (!permissionsLoading && isOwner) {
       fetchContracts();
     }
-  }, [enterpriseId, permissionsLoading, isOwner, filterState, filterKeyword, filterProjectId, page, rowsPerPage, enqueueSnackbar]);
+  }, [enterpriseId, permissionsLoading, isOwner, filterState, filterKeyword, filterProjectId, page, rowsPerPage, showToast]);
 
   const handleOpenDetail = (contract) => {
     setSelectedContract(contract);
@@ -317,24 +316,24 @@ export default function Contracts() {
   const handleEditSubmit = async () => {
     try {
       if (!createFormData.name.trim()) {
-        enqueueSnackbar("Vui lòng nhập tên hợp đồng", { variant: "error" });
+        showToast("Vui lòng nhập tên hợp đồng", 'error', 3000);
         return;
       }
 
       if (!createFormData.startDate) {
-        enqueueSnackbar("Vui lòng chọn ngày bắt đầu", { variant: "error" });
+        showToast("Vui lòng chọn ngày bắt đầu", 'error', 3000);
         return;
       }
 
       if (!createFormData.endDate) {
-        enqueueSnackbar("Vui lòng chọn ngày kết thúc", { variant: "error" });
+        showToast("Vui lòng chọn ngày kết thúc", 'error', 3000);
         return;
       }
 
       // Parse totalValue removing formatting
       const totalValueNumeric = createFormData.totalValue.replace(/\D/g, '');
       if (!totalValueNumeric || parseFloat(totalValueNumeric) <= 0) {
-        enqueueSnackbar("Vui lòng nhập tổng giá trị hợp đồng hợp lệ", { variant: "error" });
+        showToast("Vui lòng nhập tổng giá trị hợp đồng hợp lệ", 'error', 3000);
         return;
       }
 
@@ -360,10 +359,10 @@ export default function Contracts() {
       // Call appropriate API based on formMode
       if (formMode === "edit" && editingContract) {
         await contractApi.updateContract(editingContract.id, contractData);
-        enqueueSnackbar("Cập nhật hợp đồng thành công", { variant: "success" });
+        showToast("Cập nhật hợp đồng thành công", 'success', 3000);
       } else {
         await contractApi.createContract(contractData, enterpriseId);
-        enqueueSnackbar("Tạo hợp đồng thành công", { variant: "success" });
+        showToast("Tạo hợp đồng thành công", 'success', 3000);
       }
       
       // Refresh list
@@ -389,10 +388,10 @@ export default function Contracts() {
 
       handleCloseForm();
     } catch (error) {
-      console.error("[CONTRACTS] ❌ Error:", error);
-      enqueueSnackbar(
+      showToast(
         error?.response?.data?.message || `Lỗi khi ${formMode === "edit" ? "cập nhật" : "tạo"} hợp đồng. Vui lòng thử lại.`,
-        { variant: "error" }
+        'error',
+        3000
       );
     } finally {
       setFormSubmitting(false);
@@ -412,7 +411,7 @@ export default function Contracts() {
       
       await contractApi.deleteContract(deleteConfirmContractId);
       
-      enqueueSnackbar("Đã xóa hợp đồng thành công", { variant: "success" });
+      showToast("Đã xóa hợp đồng thành công", 'success', 3000);
       
       // Refresh list
       const filters = {
@@ -435,10 +434,10 @@ export default function Contracts() {
         setTotalCount(response.totalElements || response.total || response.data.length);
       }
     } catch (error) {
-      console.error("[CONTRACTS] ❌ Error deleting contract:", error);
-      enqueueSnackbar(
+      showToast(
         error?.response?.data?.message || "Lỗi khi xóa hợp đồng. Vui lòng thử lại.",
-        { variant: "error" }
+        'error',
+        3000
       );
     } finally {
       setDeletingContractId(null);
@@ -477,7 +476,6 @@ export default function Contracts() {
       const approvalsList = response?.data || response || [];
       setPaymentApprovals(Array.isArray(approvalsList) ? approvalsList : []);
     } catch (error) {
-      console.error("Error fetching payment approvals:", error);
     }
   };
 
@@ -522,31 +520,32 @@ export default function Contracts() {
     try {
       // Validate required fields
       if (!createFormData.name.trim()) {
-        enqueueSnackbar("Vui lòng nhập tên hợp đồng", { variant: "error" });
+        showToast("Vui lòng nhập tên hợp đồng", 'error', 3000);
         return;
       }
 
       if (!createFormData.startDate) {
-        enqueueSnackbar("Vui lòng chọn ngày bắt đầu", { variant: "error" });
+        showToast("Vui lòng chọn ngày bắt đầu", 'error', 3000);
         return;
       }
 
       if (!createFormData.endDate) {
-        enqueueSnackbar("Vui lòng chọn ngày kết thúc", { variant: "error" });
+        showToast("Vui lòng chọn ngày kết thúc", 'error', 3000);
         return;
       }
 
       if (!createFormData.totalValue || parseFloat(createFormData.totalValue) <= 0) {
-        enqueueSnackbar("Vui lòng nhập tổng giá trị hợp đồng hợp lệ", { variant: "error" });
+        showToast("Vui lòng nhập tổng giá trị hợp đồng hợp lệ", 'error', 3000);
         return;
       }
 
       // Use handleEditSubmit which now handles both create and edit
       await handleEditSubmit();
     } catch (error) {
-      enqueueSnackbar(
+      showToast(
         error?.response?.data?.message || "Lỗi khi tạo hợp đồng. Vui lòng thử lại.",
-        { variant: "error" }
+        'error',
+        3000
       );
     }
   };
@@ -557,7 +556,7 @@ export default function Contracts() {
       
       await contractApi.submitContract(contractId, enterpriseId);
       
-      enqueueSnackbar("Đã gửi duyệt hợp đồng", { variant: "success" });
+      showToast("Đã gửi duyệt hợp đồng", 'success', 3000);
       
       // Refresh list
       const filters = {
@@ -580,9 +579,10 @@ export default function Contracts() {
         setTotalCount(response.totalElements || response.total || response.data.length);
       }
     } catch (error) {
-      enqueueSnackbar(
+      showToast(
         error?.response?.data?.message || "Lỗi khi gửi duyệt hợp đồng. Vui lòng thử lại.",
-        { variant: "error" }
+        'error',
+        3000
       );
     } finally {
       setSubmittingContractId(null);

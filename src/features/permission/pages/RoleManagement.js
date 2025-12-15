@@ -46,6 +46,7 @@ import {
 } from "@mui/icons-material";
 import axiosClient from "../../../app/axios/axiosClient";
 import PermissionGate from "../../../shared/components/PermissionGate";
+import { useToast } from "../../../app/providers/ToastContext";
 import { CommonTable } from "../../../shared/components/CommonTable";
 import CommonDialog from "../../../shared/components/CommonDialog";
 import { PERMISSION_CODES } from "../../../shared/constants/permissions";
@@ -78,6 +79,7 @@ export default function RoleManagement({
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { showToast } = useToast();
   
   // Kiểm tra quyền của user
   const hasAccessPermission = hasPermission(requiredPermission);
@@ -130,8 +132,8 @@ export default function RoleManagement({
       const data = response.data || response;
       setRoles(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("❌ Error fetching roles:", err);
-      setError("Không thể tải danh sách quyền. " + (err?.response?.data?.message || err.message || ""));
+      const message = "Không thể tải danh sách quyền. " + (err?.response?.data?.message || err.message || "");
+      showToast(`${message}`, 'error', 3000);
       setRoles([]);
     } finally {
       setLoading(false);
@@ -153,7 +155,8 @@ export default function RoleManagement({
       const data = response.data || response;
       setPermissions(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("❌ Error fetching permissions:", err);
+      const message = "Không thể tải danh sách quyền.";
+      showToast(`${message}`, 'error', 3000);
       setPermissions([]);
     } finally {
       setLoadingPermissions(false);
@@ -227,12 +230,12 @@ export default function RoleManagement({
 
       // Validate form
       if (!roleForm.name || !roleForm.name.trim()) {
-        setError("Vui lòng nhập tên quyền");
+        showToast('Vui lòng nhập tên quyền', 'error', 3000);
         return;
       }
 
       if (roleForm.permissionIds.length === 0) {
-        setError("Vui lòng chọn ít nhất một quyền con");
+        showToast('Vui lòng chọn ít nhất một quyền con', 'error', 3000);
         return;
       }
       
@@ -273,11 +276,9 @@ export default function RoleManagement({
       }
       
       handleCloseDialog();
+      showToast(`${editingRole ? 'Cập nhật vai trò thành công!' : 'Tạo vai trò mới thành công!'}`, 'success', 3000);
       await fetchRoles();
     } catch (err) {
-      console.error("❌ Error saving role:", err);
-      console.error("❌ Error response:", err?.response?.data);
-      
       let errorMessage = "Không thể lưu quyền.";
       if (err.response?.data) {
         const errorData = err.response.data;
@@ -292,7 +293,7 @@ export default function RoleManagement({
         errorMessage = err.message;
       }
       
-      setError(errorMessage);
+      showToast(`${errorMessage}`, 'error', 3000);
     } finally {
       setSubmitting(false);
     }
@@ -512,7 +513,10 @@ export default function RoleManagement({
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
                     <IconButton 
                       size="small" 
-                      onClick={() => handleOpenDialog(row)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenDialog(row);
+                      }}
                       sx={{ 
                         color: 'primary.main',
                         '&:hover': { 
@@ -524,7 +528,10 @@ export default function RoleManagement({
                     </IconButton>
                     <IconButton 
                       size="small" 
-                      onClick={() => handleDeleteRole(row.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteRole(row.id);
+                      }}
                       sx={{ 
                         color: 'error.main',
                         '&:hover': { 
@@ -761,11 +768,13 @@ export default function RoleManagement({
                 "enterprise-id": enterpriseId
               }
             });
+            showToast(`Xóa vai trò thành công!`, 'success', 3000);
             await fetchRoles();
             setDeleteDialogOpen(false);
             setItemToDelete(null);
           } catch (err) {
-            setError(err.response?.data?.message || "Không thể xóa. Vui lòng thử lại!");
+            const message = err.response?.data?.message || "Không thể xóa. Vui lòng thử lại!";
+            showToast(`${message}`, 'error', 3000);
           } finally {
             setIsDeleting(false);
           }

@@ -20,7 +20,7 @@ import {
   ZoomOut as ZoomOutIcon,
   PictureAsPdf as PdfIcon,
 } from "@mui/icons-material";
-import { useSnackbar } from "notistack";
+import { useToast } from "../../../app/providers/ToastContext";
 import supplierApi from "../../supplier/api/supplier.api";
 import enterpriseApi from "../../enterprise/api/enterprise.api";
 import quoteApi from "../../quote/api/quote.api";
@@ -34,7 +34,7 @@ import ContractPDFView from "../components/ContractPDFView";
  */
 const ContractDetail = ({ contract, onBack, onEdit }) => {
   const theme = useTheme();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   
   const [supplierInfo, setSupplierInfo] = useState(null);
@@ -65,9 +65,7 @@ const ContractDetail = ({ contract, onBack, onEdit }) => {
             }
             
             setSupplierInfo(supplierData);
-            console.log("[CONTRACT_DETAIL] ✅ Supplier info fetched:", supplierData);
           } catch (error) {
-            console.error("[CONTRACT_DETAIL] ❌ Error fetching supplier:", error);
           }
         }
 
@@ -83,9 +81,7 @@ const ContractDetail = ({ contract, onBack, onEdit }) => {
             }
             
             setEnterpriseInfo(enterpriseData);
-            console.log("[CONTRACT_DETAIL] ✅ Enterprise info fetched:", enterpriseData);
           } catch (error) {
-            console.error("[CONTRACT_DETAIL] ❌ Error fetching enterprise:", error);
           }
         }
 
@@ -99,9 +95,7 @@ const ContractDetail = ({ contract, onBack, onEdit }) => {
             const paymentApprovalResponse = await paymentApprovalApi.getPaymentApprovalById(projectId, contract.paymentApprovalId);
             const paymentApprovalData = paymentApprovalResponse?.data || paymentApprovalResponse;
             quoteIdToFetch = paymentApprovalData?.quoteId;
-            console.log("[CONTRACT_DETAIL] ✅ PaymentApproval info fetched, quoteId:", quoteIdToFetch);
           } catch (error) {
-            console.error("[CONTRACT_DETAIL] ❌ Error fetching paymentApproval:", error);
           }
         }
         
@@ -115,13 +109,10 @@ const ContractDetail = ({ contract, onBack, onEdit }) => {
             }
             
             setQuoteInfo(quoteData);
-            console.log("[CONTRACT_DETAIL] ✅ Quote info fetched:", quoteData);
           } catch (error) {
-            console.error("[CONTRACT_DETAIL] ❌ Error fetching quote:", error);
           }
         }
       } catch (error) {
-        console.error("[CONTRACT_DETAIL] Error fetching contract info:", error);
       } finally {
         setLoadingInfo(false);
       }
@@ -142,7 +133,7 @@ const ContractDetail = ({ contract, onBack, onEdit }) => {
     const contractContent = document.getElementById('contract-pdf-content');
     
     if (!contractContent) {
-      enqueueSnackbar("Không thể tải hợp đồng", { variant: "error" });
+      showToast("Không thể tải hợp đồng", "error", 3000);
       return;
     }
 
@@ -223,13 +214,9 @@ const ContractDetail = ({ contract, onBack, onEdit }) => {
       printWindow.document.write(fullHTML);
       printWindow.document.close();
       
-      enqueueSnackbar("Đang mở cửa sổ in. Vui lòng chọn 'Lưu dưới dạng PDF' trong dialog in.", { 
-        variant: "info",
-        autoHideDuration: 5000 
-      });
+      showToast("ℹĐang mở cửa sổ in. Vui lòng chọn 'Lưu dưới dạng PDF' trong dialog in.", "success", 5000);
     } catch (error) {
-      console.error("[CONTRACT_DETAIL] Error generating PDF:", error);
-      enqueueSnackbar("Lỗi khi tạo file PDF. Vui lòng thử lại.", { variant: "error" });
+      showToast("Lỗi khi tạo file PDF. Vui lòng thử lại.", "error", 3000);
     }
   };
 

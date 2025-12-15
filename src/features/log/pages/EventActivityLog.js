@@ -18,7 +18,7 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import { useSnackbar } from 'notistack';
+import { useToast } from '../../../app/providers/ToastContext';
 import activityLogApi from '../api/activityLog.api';
 
 // Styled Components
@@ -79,7 +79,7 @@ const EmptyStateBox = styled(Box)(({ theme }) => ({
 
 export default function EventActivityLog({ eventData, enterpriseId, eventId }) {
   const theme = useTheme();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
 
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -90,7 +90,7 @@ export default function EventActivityLog({ eventData, enterpriseId, eventId }) {
   // Fetch activity logs
   useEffect(() => {
     fetchActivityLogs();
-  }, [eventId, page, rowsPerPage]);
+  }, [eventId, page, rowsPerPage, showToast]);
 
   const fetchActivityLogs = async () => {
     try {
@@ -113,8 +113,7 @@ export default function EventActivityLog({ eventData, enterpriseId, eventId }) {
         setTotalCount(result?.totalElements || 0);
       }
     } catch (error) {
-      console.error('Error fetching activity logs:', error);
-      enqueueSnackbar('Lỗi tải lịch sử hoạt động', { variant: 'error' });
+      showToast('Lỗi tải lịch sử hoạt động', 'error', 3000);
     } finally {
       setLoading(false);
     }

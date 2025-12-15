@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../../app/providers/ToastContext";
 import {
   Box,
   Card,
@@ -67,6 +68,7 @@ export default function TaskCategoryManagement({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const { showToast } = useToast();
   
   // Kiểm tra quyền của user
   const hasAccessPermission = hasPermission(requiredPermission);
@@ -125,7 +127,7 @@ export default function TaskCategoryManagement({
       setTaskCategories(Array.isArray(data) ? data : []);
       
     } catch (err) {
-      setError("Không thể tải danh sách nhóm phân loại công việc. " + (err?.response?.data?.message || err.message || ""));
+      showToast("Không thể tải danh sách nhóm phân loại công việc. " + (err?.response?.data?.message || err.message || ""), "error");
       setTaskCategories([]);
     } finally {
       setLoading(false);
@@ -160,7 +162,8 @@ export default function TaskCategoryManagement({
 
       // Validate form
       if (!categoryForm.name || !categoryForm.name.trim()) {
-        setError("Vui lòng nhập tên nhóm phân loại công việc");
+        showToast("Vui lòng nhập tên nhóm phân loại công việc", "error", 3000);
+        setSubmitting(false);
         return;
       }
       
@@ -184,13 +187,11 @@ export default function TaskCategoryManagement({
           }
         );
         
-      
-        
+        showToast("Cập nhật nhóm phân loại thành công", "success", 3000);
         // Reload danh sách
         await fetchTaskCategories();
       } else {
         // Tạo nhóm mới
-        
         const response = await axiosClient.post("/group-task-type", {
           name: categoryForm.name,
           description: categoryForm.description || ""
@@ -200,7 +201,7 @@ export default function TaskCategoryManagement({
           }
         });
         
-        
+        showToast("Tạo nhóm phân loại thành công", "success", 3000);
         // Reload danh sách
         await fetchTaskCategories();
       }
@@ -222,7 +223,7 @@ export default function TaskCategoryManagement({
         errorMessage = err.message;
       }
       
-      setError(errorMessage);
+      showToast(errorMessage, "error", 3000);
     } finally {
       setSubmitting(false);
     }
@@ -309,7 +310,7 @@ export default function TaskCategoryManagement({
   // Lưu Task Type (Create/Update)
   const handleSaveTaskType = async () => {
     if (!taskTypeForm.name.trim()) {
-      alert("Vui lòng nhập tên loại công việc");
+      showToast("Vui lòng nhập tên loại công việc", "error", 3000);
       return;
     }
 
@@ -345,9 +346,10 @@ export default function TaskCategoryManagement({
       }
 
       handleCloseTaskTypeDialog();
+      showToast((editingTaskType ? "Cập nhật" : "Tạo") + " loại công việc thành công", "success", 3000);
       await fetchTaskTypes(selectedGroup.id);
     } catch (err) {
-      alert(err.response?.data?.message || "Không thể lưu loại công việc");
+      showToast((err.response?.data?.message || "Không thể lưu loại công việc"), "error", 3000);
     } finally {
       setSubmitting(false);
     }
@@ -1027,11 +1029,12 @@ export default function TaskCategoryManagement({
               );
               await fetchTaskTypes(selectedGroup.id);
             }
+            showToast("Xóa thành công", "success", 3000);
             setDeleteDialogOpen(false);
             setItemToDelete(null);
             setDeleteTarget(null);
           } catch (err) {
-            setError(err.response?.data?.message || "Không thể xóa. Vui lòng thử lại!");
+            showToast( (err.response?.data?.message || "Không thể xóa. Vui lòng thử lại!"), "error", 3000);
           } finally {
             setIsDeleting(false);
           }

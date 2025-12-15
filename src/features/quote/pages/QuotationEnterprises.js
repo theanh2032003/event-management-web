@@ -21,7 +21,7 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import { useSnackbar } from "notistack";
+import { useToast } from "../../../app/providers/ToastContext";
 import {
   Receipt as ReceiptIcon,
   Inbox as InboxIcon,
@@ -108,7 +108,7 @@ const ActionButton = styled(IconButton)(({ theme }) => ({
 
 export default function Quotations() {
   const { id: enterpriseId } = useParams();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -217,7 +217,7 @@ export default function Quotations() {
       } catch (error) {
         console.error("[QUOTATIONS] ❌ Error fetching quotations:", error);
         const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách báo giá";
-        enqueueSnackbar(errorMessage, { variant: "error" });
+        showToast(`❌ ${errorMessage}`, 'error', 3000);
         setQuotations([]);
       } finally {
         setLoading(false);
@@ -227,7 +227,7 @@ export default function Quotations() {
     if (!permissionsLoading && isOwner) {
       fetchQuotations();
     }
-  }, [enterpriseId, permissionsLoading, isOwner, enqueueSnackbar, filters]);
+  }, [enterpriseId, permissionsLoading, isOwner, showToast, filters]);
 
   const handleOpenDetail = (quote) => {
     setSelectedQuote(quote);

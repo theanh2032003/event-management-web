@@ -28,7 +28,7 @@ import {
   styled,
   alpha,
 } from "@mui/material";
-import { useSnackbar } from "notistack";
+import { useToast } from '../../../app/providers/ToastContext';
 import {
   RequestQuote as RequestQuoteIcon,
   Inbox as InboxIcon,
@@ -228,7 +228,7 @@ const bigInputSx = {
 
 export default function RFQ() {
   const { id: supplierId } = useParams();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -307,10 +307,10 @@ export default function RFQ() {
           setTotalCount(0);
         }
       } catch (error) {
-        console.error("[RFQ] ❌ Error fetching RFQs:", error);
-        enqueueSnackbar(
+        showToast(
           error?.response?.data?.message || "Lỗi khi tải danh sách yêu cầu báo giá. Vui lòng thử lại.",
-          { variant: "error" }
+          "error",
+          3000
         );
         setRfqs([]);
         setTotalCount(0);
@@ -320,7 +320,7 @@ export default function RFQ() {
     };
 
     fetchRfqs();
-  }, [page, rowsPerPage, filterKeyword, filterProjectId, enqueueSnackbar]);
+  }, [page, rowsPerPage, filterKeyword, filterProjectId, showToast]);
 
   const handleOpenDetail = (rfq) => {
     setSelectedRfq(rfq);
@@ -436,22 +436,22 @@ export default function RFQ() {
   const handleCreateQuoteSubmit = async () => {
     try {
       if (!createQuoteFormData.name.trim()) {
-        enqueueSnackbar("Vui lòng nhập tên báo giá", { variant: "error" });
+        showToast("Vui lòng nhập tên báo giá", "error", 3000);
         return;
       }
 
       if (!createQuoteFormData.expiredAt) {
-        enqueueSnackbar("Vui lòng chọn ngày hết hạn", { variant: "error" });
+        showToast("Vui lòng chọn ngày hết hạn", "error", 3000);
         return;
       }
 
       if (!createQuoteFormData.quantity || parseFloat(createQuoteFormData.quantity) <= 0) {
-        enqueueSnackbar("Vui lòng nhập số lượng hợp lệ", { variant: "error" });
+        showToast("Vui lòng nhập số lượng hợp lệ", "error", 3000);
         return;
       }
 
       if (!createQuoteFormData.unitPrice || parseFloat(createQuoteFormData.unitPrice) <= 0) {
-        enqueueSnackbar("Vui lòng nhập đơn giá hợp lệ", { variant: "error" });
+        showToast("Vui lòng nhập đơn giá hợp lệ", "error", 3000);
         return;
       }
 
@@ -479,7 +479,7 @@ export default function RFQ() {
 
       await quoteApi.createQuote(quoteData);
 
-      enqueueSnackbar("Tạo báo giá thành công", { variant: "success" });
+      showToast("Tạo báo giá thành công", "success", 3000);
       
       // Refresh RFQ list
       const filters = {};
@@ -500,10 +500,10 @@ export default function RFQ() {
 
       handleCloseCreateQuote();
     } catch (error) {
-      console.error("[RFQ] ❌ Error creating quote:", error);
-      enqueueSnackbar(
+      showToast(
         error?.response?.data?.message || "Lỗi khi tạo báo giá. Vui lòng thử lại.",
-        { variant: "error" }
+        "error",
+        3000
       );
     } finally {
       setCreateQuoteSubmitting(false);

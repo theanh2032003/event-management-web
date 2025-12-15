@@ -19,7 +19,7 @@ import {
   Assignment as TermsIcon,
   ArrowBack as BackIcon,
 } from "@mui/icons-material";
-import { useSnackbar } from "notistack";
+import { useToast } from "../../../app/providers/ToastContext";
 import TemplateDetailLayout from "../../../components/common/TemplateDetailLayout";
 import enterpriseApi from "../../api/enterpriseApi";
 import contractApi from "../api/contract.api";
@@ -31,7 +31,7 @@ import contractApi from "../api/contract.api";
  */
 const SupplierContractDetail = ({ contract, onBack, onRefresh }) => {
   const theme = useTheme();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
   const [enterpriseInfo, setEnterpriseInfo] = useState(null);
   const [loadingEnterprise, setLoadingEnterprise] = useState(false);
   const [stateChanging, setStateChanging] = useState(false);
@@ -45,7 +45,6 @@ const SupplierContractDetail = ({ contract, onBack, onRefresh }) => {
           const response = await enterpriseApi.getEnterpriseById(contract.enterpriseId);
           setEnterpriseInfo(response?.data || response);
         } catch (error) {
-          console.error("[CONTRACT_DETAIL] Error fetching enterprise:", error);
         } finally {
           setLoadingEnterprise(false);
         }
@@ -132,7 +131,7 @@ const SupplierContractDetail = ({ contract, onBack, onRefresh }) => {
     };
 
     if (!validTransitions[contract.state] || !validTransitions[contract.state].includes(newState)) {
-      enqueueSnackbar("Chuyển đổi trạng thái không hợp lệ", { variant: "error" });
+      showToast("Chuyển đổi trạng thái không hợp lệ", "error", 3000);
       return;
     }
 
@@ -145,17 +144,16 @@ const SupplierContractDetail = ({ contract, onBack, onRefresh }) => {
       
       await contractApi.updateContractState(contract.id, { state: newState });
       
-      enqueueSnackbar("Đã cập nhật trạng thái hợp đồng", { variant: "success" });
+      showToast("Đã cập nhật trạng thái hợp đồng", "success", 3000);
       
       // Refresh data if callback provided
       if (onRefresh) {
         onRefresh();
       }
     } catch (error) {
-      console.error("[CONTRACT_DETAIL] Error changing contract state:", error);
-      enqueueSnackbar(
-        error?.response?.data?.message || "Lỗi khi thay đổi trạng thái. Vui lòng thử lại.",
-        { variant: "error" }
+      showToast( (error?.response?.data?.message || "Lỗi khi thay đổi trạng thái. Vui lòng thử lại."),
+        "error",
+        3000
       );
     } finally {
       setStateChanging(false);

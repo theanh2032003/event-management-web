@@ -44,7 +44,7 @@ import CommonDialog from "../../../shared/components/CommonDialog";
 import SubLocationDetailDialog from '../components/SubLocationDetailDialog';
 import { PERMISSION_CODES } from "../../../shared/constants/permissions";
 import { uploadToCloudinary } from "../../../shared/utils/uploadToCloudinary";
-import { useSnackbar } from 'notistack';
+import { useToast } from '../../../app/providers/ToastContext';
 
 const SubLocationCard = styled(Card)(({ theme }) => ({
   borderRadius: theme.spacing(2),
@@ -89,7 +89,7 @@ const ImageThumbnail = styled(Box)(({ theme }) => ({
 export default function LocationDetail() {
   const { id: enterpriseId, locationId } = useParams();
   const navigate = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
+  const { showToast } = useToast();
 
   const [location, setLocation] = useState(null);
   const [subLocations, setSubLocations] = useState([]);
@@ -174,10 +174,10 @@ export default function LocationDetail() {
       await locationApi.deleteSubLocation(subLocationToDelete.id);
       setDeleteDialogOpen(false);
       setSubLocationToDelete(null);
-      enqueueSnackbar('Xóa địa điểm con thành công!', { variant: 'success' });
+      showToast('Xóa địa điểm con thành công!', 'success', 3000);
       await fetchSubLocations(locationId);
     } catch (err) {
-      enqueueSnackbar('Lỗi khi xóa địa điểm con. Vui lòng thử lại.', { variant: 'error' });
+      showToast('Lỗi khi xóa địa điểm con. Vui lòng thử lại.', 'error', 3000);
     } finally {
       setIsDeleting(false);
     }
@@ -203,11 +203,11 @@ export default function LocationDetail() {
       await locationApi.deleteSubLocation(subLocationToDelete.id);
       setDeleteSubLocationDialogOpen(false);
       setSubLocationToDelete(null);
-      enqueueSnackbar('Xóa địa điểm con thành công!', { variant: 'success' });
+      showToast('Xóa địa điểm con thành công!', 'success', 3000);
       await fetchSubLocations(locationId);
       handleCloseDrawer();
     } catch (err) {
-      enqueueSnackbar('Lỗi khi xóa địa điểm con. Vui lòng thử lại.', { variant: 'error' });
+      showToast('Lỗi khi xóa địa điểm con. Vui lòng thử lại.', 'error', 3000);
     } finally {
       setIsDeletingSubLocation(false);
     }
@@ -285,12 +285,12 @@ export default function LocationDetail() {
           images: [...prev.images, ...successfulUrls],
         }));
         setSubLocationImagePreviews(prev => [...prev, ...successfulUrls]);
-        enqueueSnackbar('Tải ảnh lên thành công!', { variant: 'success' });
+        showToast('Tải ảnh lên thành công!', 'success', 3000);
       } else {
-        enqueueSnackbar('Không thể tải ảnh lên. Vui lòng thử lại!', { variant: 'error' });
+        showToast('Không thể tải ảnh lên. Vui lòng thử lại!', 'error', 3000);
       }
     } catch (error) {
-      enqueueSnackbar('Có lỗi xảy ra khi tải ảnh!', { variant: 'error' });
+      showToast('Có lỗi xảy ra khi tải ảnh!', 'error', 3000);
     } finally {
       setUploadingImages(false);
     }
@@ -305,7 +305,7 @@ export default function LocationDetail() {
 
   const handleSaveSubLocation = async () => {
     if (!subLocationForm.name.trim()) {
-      enqueueSnackbar('Vui lòng nhập tên địa điểm con!', { variant: 'warning' });
+      showToast('Vui lòng nhập tên địa điểm con!', 'error', 3000);
       return;
     }
 
@@ -320,10 +320,10 @@ export default function LocationDetail() {
 
       if (editingSubLocation) {
         await locationApi.updateSubLocation(editingSubLocation.id, payload);
-        enqueueSnackbar('Cập nhật địa điểm con thành công!', { variant: 'success' });
+        showToast('Cập nhật địa điểm con thành công!', 'success', 3000);
       } else {
         await locationApi.createSubLocation(location.id, payload);
-        enqueueSnackbar('Tạo địa điểm con thành công!', { variant: 'success' });
+        showToast('Tạo địa điểm con thành công!', 'success', 3000);
       }
 
       // Refresh sub-location list
@@ -332,7 +332,7 @@ export default function LocationDetail() {
 
       handleCloseSubLocationDialog();
     } catch (error) {
-      enqueueSnackbar('Có lỗi xảy ra khi lưu địa điểm con!', { variant: 'error' });
+      showToast('Có lỗi xảy ra khi lưu địa điểm con!', 'error', 3000);
     }
   };
 
@@ -752,7 +752,7 @@ export default function LocationDetail() {
                       variant="contained"
                       onClick={async () => {
                         if (!subLocationForm.name.trim()) {
-                          enqueueSnackbar('Vui lòng nhập tên địa điểm con!', { variant: 'warning' });
+                          showToast('Vui lòng nhập tên địa điểm con!', 'error', 3000);
                           return;
                         }
                         try {
@@ -764,7 +764,7 @@ export default function LocationDetail() {
                             description: subLocationForm.description,
                           };
                           await locationApi.updateSubLocation(selectedSubLocation.id, payload);
-                          enqueueSnackbar('Cập nhật địa điểm con thành công!', { variant: 'success' });
+                          showToast('Cập nhật địa điểm con thành công!', 'success', 3000);
                           const response = await locationApi.filterSublocationByLocation(locationId);
                           setSubLocations(response.data || []);
                           const updated = (response.data || []).find(s => s.id === selectedSubLocation.id);
@@ -773,7 +773,7 @@ export default function LocationDetail() {
                           }
                           setEditingSubLocation(null);
                         } catch (error) {
-                          enqueueSnackbar('Có lỗi xảy ra khi lưu!', { variant: 'error' });
+                          showToast('Có lỗi xảy ra khi lưu!', 'error', 3000);
                         }
                       }}
                     >
