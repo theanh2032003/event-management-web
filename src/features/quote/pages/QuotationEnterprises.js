@@ -523,6 +523,18 @@ export default function Quotations() {
               render: (value) => value || 'Không có tên',
             },
             {
+              field: 'productName',
+              headerName: 'Dịch vụ',
+              align: 'left',
+              render: (value) => value || 'N/A',
+            },
+            {
+              field: 'supplierName',
+              headerName: 'Nhà cung cấp',
+              align: 'left',
+              render: (value) => value || 'N/A',
+            },
+            {
               field: 'quantity',
               headerName: 'Số lượng',
               align: 'center',
