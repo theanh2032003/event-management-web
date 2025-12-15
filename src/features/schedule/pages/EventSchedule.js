@@ -179,7 +179,13 @@ export default function EventSchedule({ eventData, onRefresh }) {
       });
 
       const data = Array.isArray(response.data) ? response.data : response.data?.data || response.data?.content || [];
-      setSchedules(data);
+      // Sort schedules by startedAt (earliest first)
+      const sortedData = data.sort((a, b) => {
+        const dateA = new Date(a.startedAt);
+        const dateB = new Date(b.startedAt);
+        return dateA - dateB;
+      });
+      setSchedules(sortedData);
     } catch (err) {
       toast.error(
         "Không thể tải danh sách lịch trình. " +
@@ -455,13 +461,13 @@ export default function EventSchedule({ eventData, onRefresh }) {
 
                         {/* Title + Time */}
                         <Box 
-                          sx={{ flex: 1, display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                          sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
                           onClick={() => handleOpenDetailDialog(schedule.id)}
                         >
-                          <Typography variant="body1" fontWeight={600} sx={{ mr: 4, fontSize: '1rem' }} >
+                          <Typography variant="body1" fontWeight={600} sx={{ fontSize: '1rem' }} >
                             {schedule.title}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary" sx={{color: '#000000ff', fontSize: '1rem'}}>
+                          <Typography variant="caption" color="text.secondary" sx={{color: '#000000ff', fontSize: '1rem', ml: 2}}>
                             {formatDateTime(schedule.startedAt)} - {formatDateTime(schedule.endedAt)}
                           </Typography>
                         </Box>
@@ -490,13 +496,13 @@ export default function EventSchedule({ eventData, onRefresh }) {
                             }}
                           >
                             <Box 
-                              sx={{ flex: 1, display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                              sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
                               onClick={() => handleOpenDetailDialog(child.id)}
                             >
-                              <Typography variant="body2" fontWeight={500} sx={{ mr: 4, fontSize: '1rem' }}>
+                              <Typography variant="body2" fontWeight={500} sx={{ fontSize: '1rem' }}>
                                 {child.title}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary" sx={{color: '#000000ff', fontSize: '1rem'}}>
+                              <Typography variant="caption" color="text.secondary" sx={{color: '#000000ff', fontSize: '1rem', ml: 2}}>
                                 {formatDateTime(child.startedAt)} - {formatDateTime(child.endedAt)}
                               </Typography>
                             </Box>
