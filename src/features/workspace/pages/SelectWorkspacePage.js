@@ -61,11 +61,12 @@ const LogoSection = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   gap: theme.spacing(4),
   borderRight: `1px solid ${theme.palette.divider}`,
-  [theme.breakpoints.down('md')]: {
-    width: '100%',
+  [theme.breakpoints.down('lg')]: {
+    width: '45%',
     padding: theme.spacing(4),
-    borderRight: 'none',
-    borderBottom: `1px solid ${theme.palette.divider}`,
+  },
+  [theme.breakpoints.down('md')]: {
+    display: 'none',
   },
 }));
 
@@ -89,9 +90,18 @@ const ContentSection = styled(Box)(({ theme }) => ({
   padding: theme.spacing(4),
   justifyContent: 'center',
   alignItems: 'center',
+  [theme.breakpoints.down('lg')]: {
+    width: '55%',
+    padding: theme.spacing(3),
+  },
   [theme.breakpoints.down('md')]: {
     width: '100%',
     padding: theme.spacing(3),
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2),
+    justifyContent: 'flex-start',
+    paddingTop: theme.spacing(3),
   },
 }));
 
@@ -116,9 +126,15 @@ const WorkspaceGridContainer = styled(Box)(({ theme }) => ({
       background: theme.palette.text.secondary,
     },
   },
+  [theme.breakpoints.down('md')]: {
+    gridTemplateColumns: '1fr',
+    height: '300px',
+  },
   [theme.breakpoints.down('sm')]: {
     gridTemplateColumns: '1fr',
-    height: '400px',
+    height: 'auto',
+    maxHeight: '400px',
+    gap: theme.spacing(1),
   },
 }));
 
@@ -950,13 +966,14 @@ export default function SelectWorkspacePage() {
         {/* Content Section - 50% width on desktop */}
         <ContentSection>
           {/* Welcome message */}
-          <Box sx={{ textAlign: 'center', mb: 3, px: 2 }}>
+          <Box sx={{ textAlign: 'center', mb: 3, px: 2, width: '100%' }}>
             <Typography
               variant="h3"
               sx={{
                 fontWeight: 700,
                 color: 'primary.main',
-                fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' },
+                fontSize: { xs: '1.4rem', sm: '1.75rem', md: '2.5rem', lg: '3rem' },
+                lineHeight: 1.3,
               }}
             >
               Chào mừng bạn đến với
@@ -966,7 +983,8 @@ export default function SelectWorkspacePage() {
               sx={{
                 fontWeight: 700,
                 color: 'primary.main',
-                fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' },
+                fontSize: { xs: '1.4rem', sm: '1.75rem', md: '2.5rem', lg: '3rem' },
+                lineHeight: 1.3,
               }}
             >
               nền tảng Quản lý sự kiện EventMA
@@ -1099,6 +1117,12 @@ export default function SelectWorkspacePage() {
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
+        fullScreen={theme.breakpoints.down('sm')}
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 0, sm: 3 },
+          },
+        }}
       >
         <DialogTitle
           sx={{

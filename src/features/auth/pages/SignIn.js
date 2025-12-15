@@ -41,10 +41,12 @@ const Card = styled(MuiCard)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
   boxShadow:
     'hsla(220, 30%, 5%, 0.1) 0px 10px 30px 0px, hsla(220, 25%, 10%, 0.1) 0px 20px 60px -10px',
+  maxHeight: '90dvh',
+  overflowY: 'auto',
   [theme.breakpoints.up('xs')]: {
     width: '95%',
-    padding: theme.spacing(3),
-    gap: theme.spacing(2),
+    padding: theme.spacing(2.5),
+    gap: theme.spacing(1.5),
   },
   [theme.breakpoints.up('sm')]: {
     width: '90%',
@@ -57,6 +59,8 @@ const Card = styled(MuiCard)(({ theme }) => ({
     maxWidth: '500px',
     padding: theme.spacing(4),
     gap: theme.spacing(3),
+    maxHeight: 'none',
+    overflowY: 'visible',
   },
   [theme.breakpoints.up('lg')]: {
     width: '80%',
@@ -73,8 +77,8 @@ const Card = styled(MuiCard)(({ theme }) => ({
 }));
 
 const SignInContainer = styled(Stack)(({ theme }) => ({
-  height: '100vh',
-  minHeight: '100%',
+  minHeight: '100dvh',
+  minHeight: '100vh',
   padding: theme.spacing(1),
   position: 'relative',
   [theme.breakpoints.up('xs')]: {
@@ -300,7 +304,7 @@ export default function SignIn(props) {
           },
         }}
       />
-      <SignInContainer direction="column" justifyContent="center">
+      <SignInContainer direction="column" justifyContent="center" sx={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <Card variant="outlined">
           {successMessage && (
             <Alert severity="success" sx={{ mb: theme.spacing(1.5) }}>
