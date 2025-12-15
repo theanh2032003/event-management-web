@@ -284,7 +284,7 @@ const EventManagement = ({ hasPermission = true }) => {
     },
     {
       field: 'category',
-      headerName: 'Loại',
+      headerName: 'Phân loại',
       width: 120,
       align: 'center',
       headerCellSx: { fontSize: '0.9rem', fontWeight: 500, textAlign: 'center' },
@@ -301,47 +301,15 @@ const EventManagement = ({ hasPermission = true }) => {
       render: (value) => value ? formatDate(value) : '-',
     },
     {
-      field: 'state',
-      headerName: 'Trạng thái',
-      width: 130,
-      align: 'center',
-      headerCellSx: { fontSize: '0.9rem', fontWeight: 500, textAlign: 'center' },
-      cellSx: { fontSize: '0.8rem', textAlign: 'center', height: '80px' },
-      render: (value, row) => (
-        <Box
-          sx={{
-            display: 'inline-block',
-            px: 2,
-            py: 0.75,
-            borderRadius: 1,
-            backgroundColor: 
-              value === 'UPCOMING' ? 'info.light' :
-              value === 'ONGOING' ? 'success.light' :
-              value === 'ENDED' ? 'error.light' : 'default.light',
-            color: 
-              value === 'UPCOMING' ? 'info.main' :
-              value === 'ONGOING' ? 'success.main' :
-              value === 'ENDED' ? 'error.main' : 'default.main',
-            fontSize: '0.9rem',
-          }}
-        >
-          {value === 'NOT_STARTED' ? 'Sắp tới' : 
-           value === 'IN_PROGRESS' ? 'Đang diễn ra' :
-           value === 'COMPLETED' ? 'Đã kết thúc' : 
-           value === 'CANCELED' ? 'Đã hủy' : 
-           value}
-        </Box>
-      ),
-    },
-    {
-      field: 'feeType',
-      headerName: 'Loại vé',
-      width: 110,
+      field: 'endedAt',
+      headerName: 'Ngày kết thúc',
+      width: 160,
       align: 'center',
       headerCellSx: { fontSize: '0.9rem', fontWeight: 500, textAlign: 'center' },
       cellSx: { fontSize: '0.9rem', textAlign: 'center', height: '80px' },
-      render: (value) => getFeeTypeLabel(value),
+      render: (value) => value ? formatDate(value) : '-',
     },
+    
     // {
     //   field: 'actions',
     //   headerName: 'Hành động',

@@ -219,25 +219,25 @@ export default function EventOverview({
     return labels[category] || category;
   };
 
-  const getStateLabel = (state) => {
-    const labels = {
-      NOT_STARTED: "Chưa bắt đầu",
-      IN_PROGRESS: "Đang tiến hành",
-      COMPLETED: "Hoàn thành",
-      CANCELLED: "Đã hủy"
-    };
-    return labels[state] || state;
-  };
+  // const getStateLabel = (state) => {
+  //   const labels = {
+  //     NOT_STARTED: "Chưa bắt đầu",
+  //     IN_PROGRESS: "Đang tiến hành",
+  //     COMPLETED: "Hoàn thành",
+  //     CANCELLED: "Đã hủy"
+  //   };
+  //   return labels[state] || state;
+  // };
 
-  const getStateColor = (state) => {
-    const colors = {
-      NOT_STARTED: "default",
-      IN_PROGRESS: "primary",
-      COMPLETED: "success",
-      CANCELLED: "error"
-    };
-    return colors[state] || "default";
-  };
+  // const getStateColor = (state) => {
+  //   const colors = {
+  //     NOT_STARTED: "default",
+  //     IN_PROGRESS: "primary",
+  //     COMPLETED: "success",
+  //     CANCELLED: "error"
+  //   };
+  //   return colors[state] || "default";
+  // };
 
   const getVisibilityLabel = (visibility) => {
     return visibility === "PUBLIC" ? "Công khai" : "Riêng tư";
@@ -247,9 +247,7 @@ export default function EventOverview({
     return accessType === "OPEN" ? "Mở" : "Chỉ mời";
   };
 
-  const getFeeTypeLabel = (feeType) => {
-    return feeType === "FREE" ? "Miễn phí" : "Trả phí";
-  };
+ 
 
   const theme = useTheme();
 
@@ -473,12 +471,12 @@ export default function EventOverview({
                   fontWeight: 600,
                 }}
               />
-              <Chip
+              {/* <Chip
                 label={getStateLabel(currentEventData.state)}
                 color={getStateColor(currentEventData.state)}
                 size="small"
                 sx={{ fontWeight: 600 }}
-              />
+              /> */}
             </Stack>
 
             {/* Time & Location */}
@@ -619,14 +617,7 @@ export default function EventOverview({
                     {getAccessTypeLabel(currentEventData.accessType)}
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <Typography variant="caption" sx={{ color: '#000000ff', fontWeight: 600, fontSize: '0.95rem', minWidth: 100 }}>
-                    Phí tham gia:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#000000ff', fontSize: '0.95rem' }}>
-                    {getFeeTypeLabel(currentEventData.feeType)}
-                  </Typography>
-                </Box>
+              
               </Stack>
             </Box>
           )}
