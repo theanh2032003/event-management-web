@@ -37,6 +37,7 @@ import {
   formatDateTime,
 } from "../../../shared/utils/dateFormatter";
 import locationApi from "../../location/api/location.api";
+import scheduleApi from "../api/schedule.api";
 import { useToast } from "../../../app/providers/ToastContext";
 
 // Styled Components
@@ -110,6 +111,7 @@ const ImagePreview = styled("img")({
  * @param {boolean} submitting - Submitting state
  * @param {boolean} isMobile - Mobile view flag
  * @param {string} enterpriseId - Enterprise ID for fetching locations
+ * @param {string} projectId - Project/Event ID for API calls
  */
 const ScheduleDialog = ({
   open,
@@ -120,6 +122,7 @@ const ScheduleDialog = ({
   submitting,
   isMobile,
   enterpriseId,
+  projectId,
 }) => {
   const theme = useTheme();
   const toast = useToast();
@@ -129,6 +132,7 @@ const ScheduleDialog = ({
   // Location states
   const [locations, setLocations] = useState([]);
   const [loadingLocations, setLoadingLocations] = useState(false);
+  const [loadingScheduleDetail, setLoadingScheduleDetail] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [scheduleForm, setScheduleForm] = useState({
@@ -164,11 +168,46 @@ const ScheduleDialog = ({
     }
   };
 
-  // Initialize form when dialog opens or schedule changes
+  // Fetch schedule detail when editing
   useEffect(() => {
-    if (open) {
-      if (schedule) {
-        // Edit mode
+    const fetchScheduleDetail = async () => {
+      if (!open || !schedule?.id || !projectId) return;
+      
+      try {
+        setLoadingScheduleDetail(true);
+        
+        const response = await scheduleApi.getDetail(projectId, schedule.id);
+        const scheduleDetail = response?.data || response;
+        
+        // If schedule has a location, ensure it's in the locations list
+        // This handles cases where the location might be inactive
+        if (scheduleDetail.location && scheduleDetail.location.id) {
+          setLocations(prevLocations => {
+            // Check if location already exists in list
+            const locationExists = prevLocations.some(loc => loc.id === scheduleDetail.location.id);
+            
+            if (!locationExists) {
+              // Add the schedule's location to the list
+              return [...prevLocations, scheduleDetail.location];
+            }
+            return prevLocations;
+          });
+        }
+        
+        // Set form with detailed data including location
+        setScheduleForm({
+          title: scheduleDetail.title || "",
+          description: scheduleDetail.description || "",
+          images: scheduleDetail.images || [],
+          locationId: scheduleDetail.locationId || scheduleDetail.location?.id || "",
+          startedAt: formatDateTimeLocal(scheduleDetail.startedAt),
+          endedAt: formatDateTimeLocal(scheduleDetail.endedAt),
+          parentId: scheduleDetail.parentId || null,
+        });
+      } catch (err) {
+        console.error("Error fetching schedule detail:", err);
+        toast.error("Không thể tải thông tin lịch trình");
+        // Fallback to schedule data passed in
         setScheduleForm({
           title: schedule.title || "",
           description: schedule.description || "",
@@ -178,6 +217,15 @@ const ScheduleDialog = ({
           endedAt: formatDateTimeLocal(schedule.endedAt),
           parentId: schedule.parentId || null,
         });
+      } finally {
+        setLoadingScheduleDetail(false);
+      }
+    };
+
+    if (open) {
+      if (schedule) {
+        // Edit mode - fetch detail
+        fetchScheduleDetail();
       } else {
         // Create mode
         const defaultStart = parentSchedule
@@ -199,7 +247,7 @@ const ScheduleDialog = ({
         });
       }
     }
-  }, [open, schedule, parentSchedule]);
+  }, [open, schedule, parentSchedule, projectId, enterpriseId]);
 
   // Image handlers
   const handleImageUpload = async (e) => {
@@ -321,8 +369,13 @@ const ScheduleDialog = ({
 
       {/* Content */}
       <DialogContent sx={{ pt: 3 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          {/* Basic Information Section */}
+        {loadingScheduleDetail ? (
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* Basic Information Section */}
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <TextField
                   label="Tiêu đề"
@@ -545,7 +598,8 @@ const ScheduleDialog = ({
                   ))}
                 </Box>
               </Box>
-        </Box>
+          </Box>
+        )}
       </DialogContent>
 
       {/* Actions */}
