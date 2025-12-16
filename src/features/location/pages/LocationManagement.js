@@ -609,30 +609,7 @@ export default function LocationManagement({
                       {selectedLocation.capacity || '-'}
                     </Typography>
                   </Grid>
-                  <Grid item xs={6} sx={{width: '100%'}}>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Giá/giờ
-                    </Typography>
-                    <Typography variant="body2">
-                      {selectedLocation.pricePerHour ? `${selectedLocation.pricePerHour} VNĐ` : '-'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6} sx={{width: '100%'}}> 
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Email
-                    </Typography>
-                    <Typography variant="body2">
-                      {selectedLocation.email || '-'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Trạng thái
-                    </Typography>
-                    <Typography variant="body2" fontWeight={500}>
-                      {selectedLocation.available ? 'Có sẵn' : 'Không có sẵn'}
-                    </Typography>
-                  </Grid>
+                  
                 </Grid>
 
               </Box>

@@ -335,17 +335,7 @@ const ScheduleDetailDialog = ({ open, onClose, scheduleId, projectId }) => {
               )}
             </Box>
 
-            {/* Parent Schedule Info */}
-            {scheduleData.parentId && (
-              <Box sx={{ mb: 2 }}>
-                <Chip
-                  label="Lịch trình con"
-                  color="secondary"
-                  size="small"
-                  sx={{ fontWeight: 600 }}
-                />
-              </Box>
-            )}
+           
           </Box>
         ) : null}
       </DialogContent>
@@ -358,19 +348,7 @@ const ScheduleDetailDialog = ({ open, onClose, scheduleId, projectId }) => {
           borderColor: "divider",
         }}
       >
-        <Button
-          onClick={handleClose}
-          variant="contained"
-          startIcon={<CloseIcon />}
-          sx={{
-            textTransform: "none",
-            fontWeight: 600,
-            borderRadius: 2,
-            px: 3,
-          }}
-        >
-          Đóng
-        </Button>
+       
       </DialogActions>
     </Dialog>
   );

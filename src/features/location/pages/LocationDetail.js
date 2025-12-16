@@ -459,25 +459,7 @@ export default function LocationDetail() {
                     </Typography>
                   </Box>
 
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>
-                      Giá/giờ
-                    </Typography>
-                    <Typography variant="h6" color="primary.main" fontWeight={700}>
-                      {location?.pricePerHour ? `${location?.pricePerHour.toLocaleString('vi-VN')} VNĐ` : '-'}
-                    </Typography>
-                  </Box>
-
-                  {location?.email && (
-                    <Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>
-                        Email
-                      </Typography>
-                      <Typography variant="body2" fontWeight={500}>
-                        {location.email}
-                      </Typography>
-                    </Box>
-                  )}
+                
                 </Box>
               </CardContent>
             </Card>

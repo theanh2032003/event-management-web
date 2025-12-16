@@ -571,6 +571,7 @@ export default function EventSchedule({ eventData, onRefresh }) {
             submitting={submitting}
             isMobile={isMobile}
             enterpriseId={enterpriseId}
+            projectId={eventId}
           />
 
           {/* Delete Confirmation Dialog */}
