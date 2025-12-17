@@ -5,19 +5,67 @@ const productApi = {
    * 📦 Lấy danh sách sản phẩm (filter + phân trang)
    * GET /product
    */
-  getProducts: async (filters = {}, page = 0, size = 10, sort = 'name,asc') => {
+  getProducts: async (filters = {}, page = 0, size = 10, sort = null) => {
     try {
-      // Gộp filter + pageable params gửi lên backend
-      const params = {
-        ...filters, // supplierIds, categoryIds, keyword, minPrice, maxPrice, isActive,...
-        page,
-        size,
-        sort,
-      };
+      console.log('🔍 Product API - filters:', filters);
+      console.log('📄 Product API - pagination:', { page, size, sort });
 
-      const response = await axiosClient.get('/product', { params });
+      // Build params object according to API documentation
+      const paramsFilter = {};
+      
+      // Add filter fields
+      if (filters.keyword) {
+        paramsFilter.keyword = filters.keyword;
+      }
+      if (filters.categoryIds && filters.categoryIds.length > 0) {
+        paramsFilter.categoryIds = filters.categoryIds;
+      }
+      if (filters.supplierIds && filters.supplierIds.length > 0) {
+        paramsFilter.supplierIds = filters.supplierIds;
+      }
+      if (filters.isActive !== undefined) {
+        paramsFilter.isActive = filters.isActive;
+      }
+      if (filters.minPrice !== undefined) {
+        paramsFilter.minPrice = filters.minPrice;
+      }
+      if (filters.maxPrice !== undefined) {
+        paramsFilter.maxPrice = filters.maxPrice;
+      }
+
+      // Build pageable object
+      const pageable = {
+        page: page,
+        size: size,
+      };
+      
+      // Add sort if provided
+      if (sort) {
+        pageable.sort = [sort];
+      }
+
+      // Flatten all params into single object (backend may not expect nested objects)
+      const flatParams = {
+        ...paramsFilter,
+        page: pageable.page,
+        size: pageable.size,
+      };
+      
+      if (sort) {
+        flatParams.sort = sort;
+      }
+
+      console.log('📤 Product API - filter object:', paramsFilter);
+      console.log('📤 Product API - pageable object:', pageable);
+      console.log('📤 Product API - flattened params:', flatParams);
+
+      const response = await axiosClient.get('/product', { params: flatParams });
+      
+      console.log('📥 Product API - response:', response);
+      
       return response;
     } catch (error) {
+      console.error('❌ Product API - error:', error);
       throw error;
     }
   },

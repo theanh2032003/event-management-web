@@ -389,8 +389,50 @@ export default function EnterpriseMarketplace() {
         sortParam = 'name,desc';
       }
 
+      console.log('🔍 Marketplace - Fetching with filters:', filters);
+      console.log('📄 Marketplace - Page:', pageNum, 'Size:', pageSize, 'Sort:', sortParam);
+
       const response = await productApi.getProducts(filters, pageNum, pageSize, sortParam);
-      const fetchedProducts = response.data || response.products || [];
+      
+      console.log('📥 Marketplace - Full response:', response);
+
+      // Handle different response structures
+      let fetchedProducts = [];
+      let total = 0;
+      let totalPages = 0;
+
+      // Case 1: Paginated response with content array
+      if (response?.content && Array.isArray(response.content)) {
+        fetchedProducts = response.content;
+        total = response.totalElements || response.total || 0;
+        totalPages = response.totalPages || Math.ceil(total / pageSize);
+      }
+      // Case 2: Response has data.content
+      else if (response?.data?.content && Array.isArray(response.data.content)) {
+        fetchedProducts = response.data.content;
+        total = response.data.totalElements || response.data.total || 0;
+        totalPages = response.data.totalPages || Math.ceil(total / pageSize);
+      }
+      // Case 3: Response has data array directly
+      else if (response?.data && Array.isArray(response.data)) {
+        fetchedProducts = response.data;
+        total = response.totalElements || response.total || response.data.length;
+        totalPages = response.totalPages || Math.ceil(total / pageSize);
+      }
+      // Case 4: Response is array directly
+      else if (Array.isArray(response)) {
+        fetchedProducts = response;
+        total = response.length;
+        totalPages = 1;
+      }
+      // Case 5: Response has products array
+      else if (response?.products && Array.isArray(response.products)) {
+        fetchedProducts = response.products;
+        total = response.total || response.products.length;
+        totalPages = response.totalPages || Math.ceil(total / pageSize);
+      }
+
+      console.log('✅ Marketplace - Parsed products:', fetchedProducts.length, 'Total:', total, 'Pages:', totalPages);
 
       if (isLoadMore) {
         setProducts(prev => [...prev, ...fetchedProducts]);
@@ -398,7 +440,6 @@ export default function EnterpriseMarketplace() {
         setProducts(fetchedProducts);
       }
 
-      const totalPages = response.totalPages || Math.ceil((response.total || 0) / pageSize);
       setHasMore(pageNum < totalPages - 1);
       setPage(pageNum);
     } catch (error) {
