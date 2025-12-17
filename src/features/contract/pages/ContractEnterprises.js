@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { PERMISSION_CODES, PERMISSION_TYPES } from '../../../shared/constants/permissions';
 import {
   Box,
   Typography,
@@ -137,6 +138,8 @@ export default function Contracts() {
   const [deletingContractId, setDeletingContractId] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmContractId, setDeleteConfirmContractId] = useState(null);
+
+  const isUnauthorized = !permissionsLoading && !isOwner;
 
   // Modal states
   const [viewMode, setViewMode] = useState("list"); // "list" or "detail"
