@@ -112,29 +112,30 @@ export default function Contracts() {
 
   const userId = getUserId();
   const { isOwner, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
+  const isUnauthorized = !permissionsLoading && !isOwner;
 
   // Data states
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
   const [paymentApprovals, setPaymentApprovals] = useState([]);
-  
+
   // Filter states
   const [filterState, setFilterState] = useState("");
   const [filterKeyword, setFilterKeyword] = useState("");
   const [filterProjectId, setFilterProjectId] = useState("");
-  
+
   // Pagination states
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  
+
   // Action states
   const [submittingContractId, setSubmittingContractId] = useState(null);
   const [deletingContractId, setDeletingContractId] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmContractId, setDeleteConfirmContractId] = useState(null);
-  
+
   // Modal states
   const [viewMode, setViewMode] = useState("list"); // "list" or "detail"
   const [selectedContract, setSelectedContract] = useState(null);
@@ -142,7 +143,7 @@ export default function Contracts() {
   const [formMode, setFormMode] = useState("create"); // "create" or "edit"
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [editingContract, setEditingContract] = useState(null);
-  
+
   // Create form data
   const [createFormData, setCreateFormData] = useState({
     name: "",
@@ -158,17 +159,6 @@ export default function Contracts() {
     attachments: [],
   });
 
-  // Check permission
-  if (!permissionsLoading && !isOwner) {
-    return (
-      <Box>
-        <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
-          Bạn không có quyền truy cập vào mục này. Chỉ chủ doanh nghiệp mới có quyền này.
-        </Alert>
-      </Box>
-    );
-  }
-
   // Load projects
   useEffect(() => {
     const loadProjects = async () => {
@@ -182,16 +172,16 @@ export default function Contracts() {
       }
     };
 
-    if (!permissionsLoading && isOwner) {
+    if (!permissionsLoading && !isUnauthorized) {
       loadProjects();
     }
-  }, [enterpriseId, permissionsLoading, isOwner]);
+  }, [enterpriseId, permissionsLoading, isUnauthorized]);
 
   // Load payment approvals
   useEffect(() => {
     const loadPaymentApprovals = async () => {
       try {
-        const response = await paymentApprovalApi.getPaymentApprovals(null, {states: ['APPROVED_ALL']}, 0, 100);
+        const response = await paymentApprovalApi.getPaymentApprovals(null, { states: ['APPROVED_ALL'] }, 0, 100);
         const approvalsList = response?.data || response || [];
         setPaymentApprovals(Array.isArray(approvalsList) ? approvalsList : []);
       } catch (error) {
@@ -200,17 +190,17 @@ export default function Contracts() {
       }
     };
 
-    if (!permissionsLoading && isOwner) {
+    if (!permissionsLoading && !isUnauthorized) {
       loadPaymentApprovals();
     }
-  }, [permissionsLoading, isOwner]);
+  }, [permissionsLoading, isUnauthorized]);
 
   // Fetch contracts
   useEffect(() => {
     const fetchContracts = async () => {
       try {
         setLoading(true);
-        
+
         const filters = {
           enterpriseId,
           owner: true,
@@ -229,7 +219,7 @@ export default function Contracts() {
         }
 
         const response = await contractApi.getContracts(filters, page, rowsPerPage);
-        
+
         // Handle paginated response
         if (response?.content && Array.isArray(response.content)) {
           setContracts(response.content);
@@ -254,10 +244,10 @@ export default function Contracts() {
       }
     };
 
-    if (!permissionsLoading && isOwner) {
+    if (!permissionsLoading && !isUnauthorized) {
       fetchContracts();
     }
-  }, [enterpriseId, permissionsLoading, isOwner, filterState, filterKeyword, filterProjectId, page, rowsPerPage, showToast]);
+  }, [enterpriseId, permissionsLoading, isUnauthorized, filterState, filterKeyword, filterProjectId, page, rowsPerPage, showToast]);
 
   const handleOpenDetail = (contract) => {
     setSelectedContract(contract);
@@ -364,7 +354,7 @@ export default function Contracts() {
         await contractApi.createContract(contractData, enterpriseId);
         showToast("Tạo hợp đồng thành công", 'success', 3000);
       }
-      
+
       // Refresh list
       const filters = {
         enterpriseId,
@@ -408,11 +398,11 @@ export default function Contracts() {
 
     try {
       setDeletingContractId(deleteConfirmContractId);
-      
+
       await contractApi.deleteContract(deleteConfirmContractId);
-      
+
       showToast("Đã xóa hợp đồng thành công", 'success', 3000);
-      
+
       // Refresh list
       const filters = {
         enterpriseId,
@@ -472,7 +462,7 @@ export default function Contracts() {
 
   const handlePaymentApprovalsOpen = async () => {
     try {
-      const response = await paymentApprovalApi.getPaymentApprovals(null, {states: ['APPROVED_ALL']}, 0, 100);
+      const response = await paymentApprovalApi.getPaymentApprovals(null, { states: ['APPROVED_ALL'] }, 0, 100);
       const approvalsList = response?.data || response || [];
       setPaymentApprovals(Array.isArray(approvalsList) ? approvalsList : []);
     } catch (error) {
@@ -481,7 +471,7 @@ export default function Contracts() {
 
   const handleCreateInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     // If changing paymentApprovalId, auto-fill totalValue from approval amount
     if (name === 'paymentApprovalId' && value) {
       const selectedApproval = paymentApprovals.find(
@@ -553,11 +543,11 @@ export default function Contracts() {
   const handleSubmitContract = async (contractId) => {
     try {
       setSubmittingContractId(contractId);
-      
+
       await contractApi.submitContract(contractId, enterpriseId);
-      
+
       showToast("Đã gửi duyệt hợp đồng", 'success', 3000);
-      
+
       // Refresh list
       const filters = {
         enterpriseId,
@@ -661,6 +651,16 @@ export default function Contracts() {
     );
   }
 
+  if (isUnauthorized) {
+    return (
+      <Box>
+        <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
+          Bạn không có quyền truy cập vào mục này
+        </Alert>
+      </Box>
+    );
+  }
+
   // Show detail view if viewMode is "detail"
   if (viewMode === "detail" && selectedContract) {
     return (
@@ -674,46 +674,44 @@ export default function Contracts() {
 
   return (
     <Box>
-        {/* Filters */}
+      {/* Filters */}
       <FilterCard>
         <CardContent>
-          {/* Keyword Search Row */}
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center", marginBottom: 2 }}>
+          <Grid container spacing={2} alignItems="center">
             {/* Keyword Search */}
-            <TextField
-              placeholder="Tìm kiếm hợp đồng ..."
-              size="medium"
-              value={filterKeyword}
-              onChange={(e) => setFilterKeyword(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setPage(0);
-                }
-              }}
-              onBlur={() => setPage(0)}
-              sx={{ 
-                flex: 1,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  backgroundColor: alpha(theme.palette.background.default, 0.6),
-                  transition: 'all 0.2s ease',
-                  fontSize: '1rem',
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.background.default, 0.8),
+            <Grid item xs={12} md={4}>
+              <TextField
+                placeholder="Tìm kiếm hợp đồng ..."
+                size="small"
+                fullWidth
+                value={filterKeyword}
+                onChange={(e) => setFilterKeyword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setPage(0);
+                  }
+                }}
+                onBlur={() => setPage(0)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    },
                   },
-                  '&.Mui-focused': {
-                    backgroundColor: theme.palette.background.paper,
-                    boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
-                  },
-                },
-              }}
-            />
-          </Box>
+                }}
+              />
+            </Grid>
 
-          {/* Filter Controls Row */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
             {/* Project Filter */}
-            <Box sx={{ width: "calc(25% - 6px)" }}>
+            <Grid item xs={12} sm={6} md={3}>
               <TextField
                 select
                 label="Dự án"
@@ -726,17 +724,18 @@ export default function Contracts() {
                 fullWidth
                 displayEmpty
                 sx={{
+                  minWidth:200,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
                     transition: 'all 0.2s ease',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     '&:hover': {
                       backgroundColor: alpha(theme.palette.background.default, 0.8),
                     },
                     '&.Mui-focused': {
                       backgroundColor: theme.palette.background.paper,
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                     },
                   },
                 }}
@@ -748,10 +747,10 @@ export default function Contracts() {
                   </MenuItem>
                 ))}
               </TextField>
-            </Box>
+            </Grid>
 
             {/* Filter by State */}
-            <Box sx={{ width: "calc(20% - 6px)" }}>
+            <Grid item xs={12} sm={6} md={2}>
               <TextField
                 select
                 label="Trạng thái"
@@ -763,17 +762,18 @@ export default function Contracts() {
                 size="small"
                 fullWidth
                 sx={{
+                  minWidth: 100 ,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
                     transition: 'all 0.2s ease',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     '&:hover': {
                       backgroundColor: alpha(theme.palette.background.default, 0.8),
                     },
                     '&.Mui-focused': {
                       backgroundColor: theme.palette.background.paper,
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                     },
                   },
                 }}
@@ -785,10 +785,10 @@ export default function Contracts() {
                 <MenuItem value="COMPLETED">Hoàn thành</MenuItem>
                 <MenuItem value="CANCELED">Đã hủy</MenuItem>
               </TextField>
-            </Box>
+            </Grid>
 
             {/* Create Button */}
-            <Box sx={{ width: "calc(20% - 6px)" }}>
+            <Grid item xs={12} sm={12} md={3}>
               <StyledButton
                 variant="contained"
                 color="primary"
@@ -799,8 +799,8 @@ export default function Contracts() {
               >
                 Tạo Hợp Đồng
               </StyledButton>
-            </Box>
-          </Box>
+            </Grid>
+          </Grid>
         </CardContent>
       </FilterCard>
 
@@ -881,7 +881,7 @@ export default function Contracts() {
                 <Box sx={{ display: "flex", gap: 1, justifyContent: "center", alignItems: "center" }}>
                   {contract.state === "DRAFT" && (
                     <Tooltip title="Gửi duyệt" arrow>
-                      <ActionButton 
+                      <ActionButton
                         size="small"
                         onClick={() => handleSubmitContract(contract.id)}
                         disabled={submittingContractId === contract.id}
@@ -891,9 +891,9 @@ export default function Contracts() {
                       </ActionButton>
                     </Tooltip>
                   )}
-                  
+
                   <Tooltip title="Chi tiết" arrow>
-                    <ActionButton 
+                    <ActionButton
                       size="small"
                       onClick={() => handleOpenDetail(contract)}
                       sx={{
@@ -909,7 +909,7 @@ export default function Contracts() {
 
                   {contract.state === "DRAFT" && (
                     <Tooltip title="Sửa" arrow>
-                      <ActionButton 
+                      <ActionButton
                         size="small"
                         color="primary"
                         onClick={() => handleOpenEdit(contract)}
@@ -926,7 +926,7 @@ export default function Contracts() {
                   )}
                   {contract.state === "DRAFT" && (
                     <Tooltip title="Xóa" arrow>
-                      <ActionButton 
+                      <ActionButton
                         size="small"
                         onClick={() => handleDeleteContract(contract.id)}
                         disabled={deletingContractId === contract.id}
@@ -957,10 +957,10 @@ export default function Contracts() {
       )}
 
       {/* Form Dialog - Create or Edit */}
-      <Dialog 
-        open={formOpen} 
-        onClose={handleCloseForm} 
-        maxWidth="md" 
+      <Dialog
+        open={formOpen}
+        onClose={handleCloseForm}
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -969,7 +969,7 @@ export default function Contracts() {
           }
         }}
       >
-        <DialogTitle sx={{ 
+        <DialogTitle sx={{
           fontWeight: 700,
           fontSize: "1.25rem",
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -1015,7 +1015,7 @@ export default function Contracts() {
                 onOpen={handlePaymentApprovalsOpen}
                 label={`Phê duyệt thanh toán`}
                 required={formMode === "create"}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                   '& .MuiSelect-select': {
@@ -1034,7 +1034,7 @@ export default function Contracts() {
 
             {/* Ngày bắt đầu và Ngày kết thúc */}
             <Grid container spacing={formMode === "create" ? 1.5 : 2}>
-              <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+              <Grid item xs={12} sm={6} sx={{ width: '100%' }}>
                 <TextField
                   label="Ngày bắt đầu"
                   name="startDate"
@@ -1063,7 +1063,7 @@ export default function Contracts() {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+              <Grid item xs={12} sm={6} sx={{ width: '100%' }}>
                 <TextField
                   label="Ngày kết thúc"
                   name="endDate"
@@ -1096,7 +1096,7 @@ export default function Contracts() {
 
             {/* Tổng giá trị và Tiền tệ */}
             <Grid container spacing={formMode === "create" ? 1.5 : 2}>
-              <Grid item xs={12} sm={8} sx={{width: '100%'}}>
+              <Grid item xs={12} sm={8} sx={{ width: '100%' }}>
                 <TextField
                   label="Tổng giá trị *"
                   name="totalValue"
@@ -1124,7 +1124,7 @@ export default function Contracts() {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={4} sx={{width: '100%'}}>
+              <Grid item xs={12} sm={4} sx={{ width: '100%' }}>
                 <FormControl fullWidth size="small">
                   <InputLabel sx={formMode === "create" ? { fontSize: '0.9375rem', color: 'text.secondary' } : {}}>Tiền tệ</InputLabel>
                   <Select
@@ -1132,7 +1132,7 @@ export default function Contracts() {
                     value={createFormData.currency}
                     onChange={handleCreateInputChange}
                     label="Tiền tệ"
-                    sx={{ 
+                    sx={{
                       borderRadius: 2,
                       fontSize: formMode === "create" ? '0.9375rem' : 'inherit',
                       '& .MuiSelect-select': {
@@ -1255,13 +1255,13 @@ export default function Contracts() {
           </Box>
         </DialogContent>
 
-        <DialogActions sx={{ 
-          p: 3, 
+        <DialogActions sx={{
+          p: 3,
           pt: 2,
           borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           gap: 2,
         }}>
-          <Button 
+          <Button
             onClick={handleCloseForm}
             disabled={formSubmitting}
             variant="outlined"
@@ -1269,7 +1269,7 @@ export default function Contracts() {
           >
             Hủy
           </Button>
-          <Button 
+          <Button
             variant="contained"
             onClick={handleCreateSubmit}
             disabled={formSubmitting}

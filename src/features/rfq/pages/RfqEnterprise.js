@@ -18,6 +18,7 @@ import {
   alpha,
   TextField,
   Card,
+  Grid,
   CardContent,
   Autocomplete,
 } from "@mui/material";
@@ -107,16 +108,17 @@ export default function QuoteRequests() {
 
   const userId = getUserId();
   const { isOwner, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
+  const isUnauthorized = !permissionsLoading && !isOwner;
 
   const [quoteRequests, setQuoteRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stateChanging, setStateChanging] = useState(null);
-  
+
   // Pagination states
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  
+
   // Filter states
   const [filters, setFilters] = useState({
     keyword: '',
@@ -124,7 +126,7 @@ export default function QuoteRequests() {
     projectId: '',
     supplierId: '',
   });
-  
+
   // Data for dropdowns
   const [projects, setProjects] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -135,7 +137,7 @@ export default function QuoteRequests() {
   const [projectSearchTimer, setProjectSearchTimer] = useState(null);
   const [supplierSearchTimer, setSupplierSearchTimer] = useState(null);
   const [stateSearchTimer, setStateSearchTimer] = useState(null);
-  
+
   // Modal states
   const [viewMode, setViewMode] = useState("list"); // "list" or "detail"
   const [selectedRfq, setSelectedRfq] = useState(null);
@@ -143,18 +145,6 @@ export default function QuoteRequests() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletingRfqId, setDeletingRfqId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // Check permission
-  if (!permissionsLoading && !isOwner) {
-    return (
-      <Box>
-        <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
-          Bạn không có quyền truy cập vào mục này. Chỉ chủ doanh nghiệp mới có quyền này.
-        </Alert>
-      </Box>
-    );
-  }
-
 
   // Fetch quote requests
   useEffect(() => {
@@ -167,13 +157,13 @@ export default function QuoteRequests() {
           ...(filters.projectId && { projectId: filters.projectId }),
           ...(filters.supplierId && { supplierId: filters.supplierId }),
         };
-        
+
         const response = await rfqApi.getRfqs(filterParams, page, rowsPerPage);
-        
+
         // Handle response structure
         let data = [];
         let total = 0;
-        
+
         if (response?.content && Array.isArray(response.content)) {
           data = response.content;
           total = response.totalElements || response.total || 0;
@@ -189,7 +179,7 @@ export default function QuoteRequests() {
             total = response.data.totalElements || response.data.total || 0;
           }
         }
-        
+
         setQuoteRequests(Array.isArray(data) ? data : []);
         setTotalCount(total);
       } catch (error) {
@@ -202,10 +192,10 @@ export default function QuoteRequests() {
       }
     };
 
-    if (!permissionsLoading && isOwner) {
+    if (!permissionsLoading && !isUnauthorized) {
       fetchQuoteRequests();
     }
-  }, [enterpriseId, permissionsLoading, isOwner, showToast, page, rowsPerPage, filters]);
+  }, [enterpriseId, permissionsLoading, isUnauthorized, showToast, page, rowsPerPage, filters]);
 
   const handleOpenDetail = (rfq) => {
     setSelectedRfq(rfq);
@@ -234,17 +224,17 @@ export default function QuoteRequests() {
 
   const handleConfirmDelete = async () => {
     if (!deletingRfqId) return;
-    
+
     try {
       setDeleteLoading(true);
       await rfqApi.deleteRfq(deletingRfqId);
-      
+
       // Reload data from server
       const response = await rfqApi.getRfqs({}, page, rowsPerPage);
-      
+
       let data = [];
       let total = 0;
-      
+
       if (response?.content && Array.isArray(response.content)) {
         data = response.content;
         total = response.totalElements || response.total || 0;
@@ -255,23 +245,23 @@ export default function QuoteRequests() {
         data = Array.isArray(response.data) ? response.data : response.data.content || [];
         total = response.data.totalElements || response.data.total || data.length;
       }
-      
+
       setQuoteRequests(Array.isArray(data) ? data : []);
       setTotalCount(total);
-      
+
       // Close modal first
       setDeleteLoading(false);
       setDeleteModalOpen(false);
       setDeletingRfqId(null);
       setSelectedRfq(null);
-      
+
       // Show success toast after modal is closed
       setTimeout(() => {
         showToast("Xóa yêu cầu báo giá thành công", 'success', 4000);
       }, 600);
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi xóa yêu cầu báo giá";
-      showToast( errorMessage, 'error', 5000);
+      showToast(errorMessage, 'error', 5000);
       setDeleteLoading(false);
     }
   };
@@ -280,10 +270,10 @@ export default function QuoteRequests() {
     // Reload data from server to get updated project info
     try {
       const response = await rfqApi.getRfqs({}, page, rowsPerPage);
-      
+
       let data = [];
       let total = 0;
-      
+
       if (response?.content && Array.isArray(response.content)) {
         data = response.content;
         total = response.totalElements || response.total || 0;
@@ -299,7 +289,7 @@ export default function QuoteRequests() {
           total = response.data.totalElements || response.data.total || 0;
         }
       }
-      
+
       setQuoteRequests(Array.isArray(data) ? data : []);
       setTotalCount(total);
       showToast("Đã cập nhật và tải lại danh sách", 'success');
@@ -318,13 +308,13 @@ export default function QuoteRequests() {
       setStateChanging(rfqId);
       await rfqApi.enterpriseChangeState(rfqId, { state: newState });
       showToast("Cập nhật trạng thái thành công", 'success');
-      
+
       // Reload data to get updated list
       const response = await rfqApi.getRfqs({}, page, rowsPerPage);
-      
+
       let data = [];
       let total = 0;
-      
+
       if (response?.content && Array.isArray(response.content)) {
         data = response.content;
         total = response.totalElements || response.total || 0;
@@ -340,7 +330,7 @@ export default function QuoteRequests() {
           total = response.data.totalElements || response.data.total || 0;
         }
       }
-      
+
       setQuoteRequests(Array.isArray(data) ? data : []);
       setTotalCount(total);
     } catch (error) {
@@ -399,22 +389,22 @@ export default function QuoteRequests() {
         }}
         onOpen={() => openHandler()}
         renderInput={(params) => (
-          <TextField 
-            {...params} 
-            label={label} 
-            size="medium"
+          <TextField
+            {...params}
+            label={label}
+            size="small"
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
                 backgroundColor: alpha(theme.palette.background.default, 0.6),
                 transition: 'all 0.2s ease',
-                fontSize: '1rem',
+                fontSize: '0.875rem',
                 '&:hover': {
                   backgroundColor: alpha(theme.palette.background.default, 0.8),
                 },
                 '&.Mui-focused': {
                   backgroundColor: theme.palette.background.paper,
-                  boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                 },
               },
             }}
@@ -461,7 +451,7 @@ export default function QuoteRequests() {
   const handleProjectSearch = async (keyword) => {
     setProjectKeyword(keyword);
     if (projectSearchTimer) clearTimeout(projectSearchTimer);
-    
+
     const timer = setTimeout(async () => {
       try {
         const response = await projectApi.getProjectsByEnterprise(keyword || '', 0, 100);
@@ -478,14 +468,14 @@ export default function QuoteRequests() {
         console.error("Error fetching projects:", error);
       }
     }, 300);
-    
+
     setProjectSearchTimer(timer);
   };
 
   const handleSupplierSearch = async (keyword) => {
     setSupplierKeyword(keyword);
     if (supplierSearchTimer) clearTimeout(supplierSearchTimer);
-    
+
     const timer = setTimeout(async () => {
       try {
         const response = await supplierApi.getSuppliers(keyword || '', 0, 100);
@@ -502,14 +492,14 @@ export default function QuoteRequests() {
         console.error("Error fetching suppliers:", error);
       }
     }, 300);
-    
+
     setSupplierSearchTimer(timer);
   };
 
   const handleStateSearch = async (keyword) => {
     setStateKeyword(keyword);
     if (stateSearchTimer) clearTimeout(stateSearchTimer);
-    
+
     const timer = setTimeout(async () => {
       // Filter states based on keyword
       const stateOptions = [
@@ -517,13 +507,13 @@ export default function QuoteRequests() {
         { id: 'SENT', name: 'Đã gửi' },
         { id: 'CANCELLED', name: 'Đã hủy' },
       ];
-      
-      const filtered = stateOptions.filter(s => 
+
+      const filtered = stateOptions.filter(s =>
         s.name.toLowerCase().includes(keyword.toLowerCase())
       );
       setStates(filtered);
     }, 300);
-    
+
     setStateSearchTimer(timer);
   };
 
@@ -535,6 +525,16 @@ export default function QuoteRequests() {
           Đang tải dữ liệu...
         </Typography>
       </LoadingBox>
+    );
+  }
+
+  if (isUnauthorized) {
+    return (
+      <Box>
+        <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
+          Bạn không có quyền truy cập vào mục này.
+        </Alert>
+      </Box>
     );
   }
 
@@ -554,37 +554,35 @@ export default function QuoteRequests() {
       {/* Filter Box */}
       <FilterCard>
         <CardContent>
-          {/* Keyword Search Row */}
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center", marginBottom: 2 }}>
+          <Grid container spacing={2} alignItems="center">
             {/* Keyword Search */}
-            <TextField
-              placeholder="Tìm kiếm từ khóa..."
-              size="medium"
-              value={filters.keyword}
-              onChange={(e) => handleFilterChange('keyword', e.target.value)}
-              sx={{ 
-                flex: 1,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  backgroundColor: alpha(theme.palette.background.default, 0.6),
-                  transition: 'all 0.2s ease',
-                  fontSize: '1rem',
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.background.default, 0.8),
+            <Grid item xs={12} md={3}>
+              <TextField
+                placeholder="Tìm kiếm từ khóa..."
+                size="small"
+                fullWidth
+                value={filters.keyword}
+                onChange={(e) => handleFilterChange('keyword', e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    },
                   },
-                  '&.Mui-focused': {
-                    backgroundColor: theme.palette.background.paper,
-                    boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
-                  },
-                },
-              }}
-            />
-          </Box>
+                }}
+              />
+            </Grid>
 
-          {/* Filter Controls Row */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
-            {/* State Filter */}
-            <Box sx={{ width: "calc(20% - 4px)" }}>
+            {/* Filter Controls */}
+            <Grid item xs={12} sm={4} md={3}>
               {renderAutocompleteFilter(
                 'state',
                 'Trạng thái',
@@ -594,10 +592,9 @@ export default function QuoteRequests() {
                 handleStateSearch,
                 () => handleStateSearch('')
               )}
-            </Box>
+            </Grid>
 
-            {/* Project Filter */}
-            <Box sx={{ width: "calc(20% - 4px)" }}>
+            <Grid item xs={12} sm={4} md={3}>
               {renderAutocompleteFilter(
                 'projectId',
                 'Chọn dự án',
@@ -607,10 +604,9 @@ export default function QuoteRequests() {
                 handleProjectSearch,
                 () => handleProjectSearch('')
               )}
-            </Box>
+            </Grid>
 
-            {/* Supplier Filter */}
-            <Box sx={{ width: "calc(20% - 4px)" }}>
+            <Grid item xs={12} sm={4} md={3}>
               {renderAutocompleteFilter(
                 'supplierId',
                 'Chọn nhà cung cấp',
@@ -620,8 +616,8 @@ export default function QuoteRequests() {
                 handleSupplierSearch,
                 () => handleSupplierSearch('')
               )}
-            </Box>
-          </Box>
+            </Grid>
+          </Grid>
         </CardContent>
       </FilterCard>
 
@@ -708,7 +704,7 @@ export default function QuoteRequests() {
               render: (value, row) => (
                 <Box sx={{ display: "flex", gap: 1, justifyContent: "center", alignItems: "center" }}>
                   <Tooltip title="Xem chi tiết" arrow>
-                    <ActionButton 
+                    <ActionButton
                       size="small"
                       onClick={() => handleOpenDetail(row)}
                       sx={{
@@ -723,7 +719,7 @@ export default function QuoteRequests() {
                   </Tooltip>
                   {row.state === "DRAFT" && (
                     <Tooltip title="Chỉnh sửa" arrow>
-                      <ActionButton 
+                      <ActionButton
                         size="small"
                         color="primary"
                         onClick={() => handleEditClick(row)}
@@ -740,7 +736,7 @@ export default function QuoteRequests() {
                   )}
                   {row.state === "DRAFT" && (
                     <Tooltip title="Xoá" arrow>
-                      <ActionButton 
+                      <ActionButton
                         size="small"
                         color="error"
                         onClick={() => handleDeleteClick(row)}
@@ -815,8 +811,8 @@ export default function QuoteRequests() {
           <Typography variant="body1" sx={{ mb: 1, color: 'text.secondary' }}>
             Bạn có chắc chắn muốn xóa yêu cầu báo giá này?
           </Typography>
-          <Typography 
-            variant="caption" 
+          <Typography
+            variant="caption"
             sx={{ display: 'block', mt: 2, color: 'text.secondary' }}
           >
             Hành động này không thể hoàn tác

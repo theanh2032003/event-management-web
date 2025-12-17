@@ -186,17 +186,6 @@ export default function PaymentApproval() {
   const [approveNote, setApproveNote] = useState("");
   const [approveSubmitting, setApproveSubmitting] = useState(false);
 
-  // Check permission
-  if (!permissionsLoading && !isOwner) {
-    return (
-      <Box sx={{ pb: 4 }}>
-        <Alert severity="warning">
-          Bạn không có quyền truy cập vào mục này. Chỉ chủ doanh nghiệp mới có quyền này.
-        </Alert>
-      </Box>
-    );
-  }
-
   // Load projects
   useEffect(() => {
     const loadProjects = async () => {
@@ -865,6 +854,10 @@ export default function PaymentApproval() {
               Đang tải dữ liệu...
             </Typography>
           </LoadingBox>
+        ) : !isOwner && !permissionsLoading ? (
+          <Alert severity="warning" icon={<LockIcon />}>
+            Bạn không có quyền truy cập vào mục này. Chỉ chủ doanh nghiệp mới có quyền này.
+          </Alert>
         ) : payments.length > 0 ? (
           <CommonTable
             columns={[

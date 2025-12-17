@@ -219,7 +219,7 @@ export default function EnterpriseStatistics({ hasPermission = true }) {
           borderColor: 'warning.main',
         }}>
           <Typography variant="body2" sx={{ fontWeight: 600, color: 'warning.dark' }}>
-            ⚠️ Bạn không có quyền truy cập chức năng này
+            Bạn không có quyền truy cập chức năng này
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Vui lòng liên hệ với quản trị viên để được cấp quyền

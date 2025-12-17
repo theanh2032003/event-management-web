@@ -292,8 +292,8 @@ const StyledProductCard = memo(({ product, onViewDetail }) => {
               {displayPrice}
             </Typography>
             {product.unit && (
-              <Typography 
-                variant="caption" 
+              <Typography
+                variant="caption"
                 color="text.secondary"
                 sx={{ fontSize: "0.75rem" }}
               >
@@ -325,6 +325,7 @@ export default function EnterpriseMarketplace() {
 
   const userId = getUserId();
   const { isOwner, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
+  const isUnauthorized = !permissionsLoading && !isOwner;
 
   // State
   const [products, setProducts] = useState([]);
@@ -332,29 +333,20 @@ export default function EnterpriseMarketplace() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const pageSize = 12;
-  
+
   // Filter state
   const [keyword, setKeyword] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [categories, setCategories] = useState([]);
-  
+
   // Scroll ref
   const productsGridRef = useRef(null);
 
-  // Check permission
-  if (!permissionsLoading && !isOwner) {
-    return (
-      <Box>
-        <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
-          Bạn không có quyền truy cập vào Thị Trường. Chỉ chủ doanh nghiệp mới có quyền này.
-        </Alert>
-      </Box>
-    );
-  }
-
   // Load categories
   useEffect(() => {
+    if (isUnauthorized) return;
+
     const loadCategories = async () => {
       try {
         const response = await categoryApi.getCategories();
@@ -367,13 +359,15 @@ export default function EnterpriseMarketplace() {
       }
     };
     loadCategories();
-  }, []);
+  }, [isUnauthorized, showToast]);
 
   // Fetch products with lazy load
   const fetchProducts = useCallback(async (pageNum = 0, isLoadMore = false) => {
+    if (isUnauthorized) return;
+
     try {
       setLoading(true);
-      
+
       const filters = {};
       if (keyword) {
         filters.keyword = keyword;
@@ -412,14 +406,16 @@ export default function EnterpriseMarketplace() {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, keyword, showToast]);
+  }, [selectedCategory, keyword, sortOrder, showToast, isUnauthorized]);
 
   // Initial fetch
   useEffect(() => {
+    if (isUnauthorized) return;
+
     setPage(0);
     setProducts([]);
     fetchProducts(0, false);
-  }, [keyword, selectedCategory, sortOrder]);
+  }, [keyword, selectedCategory, sortOrder, fetchProducts, isUnauthorized]);
 
   // Handle scroll for lazy load
   const handleProductsScroll = useCallback((e) => {
@@ -459,25 +455,35 @@ export default function EnterpriseMarketplace() {
     );
   }
 
+  if (isUnauthorized) {
+    return (
+      <Box>
+        <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
+          Bạn không có quyền truy cập vào Thị Trường
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       {/* Filters - Shopee Style */}
       <FilterCard>
         <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={2} alignItems="center" >
+          <Grid container spacing={2} alignItems="center">
             {/* Search */}
-            <Grid item xs={12} md={6} sx={{width: '50%'}}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 placeholder="Tìm kiếm"
                 variant="outlined"
-                size="medium"
+                size="small"
                 onChange={handleSearchChange}
                 defaultValue=""
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{ color: "text.secondary", fontSize: 24 }} />
+                      <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
                     </InputAdornment>
                   ),
                 }}
@@ -486,13 +492,13 @@ export default function EnterpriseMarketplace() {
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
                     transition: 'all 0.2s ease',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     '&:hover': {
                       backgroundColor: alpha(theme.palette.background.default, 0.8),
                     },
                     '&.Mui-focused': {
                       backgroundColor: theme.palette.background.paper,
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                     },
                   },
                 }}
@@ -500,9 +506,10 @@ export default function EnterpriseMarketplace() {
             </Grid>
 
             {/* Category Filter */}
-            <Grid item xs={12} sm={6} md={3} sx={{width: '20%'}}>
-              <FormControl fullWidth size="medium" variant="outlined">
-                <InputLabel id="category-label" sx={{ fontSize: '1rem' }}>Danh mục</InputLabel>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth size="small" variant="outlined"
+                              sx={{ minWidth: 110 }}   >
+                <InputLabel id="category-label" sx={{ fontSize: '0.875rem' }}>Danh mục</InputLabel>
                 <Select
                   labelId="category-label"
                   id="category-select"
@@ -512,7 +519,7 @@ export default function EnterpriseMarketplace() {
                   MenuProps={{
                     PaperProps: {
                       style: {
-                        maxHeight: 48 * 5 + 8,
+                        maxHeight: 40 * 5 + 8,
                       },
                     },
                   }}
@@ -520,7 +527,7 @@ export default function EnterpriseMarketplace() {
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
                     transition: 'all 0.2s ease',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     '&:hover': {
                       backgroundColor: alpha(theme.palette.background.default, 0.8),
                     },
@@ -529,11 +536,11 @@ export default function EnterpriseMarketplace() {
                     },
                   }}
                 >
-                  <MenuItem value="" sx={{ fontSize: '1rem' }}>
+                  <MenuItem value="" sx={{ fontSize: '0.875rem' }}>
                     <em>Tất cả danh mục</em>
                   </MenuItem>
                   {categories.map((cat) => (
-                    <MenuItem key={cat.id} value={cat.id} sx={{ fontSize: '1rem' }}>
+                    <MenuItem key={cat.id} value={cat.id} sx={{ fontSize: '0.875rem' }}>
                       {cat.name}
                     </MenuItem>
                   ))}
@@ -542,9 +549,10 @@ export default function EnterpriseMarketplace() {
             </Grid>
 
             {/* Sort Filter */}
-            <Grid item xs={12} sm={6} md={3} sx={{width: '20%'}}>
-              <FormControl fullWidth size="medium" variant="outlined">
-                <InputLabel id="sort-label" sx={{ fontSize: '1rem' }}>Sắp xếp</InputLabel>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth size="small" variant="outlined" 
+                              sx={{ minWidth: 100 }}   >
+                <InputLabel id="sort-label" sx={{ fontSize: '0.875rem' }}>Sắp xếp</InputLabel>
                 <Select
                   labelId="sort-label"
                   id="sort-select"
@@ -554,7 +562,7 @@ export default function EnterpriseMarketplace() {
                   MenuProps={{
                     PaperProps: {
                       style: {
-                        maxHeight: 48 * 5 + 8,
+                        maxHeight: 40 * 5 + 8,
                       },
                     },
                   }}
@@ -562,7 +570,7 @@ export default function EnterpriseMarketplace() {
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
                     transition: 'all 0.2s ease',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     '&:hover': {
                       backgroundColor: alpha(theme.palette.background.default, 0.8),
                     },
@@ -571,11 +579,11 @@ export default function EnterpriseMarketplace() {
                     },
                   }}
                 >
-                  <MenuItem value="" sx={{ fontSize: '1rem' }}>Mặc định</MenuItem>
-                  <MenuItem value="price_asc" sx={{ fontSize: '1rem' }}>Giá: Thấp → Cao</MenuItem>
-                  <MenuItem value="price_desc" sx={{ fontSize: '1rem' }}>Giá: Cao → Thấp</MenuItem>
-                  <MenuItem value="name_asc" sx={{ fontSize: '1rem' }}>Tên: A → Z</MenuItem>
-                  <MenuItem value="name_desc" sx={{ fontSize: '1rem' }}>Tên: Z → A</MenuItem>
+                  <MenuItem value="" sx={{ fontSize: '0.875rem' }}>Mặc định</MenuItem>
+                  <MenuItem value="price_asc" sx={{ fontSize: '0.875rem' }}>Giá: Thấp → Cao</MenuItem>
+                  <MenuItem value="price_desc" sx={{ fontSize: '0.875rem' }}>Giá: Cao → Thấp</MenuItem>
+                  <MenuItem value="name_asc" sx={{ fontSize: '0.875rem' }}>Tên: A → Z</MenuItem>
+                  <MenuItem value="name_desc" sx={{ fontSize: '0.875rem' }}>Tên: Z → A</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -595,7 +603,7 @@ export default function EnterpriseMarketplace() {
         <EmptyStateBox>
           <ShoppingCartIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
           <Typography variant="h6" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
-            Không tìm thấy 
+            Không tìm thấy
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Không có dịch vụ nào phù hợp với bộ lọc bạn đã chọn.
@@ -625,21 +633,21 @@ export default function EnterpriseMarketplace() {
           onScroll={handleProductsScroll}
           ref={productsGridRef}
         >
-          <Grid 
-            container 
+          <Grid
+            container
             spacing={2}
             sx={{
               justifyContent: 'center',
             }}
           >
             {products.map((product) => (
-              <Grid 
-                item 
-                xs={6} 
-                sm={4} 
-                md={3} 
-                key={product.id} 
-                sx={{ 
+              <Grid
+                item
+                xs={6}
+                sm={4}
+                md={3}
+                key={product.id}
+                sx={{
                   display: "flex",
                   [theme.breakpoints.up('lg')]: {
                     flexBasis: '20%',

@@ -102,6 +102,7 @@ export default function ProductDetail() {
 
   const userId = getUserId();
   const { isOwner, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
+  const isUnauthorized = !permissionsLoading && !isOwner;
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -110,19 +111,10 @@ export default function ProductDetail() {
   const [supplierInfo, setSupplierInfo] = useState(null);
   const [loadingSupplier, setLoadingSupplier] = useState(false);
 
-  // Check permission
-  if (!permissionsLoading && !isOwner) {
-    return (
-      <Box sx={{ pb: 4 }}>
-        <Alert severity="warning">
-          Bạn không có quyền truy cập vào Thị Trường. Chỉ chủ doanh nghiệp mới có quyền này.
-        </Alert>
-      </Box>
-    );
-  }
-
   // Fetch product detail
   useEffect(() => {
+    if (isUnauthorized) return;
+
     const fetchProduct = async () => {
       try {
         setLoading(true);
@@ -168,12 +160,22 @@ export default function ProductDetail() {
     };
 
     fetchProduct();
-  }, [enterpriseId, productId, showToast]);
+  }, [enterpriseId, productId, showToast, isUnauthorized]);
 
   if (permissionsLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (isUnauthorized) {
+    return (
+      <Box sx={{ pb: 4 }}>
+        <Alert severity="warning">
+          Bạn không có quyền truy cập vào Thị Trường.
+        </Alert>
       </Box>
     );
   }

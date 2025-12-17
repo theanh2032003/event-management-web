@@ -19,6 +19,7 @@ import {
   TextField,
   Autocomplete,
   Select,
+  Grid,
   MenuItem,
 } from "@mui/material";
 import { useToast } from "../../../app/providers/ToastContext";
@@ -120,12 +121,13 @@ export default function Quotations() {
 
   const userId = getUserId();
   const { isOwner, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
+  const isUnauthorized = !permissionsLoading && !isOwner;
 
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [viewMode, setViewMode] = useState("list"); // "list" or "detail"
-  
+
   // Filter states
   const [filters, setFilters] = useState({
     keyword: '',
@@ -133,7 +135,7 @@ export default function Quotations() {
     projectIds: [],
     supplierIds: [],
   });
-  
+
   // Data for dropdowns
   const [projects, setProjects] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -144,17 +146,6 @@ export default function Quotations() {
   const [projectSearchTimer, setProjectSearchTimer] = useState(null);
   const [supplierSearchTimer, setSupplierSearchTimer] = useState(null);
   const [statesSearchTimer, setStatesSearchTimer] = useState(null);
-
-  // Check permission
-  if (!permissionsLoading && !isOwner) {
-    return (
-      <Box>
-        <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
-          Bạn không có quyền truy cập vào mục này. Chỉ chủ doanh nghiệp mới có quyền này.
-        </Alert>
-      </Box>
-    );
-  }
 
   // Fetch projects and suppliers
   useEffect(() => {
@@ -191,14 +182,14 @@ export default function Quotations() {
       }
     };
 
-    if (!permissionsLoading && isOwner) {
+    if (!permissionsLoading && !isUnauthorized) {
       const timer = setTimeout(() => {
         fetchDropdownData();
       }, 300);
-      
+
       return () => clearTimeout(timer);
     }
-  }, [permissionsLoading, isOwner, projectKeyword, supplierKeyword]);
+  }, [permissionsLoading, isUnauthorized, projectKeyword, supplierKeyword]);
 
   // Fetch quotations
   useEffect(() => {
@@ -224,10 +215,10 @@ export default function Quotations() {
       }
     };
 
-    if (!permissionsLoading && isOwner) {
+    if (!permissionsLoading && !isUnauthorized) {
       fetchQuotations();
     }
-  }, [enterpriseId, permissionsLoading, isOwner, showToast, filters]);
+  }, [enterpriseId, permissionsLoading, isUnauthorized, showToast, filters]);
 
   const handleOpenDetail = (quote) => {
     setSelectedQuote(quote);
@@ -267,22 +258,22 @@ export default function Quotations() {
         }}
         onOpen={() => openHandler()}
         renderInput={(params) => (
-          <TextField 
-            {...params} 
-            label={label} 
-            size="medium"
+          <TextField
+            {...params}
+            label={label}
+            size="small"
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
                 backgroundColor: alpha(theme.palette.background.default, 0.6),
                 transition: 'all 0.2s ease',
-                fontSize: '1rem',
+                fontSize: '0.875rem',
                 '&:hover': {
                   backgroundColor: alpha(theme.palette.background.default, 0.8),
                 },
                 '&.Mui-focused': {
                   backgroundColor: theme.palette.background.paper,
-                  boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                 },
               },
             }}
@@ -329,7 +320,7 @@ export default function Quotations() {
   const handleProjectSearch = async (keyword) => {
     setProjectKeyword(keyword);
     if (projectSearchTimer) clearTimeout(projectSearchTimer);
-    
+
     const timer = setTimeout(async () => {
       try {
         const response = await projectApi.getProjectsByEnterprise(keyword || '', 0, 100);
@@ -346,14 +337,14 @@ export default function Quotations() {
         console.error("Error fetching projects:", error);
       }
     }, 300);
-    
+
     setProjectSearchTimer(timer);
   };
 
   const handleSupplierSearch = async (keyword) => {
     setSupplierKeyword(keyword);
     if (supplierSearchTimer) clearTimeout(supplierSearchTimer);
-    
+
     const timer = setTimeout(async () => {
       try {
         const response = await supplierApi.getSuppliers(keyword || '', 0, 100);
@@ -370,14 +361,14 @@ export default function Quotations() {
         console.error("Error fetching suppliers:", error);
       }
     }, 300);
-    
+
     setSupplierSearchTimer(timer);
   };
 
   const handleStateSearch = async (keyword) => {
     setStatesKeyword(keyword);
     if (statesSearchTimer) clearTimeout(statesSearchTimer);
-    
+
     const timer = setTimeout(async () => {
       // Filter states based on keyword
       const stateOptions = [
@@ -385,13 +376,13 @@ export default function Quotations() {
         { id: 'APPROVED', name: 'Chấp nhận' },
         { id: 'REJECTED', name: 'Từ chối' },
       ];
-      
-      const filtered = stateOptions.filter(s => 
+
+      const filtered = stateOptions.filter(s =>
         s.name.toLowerCase().includes(keyword.toLowerCase())
       );
       setStates(filtered);
     }, 300);
-    
+
     setStatesSearchTimer(timer);
   };
 
@@ -406,6 +397,16 @@ export default function Quotations() {
     );
   }
 
+  if (isUnauthorized) {
+    return (
+      <Box>
+        <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
+          Bạn không có quyền truy cập vào mục này
+        </Alert>
+      </Box>
+    );
+  }
+
   // Show detail view if viewMode is "detail"
   if (viewMode === "detail" && selectedQuote) {
     return <QuotationDetail quotation={selectedQuote} onBack={handleCloseDetail} />;
@@ -416,37 +417,35 @@ export default function Quotations() {
       {/* Filter Box */}
       <FilterCard>
         <CardContent>
-          {/* Keyword Search Row */}
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center", marginBottom: 2 }}>
+          <Grid container spacing={2} alignItems="center">
             {/* Keyword Search */}
-            <TextField
-              placeholder="Tìm kiếm báo giá..."
-              size="medium"
-              value={filters.keyword}
-              onChange={(e) => handleFilterChange('keyword', e.target.value)}
-              sx={{ 
-                flex: 1,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  backgroundColor: alpha(theme.palette.background.default, 0.6),
-                  transition: 'all 0.2s ease',
-                  fontSize: '1rem',
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.background.default, 0.8),
+            <Grid item xs={12} md={3}>
+              <TextField
+                placeholder="Tìm kiếm báo giá..."
+                size="small"
+                fullWidth
+                value={filters.keyword}
+                onChange={(e) => handleFilterChange('keyword', e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    },
                   },
-                  '&.Mui-focused': {
-                    backgroundColor: theme.palette.background.paper,
-                    boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
-                  },
-                },
-              }}
-            />
-          </Box>
+                }}
+              />
+            </Grid>
 
-          {/* Filter Controls Row */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
-            {/* State Filter */}
-            <Box sx={{ width: "calc(20% - 4px)" }}>
+            {/* Filter Controls */}
+            <Grid item xs={12} sm={4} md={3}>
               {renderAutocompleteFilter(
                 'states',
                 'Trạng thái',
@@ -457,10 +456,9 @@ export default function Quotations() {
                 () => handleStateSearch(''),
                 true
               )}
-            </Box>
+            </Grid>
 
-            {/* Project Filter */}
-            <Box sx={{ width: "calc(20% - 4px)" }}>
+            <Grid item xs={12} sm={4} md={3}>
               {renderAutocompleteFilter(
                 'projectIds',
                 'Chọn sự kiện',
@@ -471,10 +469,9 @@ export default function Quotations() {
                 () => handleProjectSearch(''),
                 false
               )}
-            </Box>
+            </Grid>
 
-            {/* Supplier Filter */}
-            <Box sx={{ width: "calc(20% - 4px)" }}>
+            <Grid item xs={12} sm={4} md={3}>
               {renderAutocompleteFilter(
                 'supplierIds',
                 'Chọn nhà cung cấp',
@@ -485,8 +482,8 @@ export default function Quotations() {
                 () => handleSupplierSearch(''),
                 false
               )}
-            </Box>
-          </Box>
+            </Grid>
+          </Grid>
         </CardContent>
       </FilterCard>
 
@@ -564,7 +561,7 @@ export default function Quotations() {
               render: (value, row) => (
                 <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
                   <Tooltip title="Chi tiết">
-                    <ActionButton 
+                    <ActionButton
                       size="small"
                       onClick={() => handleOpenDetail(row)}
                     >
