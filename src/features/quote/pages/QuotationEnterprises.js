@@ -21,12 +21,14 @@ import {
   Select,
   Grid,
   MenuItem,
+  InputAdornment,
 } from "@mui/material";
 import { useToast } from "../../../app/providers/ToastContext";
 import {
   Receipt as ReceiptIcon,
   Inbox as InboxIcon,
   Info as InfoIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import useEnterpriseUserPermissions from "../../permission/hooks/useEnterpriseUserPermissions";
 import quoteApi from "../api/quote.api";
@@ -426,6 +428,13 @@ export default function Quotations() {
                 fullWidth
                 value={filters.keyword}
                 onChange={(e) => handleFilterChange('keyword', e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
