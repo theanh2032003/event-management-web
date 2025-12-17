@@ -25,6 +25,7 @@ import {
   styled,
   alpha,
   Button,
+  InputAdornment,
 } from "@mui/material";
 import { useToast } from "../../../app/providers/ToastContext";
 import {
@@ -34,6 +35,7 @@ import {
   ZoomIn as ZoomInIcon,
   ZoomOut as ZoomOutIcon,
   PictureAsPdf as PdfIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import contractApi from "../api/contract.api";
 import supplierApi from "../../supplier/api/supplier.api";
@@ -118,21 +120,21 @@ export default function Contracts() {
   // Data states
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Filter states
   const [filterState, setFilterState] = useState("");
   const [filterKeyword, setFilterKeyword] = useState("");
-  
+
   // Pagination states
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  
+
   // Action states
   const [stateChanging, setStateChanging] = useState(null);
   const [confirmStateOpen, setConfirmStateOpen] = useState(false);
   const [pendingStateChange, setPendingStateChange] = useState(null);
-  
+
   // Modal states
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
@@ -147,11 +149,11 @@ export default function Contracts() {
     const fetchContracts = async () => {
       try {
         setLoading(true);
-        
+
         const filters = {
           owner: false, // Supplier side
         };
-        
+
         if (filterState) {
           filters.state = filterState;
         }
@@ -160,7 +162,7 @@ export default function Contracts() {
         }
 
         const response = await contractApi.getContracts(filters, page, rowsPerPage);
-        
+
         // Handle different response formats
         if (response?.data && Array.isArray(response.data)) {
           setContracts(response.data);
@@ -202,7 +204,7 @@ export default function Contracts() {
       // Fetch supplier info
       const currentWorkspace = localStorage.getItem('currentWorkspace');
       let supplierIdToFetch = null;
-      
+
       if (currentWorkspace) {
         try {
           const workspace = JSON.parse(currentWorkspace);
@@ -222,12 +224,12 @@ export default function Contracts() {
           const supplierResponse = await supplierApi.getSupplierById(supplierIdToFetch);
           // Handle different response formats
           let supplierData = supplierResponse?.data?.data || supplierResponse?.data || supplierResponse;
-          
+
           // If response is axios response object, extract data
           if (supplierResponse?.data && typeof supplierResponse.data === 'object' && !supplierResponse.data.data) {
             supplierData = supplierResponse.data;
           }
-          
+
           setSupplierInfo(supplierData);
         } catch (error) {
           showToast("Không thể tải thông tin nhà cung cấp", "error", 3000);
@@ -241,12 +243,12 @@ export default function Contracts() {
           const enterpriseResponse = await enterpriseApi.getEnterpriseById(enterpriseIdToFetch);
           // Handle different response formats
           let enterpriseData = enterpriseResponse?.data?.data || enterpriseResponse?.data || enterpriseResponse;
-          
+
           // If response is axios response object, extract data
           if (enterpriseResponse?.data && typeof enterpriseResponse.data === 'object' && !enterpriseResponse.data.data) {
             enterpriseData = enterpriseResponse.data;
           }
-          
+
           setEnterpriseInfo(enterpriseData);
         } catch (error) {
           showToast("Không thể tải thông tin doanh nghiệp", "error", 3000);
@@ -255,7 +257,7 @@ export default function Contracts() {
 
       // Fetch quote info if contract has quoteId or paymentApprovalId
       let quoteIdToFetch = contract?.quoteId || contract?.quote?.id;
-      
+
       // If no direct quoteId, try to get from paymentApproval
       if (!quoteIdToFetch && contract?.paymentApprovalId) {
         try {
@@ -267,18 +269,18 @@ export default function Contracts() {
           // Continue without quoteId from paymentApproval
         }
       }
-      
+
       if (quoteIdToFetch) {
         try {
           const quoteResponse = await quoteApi.getQuoteById(quoteIdToFetch);
           // Handle different response formats
           let quoteData = quoteResponse?.data?.data || quoteResponse?.data || quoteResponse;
-          
+
           // If response is axios response object, extract data
           if (quoteResponse?.data && typeof quoteResponse.data === 'object' && !quoteResponse.data.data) {
             quoteData = quoteResponse.data;
           }
-          
+
           setQuoteInfo(quoteData);
         } catch (error) {
           showToast("Không thể tải thông tin báo giá", "error", 3000);
@@ -309,7 +311,7 @@ export default function Contracts() {
 
   const handleDownloadPDF = () => {
     const contractContent = document.getElementById('contract-pdf-content');
-    
+
     if (!contractContent) {
       showToast("Không thể tải hợp đồng", "error", 3000);
       return;
@@ -318,17 +320,17 @@ export default function Contracts() {
     try {
       // Clone the contract content to preserve original
       const clonedContent = contractContent.cloneNode(true);
-      
+
       // Remove zoom transform from cloned content
       clonedContent.style.transform = 'scale(1)';
       clonedContent.style.width = '100%';
-      
+
       // Create a new window for PDF generation
       const printWindow = window.open('', '_blank');
-      
+
       // Get the contract HTML content
       const contractHTML = clonedContent.innerHTML;
-      
+
       // Get all styles from the original document
       const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
         .map(style => {
@@ -339,7 +341,7 @@ export default function Contracts() {
           }
         })
         .join('');
-      
+
       // Create the full HTML document with all styles
       const fullHTML = `
         <!DOCTYPE html>
@@ -388,10 +390,10 @@ export default function Contracts() {
           </body>
         </html>
       `;
-      
+
       printWindow.document.write(fullHTML);
       printWindow.document.close();
-      
+
       showToast("ℹĐang mở cửa sổ in. Vui lòng chọn 'Lưu dưới dạng PDF' trong dialog in.", "success", 5000);
     } catch (error) {
       showToast("Lỗi khi tạo file PDF. Vui lòng thử lại.", "error", 3000);
@@ -422,11 +424,11 @@ export default function Contracts() {
 
     try {
       setStateChanging(contractId);
-      
+
       await contractApi.updateContractState(contractId, { state: newState });
-      
+
       showToast("Đã cập nhật trạng thái hợp đồng", "success", 3000);
-      
+
       // Refresh list
       const filters = {
         owner: false,
@@ -548,19 +550,27 @@ export default function Contracts() {
               value={filterKeyword}
               onChange={(e) => setFilterKeyword(e.target.value)}
               placeholder="Tìm theo tên hợp đồng..."
-              sx={{ 
-                minWidth: 250, 
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                minWidth: 250,
                 flex: 1,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
                   backgroundColor: alpha(theme.palette.background.default, 0.6),
                   transition: 'all 0.2s ease',
+                  fontSize: '0.875rem',
                   '&:hover': {
                     backgroundColor: alpha(theme.palette.background.default, 0.8),
                   },
                   '&.Mui-focused': {
                     backgroundColor: theme.palette.background.paper,
-                    boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                   },
                 },
               }}
@@ -674,8 +684,8 @@ export default function Contracts() {
                       onChange={(e) => handleStateChange(row.id, e.target.value, value)}
                       size="small"
                       disabled={stateChanging === row.id}
-                      sx={{ 
-                        minWidth: 140, 
+                      sx={{
+                        minWidth: 140,
                         borderRadius: 1.5,
                         '& .MuiOutlinedInput-notchedOutline': {
                           borderColor: alpha(theme.palette.primary.main, 0.3),
@@ -755,9 +765,9 @@ export default function Contracts() {
       )}
 
       {/* Detail Dialog */}
-      <Dialog 
-        open={detailOpen} 
-        onClose={handleCloseDetail} 
+      <Dialog
+        open={detailOpen}
+        onClose={handleCloseDetail}
         maxWidth={false}
         fullWidth
         fullScreen={isMobile}
@@ -776,7 +786,7 @@ export default function Contracts() {
           }
         }}
       >
-        <DialogTitle sx={{ 
+        <DialogTitle sx={{
           fontWeight: 700,
           fontSize: "1.25rem",
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
@@ -816,11 +826,11 @@ export default function Contracts() {
                 <ZoomOutIcon />
               </IconButton>
             </Tooltip>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                minWidth: 60, 
-                textAlign: 'center', 
+            <Typography
+              variant="body2"
+              sx={{
+                minWidth: 60,
+                textAlign: 'center',
                 fontWeight: 600,
                 color: theme.palette.text.primary,
                 px: 1,
@@ -851,7 +861,7 @@ export default function Contracts() {
           </Box>
         </DialogTitle>
 
-        <DialogContent sx={{ 
+        <DialogContent sx={{
           p: 0,
           overflow: 'hidden',
           backgroundColor: '#e0e0e0',
@@ -861,10 +871,10 @@ export default function Contracts() {
           flexDirection: 'column',
         }}>
           {loadingInfo ? (
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
               minHeight: '600px',
               backgroundColor: '#f5f5f5',
               flex: 1,
@@ -872,8 +882,8 @@ export default function Contracts() {
               <CircularProgress />
             </Box>
           ) : selectedContract ? (
-            <Box sx={{ 
-              display: 'flex', 
+            <Box sx={{
+              display: 'flex',
               justifyContent: 'center',
               alignItems: 'flex-start',
               backgroundColor: '#e0e0e0',
@@ -911,7 +921,7 @@ export default function Contracts() {
                   my: { xs: 1, sm: 2 },
                 }}
               >
-                <ContractPDFView 
+                <ContractPDFView
                   contract={selectedContract}
                   supplier={supplierInfo}
                   enterprise={enterpriseInfo || selectedContract.enterprise}
@@ -922,20 +932,20 @@ export default function Contracts() {
           ) : null}
         </DialogContent>
 
-        <DialogActions sx={{ 
-          p: 2.5, 
+        <DialogActions sx={{
+          p: 2.5,
           px: 3,
           borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
           gap: 2,
           backgroundColor: '#ffffff',
           boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.1)',
         }}>
-          <Button 
+          <Button
             onClick={handleCloseDetail}
             variant="outlined"
-            sx={{ 
-              borderRadius: 2, 
-              textTransform: 'none', 
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
               fontWeight: 600,
               px: 3,
               borderColor: alpha(theme.palette.divider, 0.5),
@@ -947,13 +957,13 @@ export default function Contracts() {
           >
             Đóng
           </Button>
-          <Button 
+          <Button
             onClick={handleDownloadPDF}
             variant="contained"
             startIcon={<PdfIcon />}
-            sx={{ 
-              borderRadius: 2, 
-              textTransform: 'none', 
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
               fontWeight: 600,
               px: 3,
               background: `linear-gradient(135deg, ${theme.palette.error.main}, ${theme.palette.error.dark})`,

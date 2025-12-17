@@ -28,30 +28,32 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
-    borderRadius: theme.spacing(1.5),
+    borderRadius: theme.spacing(2), // Matches borderRadius: 2
     backgroundColor: alpha(theme.palette.background.default, 0.6),
     transition: 'all 0.2s ease',
+    fontSize: '0.875rem',
     '&:hover': {
       backgroundColor: alpha(theme.palette.background.default, 0.8),
     },
     '&.Mui-focused': {
       backgroundColor: theme.palette.background.paper,
-      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
     },
   },
 }));
 
 const StyledFormControl = styled(FormControl)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
-    borderRadius: theme.spacing(1.5),
+    borderRadius: theme.spacing(2),
     backgroundColor: alpha(theme.palette.background.default, 0.6),
     transition: 'all 0.2s ease',
+    fontSize: '0.875rem',
     '&:hover': {
       backgroundColor: alpha(theme.palette.background.default, 0.8),
     },
     '&.Mui-focused': {
       backgroundColor: theme.palette.background.paper,
-      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
     },
   },
 }));
@@ -116,16 +118,16 @@ const EventFilters = ({
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: "text.secondary" }} />
+                  <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
                 </InputAdornment>
               ),
             }}
           />
         </Grid>
 
-       
 
-       
+
+
 
         {/* Filter by Category */}
         <Grid item xs={12} sm={6} md={3}>

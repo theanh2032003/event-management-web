@@ -50,6 +50,7 @@ import {
   AccountBalance as AccountBalanceIcon,
   Percent as PercentIcon,
   LocalShipping as LocalShippingIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import quoteApi from "../api/quote.api";
 import { CommonTable } from "../../../shared/components/CommonTable";
@@ -257,31 +258,31 @@ export default function Quotations() {
   // Data states
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Filter states
   const [filterStates, setFilterStates] = useState([]);
   const [filterKeyword, setFilterKeyword] = useState("");
-  
+
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [quoteToDelete, setQuoteToDelete] = useState(null);
-  
+
   // Pagination states
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  
+
   // Action states
   const [stateChanging, setStateChanging] = useState(null);
   const [deletingQuoteId, setDeletingQuoteId] = useState(null);
-  
+
   // Modal states
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editingQuote, setEditingQuote] = useState(null);
-  
+
   // Edit form data
   const [editFormData, setEditFormData] = useState({
     name: "",
@@ -305,7 +306,7 @@ export default function Quotations() {
     const fetchQuotes = async () => {
       try {
         setLoading(true);
-        
+
         const filters = {};
         if (filterStates.length > 0) {
           filters.states = filterStates;
@@ -315,7 +316,7 @@ export default function Quotations() {
         }
 
         const response = await quoteApi.getQuotes(filters, page, rowsPerPage);
-        
+
         // Handle different response formats
         if (response?.data && Array.isArray(response.data)) {
           setQuotes(response.data);
@@ -404,7 +405,7 @@ export default function Quotations() {
     const { name, value } = e.target;
     setEditFormData(prev => {
       const newData = { ...prev };
-      
+
       // Handle currency fields
       if (currencyFields.has(name)) {
         const sanitized = sanitizeCurrencyValue(value);
@@ -412,16 +413,16 @@ export default function Quotations() {
       } else {
         newData[name] = value;
       }
-      
+
       // Auto-calculate totalPrice and finalPrice
       if (name === "quantity" || name === "unitPrice") {
         const qty = parseFloat(newData.quantity) || 0;
-        const unitPriceNum = currencyFields.has("unitPrice") 
-          ? getCurrencyNumber(newData.unitPrice) 
+        const unitPriceNum = currencyFields.has("unitPrice")
+          ? getCurrencyNumber(newData.unitPrice)
           : parseFloat(newData.unitPrice) || 0;
         newData.totalPrice = (qty * unitPriceNum).toString();
       }
-      
+
       if (name === "totalPrice" || name === "tax" || name === "discount" || name === "shippingFee" || name === "otherFee") {
         const totalPrice = parseFloat(newData.totalPrice) || 0;
         const tax = currencyFields.has("tax") ? getCurrencyNumber(newData.tax) : (parseFloat(newData.tax) || 0);
@@ -430,7 +431,7 @@ export default function Quotations() {
         const otherFee = currencyFields.has("otherFee") ? getCurrencyNumber(newData.otherFee) : (parseFloat(newData.otherFee) || 0);
         newData.finalPrice = (totalPrice + tax - discount + shippingFee + otherFee).toString();
       }
-      
+
       return newData;
     });
   };
@@ -494,7 +495,7 @@ export default function Quotations() {
       const response = await quoteApi.updateQuote(editingQuote.id, quoteData);
 
       showToast("Cập nhật báo giá thành công!", "success", 3000);
-      
+
       // Refresh list
       const filters = {};
       if (filterStates.length > 0) filters.states = filterStates;
@@ -534,11 +535,11 @@ export default function Quotations() {
 
     try {
       setDeletingQuoteId(quoteToDelete.id);
-      
+
       await quoteApi.deleteQuote(quoteToDelete.id);
-      
+
       showToast("Đã xóa báo giá thành công", "success", 3000);
-      
+
       // Refresh list
       const filters = {};
       if (filterStates.length > 0) filters.states = filterStates;
@@ -576,11 +577,11 @@ export default function Quotations() {
   const handleStateChange = async (quoteId, newState) => {
     try {
       setStateChanging(quoteId);
-      
+
       await quoteApi.supplierChangeState(quoteId, { state: newState });
-      
+
       showToast("Đã cập nhật trạng thái báo giá", "success", 3000);
-      
+
       // Refresh list
       const filters = {};
       if (filterStates.length > 0) filters.states = filterStates;
@@ -649,7 +650,7 @@ export default function Quotations() {
     const labels = {
       DRAFT: "Nháp",
       SUBMITTED: "Đã gửi",
-   
+
     };
     return labels[state] || state;
   };
@@ -677,7 +678,30 @@ export default function Quotations() {
               value={filterKeyword}
               onChange={(e) => setFilterKeyword(e.target.value)}
               placeholder="Tìm theo tên..."
-              sx={{ minWidth: 250, flex: 1 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                minWidth: 250,
+                flex: 1,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  backgroundColor: alpha(theme.palette.background.default, 0.6),
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.875rem',
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.background.default, 0.8),
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: theme.palette.background.paper,
+                    boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                  },
+                },
+              }}
             />
 
             <FormControl size="small" sx={{ minWidth: 150 }}>
@@ -900,10 +924,10 @@ export default function Quotations() {
       )}
 
       {/* Detail Dialog */}
-      <Dialog 
-        open={detailOpen} 
-        onClose={handleCloseDetail} 
-        maxWidth="md" 
+      <Dialog
+        open={detailOpen}
+        onClose={handleCloseDetail}
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -912,7 +936,7 @@ export default function Quotations() {
           }
         }}
       >
-        <DialogTitle sx={{ 
+        <DialogTitle sx={{
           fontWeight: 700,
           fontSize: "1.25rem",
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -1058,13 +1082,13 @@ export default function Quotations() {
           )}
         </DialogContent>
 
-        <DialogActions sx={{ 
-          p: 3, 
+        <DialogActions sx={{
+          p: 3,
           pt: 2,
           borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           gap: 2,
         }}>
-          <Button 
+          <Button
             onClick={handleCloseDetail}
             variant="outlined"
             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
@@ -1072,7 +1096,7 @@ export default function Quotations() {
             Đóng
           </Button>
           {selectedQuote && selectedQuote.state === "DRAFT" && (
-            <Button 
+            <Button
               variant="contained"
               color="primary"
               startIcon={<EditIcon />}
@@ -1089,10 +1113,10 @@ export default function Quotations() {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog 
-        open={editOpen} 
-        onClose={handleCloseEdit} 
-        maxWidth="md" 
+      <Dialog
+        open={editOpen}
+        onClose={handleCloseEdit}
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -1101,7 +1125,7 @@ export default function Quotations() {
           }
         }}
       >
-        <DialogTitle sx={{ 
+        <DialogTitle sx={{
           display: 'flex',
           alignItems: 'flex-start',
           justifyContent: 'space-between',
@@ -1115,9 +1139,9 @@ export default function Quotations() {
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <QuoteReceiptIcon sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
             <Box>
-              <Typography 
-                variant="h5" 
-                sx={{ 
+              <Typography
+                variant="h5"
+                sx={{
                   fontWeight: 700,
                   mb: 0.5,
                   background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
@@ -1133,7 +1157,7 @@ export default function Quotations() {
               </Typography>
             </Box>
           </Box>
-          <IconButton 
+          <IconButton
             onClick={handleCloseEdit}
             size="small"
             disabled={editSubmitting}
@@ -1166,7 +1190,7 @@ export default function Quotations() {
             </Grid>
 
             {/* Ngày hết hạn */}
-            <Grid item xs={12} md={4} sx={{width: '100%'}}>
+            <Grid item xs={12} md={4} sx={{ width: '100%' }}>
               <StyledTextField
                 label="Ngày hết hạn *"
                 name="expiredAt"
@@ -1180,7 +1204,7 @@ export default function Quotations() {
             </Grid>
 
             {/* Số lượng */}
-            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+            <Grid item xs={12} sm={6} sx={{ width: '100%' }}>
               <StyledTextField
                 label="Số lượng"
                 name="quantity"
@@ -1193,7 +1217,7 @@ export default function Quotations() {
             </Grid>
 
             {/* Đơn giá */}
-            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+            <Grid item xs={12} sm={6} sx={{ width: '100%' }}>
               <StyledTextField
                 label="Đơn giá"
                 name="unitPrice"
@@ -1212,7 +1236,7 @@ export default function Quotations() {
             </Grid>
 
             {/* Tổng giá */}
-            <Grid item xs={12} sx={{width: '100%'}}>
+            <Grid item xs={12} sx={{ width: '100%' }}>
               <StyledTextField
                 label="Tổng giá"
                 value={formatCurrency(editFormData.totalPrice)}
@@ -1229,7 +1253,7 @@ export default function Quotations() {
             </Grid>
 
             {/* Phụ phí */}
-            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+            <Grid item xs={12} sm={6} sx={{ width: '100%' }}>
               <StyledTextField
                 label="Phụ phí"
                 name="otherFee"
@@ -1247,7 +1271,7 @@ export default function Quotations() {
             </Grid>
 
             {/* Giảm giá */}
-            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+            <Grid item xs={12} sm={6} sx={{ width: '100%' }}>
               <StyledTextField
                 label="Giảm giá"
                 name="discount"
@@ -1265,7 +1289,7 @@ export default function Quotations() {
             </Grid>
 
             {/* Giá cuối cùng */}
-            <Grid item xs={12}  sx={{width: '100%'}}>
+            <Grid item xs={12} sx={{ width: '100%' }}>
               <StyledTextField
                 label="Giá cuối cùng"
                 value={formatCurrency(editFormData.finalPrice)}
@@ -1282,7 +1306,7 @@ export default function Quotations() {
             </Grid>
 
             {/* Phương thức thanh toán */}
-            <Grid item xs={12} sm={6}  sx={{width: '100%'}}>
+            <Grid item xs={12} sm={6} sx={{ width: '100%' }}>
               <StyledFormControl fullWidth sx={{ minHeight: 52 }}>
                 <InputLabel>Phương thức thanh toán</InputLabel>
                 <Select
@@ -1301,7 +1325,7 @@ export default function Quotations() {
             </Grid>
 
             {/* Điều khoản */}
-            <Grid item xs={12} sx={{width: '100%'}}>
+            <Grid item xs={12} sx={{ width: '100%' }}>
               <StyledTextField
                 label="Điều khoản thanh toán"
                 name="paymentTerms"
@@ -1314,7 +1338,7 @@ export default function Quotations() {
             </Grid>
 
             {/* Bảo hành */}
-            <Grid item xs={12}  sx={{width: '100%'}}>
+            <Grid item xs={12} sx={{ width: '100%' }}>
               <StyledTextField
                 label="Bảo hành"
                 name="guarantee"
@@ -1329,8 +1353,8 @@ export default function Quotations() {
           </Grid>
         </DialogContent>
 
-        <DialogActions sx={{ 
-          p: 3, 
+        <DialogActions sx={{
+          p: 3,
           pt: 2,
           borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           gap: 2,

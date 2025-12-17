@@ -203,11 +203,11 @@ const StatusChip = styled(Chip)(({ theme, active }) => ({
   fontWeight: 600,
   fontSize: '0.75rem',
   height: '28px',
-  backgroundColor: active 
-    ? alpha(theme.palette.success.main, 0.1) 
+  backgroundColor: active
+    ? alpha(theme.palette.success.main, 0.1)
     : alpha(theme.palette.warning.main, 0.1),
-  color: active 
-    ? theme.palette.success.main 
+  color: active
+    ? theme.palette.success.main
     : theme.palette.warning.main,
   border: `1px solid ${active ? theme.palette.success.main : theme.palette.warning.main}`,
 }));
@@ -225,7 +225,7 @@ const ActionButton = styled(IconButton)(({ theme, color }) => ({
   transition: 'all 0.2s ease',
   padding: theme.spacing(1),
   '&:hover': {
-    backgroundColor: color === 'error' 
+    backgroundColor: color === 'error'
       ? alpha(theme.palette.error.main, 0.1)
       : alpha(theme.palette.primary.main, 0.1),
     transform: 'scale(1.15)',
@@ -287,7 +287,7 @@ export default function Marketplace() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { id: supplierId } = useParams();
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -332,7 +332,7 @@ export default function Marketplace() {
     try {
       setLoading(true);
       setError('');
-      
+
       // Build filters
       const filters = {
         supplierIds: [supplierId],
@@ -357,14 +357,14 @@ export default function Marketplace() {
       }
 
       const response = await productApi.getProducts(filters, page, rowsPerPage, sortParam);
-      
+
       // Debug logging
       console.log('📦 Products API Response:', response);
-      
+
       // Handle response structure - axiosClient đã return response.data
       let data = [];
       let total = 0;
-      
+
       // Cấu trúc: { data: [...], metadata: { total, totalPage, page, size } }
       if (response?.data && Array.isArray(response.data) && response?.metadata) {
         data = response.data;
@@ -395,9 +395,9 @@ export default function Marketplace() {
         total = response.length;
         console.log('📦 Direct array - length:', total);
       }
-      
+
       console.log('📦 Final data count:', data.length, 'Total count:', total);
-      
+
       setProducts(Array.isArray(data) ? data : []);
       setTotalCount(total);
       setLoading(false);
@@ -442,10 +442,10 @@ export default function Marketplace() {
 
   const handleDeleteClick = (product) => {
     const productId = product.id || product._id;
-    setDeleteDialog({ 
-      open: true, 
-      productId, 
-      productName: product.name 
+    setDeleteDialog({
+      open: true,
+      productId,
+      productName: product.name
     });
   };
 
@@ -459,10 +459,10 @@ export default function Marketplace() {
       fetchProducts(); // Reload products
     } catch (error) {
       console.error('Error deleting product:', error);
-      setSnackbar({ 
-        open: true, 
-        message: error?.response?.data?.message || 'Không thể xóa sản phẩm', 
-        severity: 'error' 
+      setSnackbar({
+        open: true,
+        message: error?.response?.data?.message || 'Không thể xóa sản phẩm',
+        severity: 'error'
       });
     }
   };
@@ -507,18 +507,18 @@ export default function Marketplace() {
 
       const newStatus = product.isActive !== false ? false : true;
       await productApi.changeProductState(productId, newStatus);
-      setSnackbar({ 
-        open: true, 
-        message: newStatus ? 'Kích hoạt sản phẩm thành công!' : 'Tạm dừng sản phẩm thành công!', 
-        severity: 'success' 
+      setSnackbar({
+        open: true,
+        message: newStatus ? 'Kích hoạt sản phẩm thành công!' : 'Tạm dừng sản phẩm thành công!',
+        severity: 'success'
       });
       fetchProducts(); // Reload products
     } catch (error) {
       console.error('Error changing product state:', error);
-      setSnackbar({ 
-        open: true, 
-        message: error?.response?.data?.message || 'Không thể thay đổi trạng thái sản phẩm', 
-        severity: 'error' 
+      setSnackbar({
+        open: true,
+        message: error?.response?.data?.message || 'Không thể thay đổi trạng thái sản phẩm',
+        severity: 'error'
       });
     }
   };
@@ -559,7 +559,7 @@ export default function Marketplace() {
             {/* Keyword Search */}
             <TextField
               placeholder="Tìm kiếm"
-              size="medium"
+              size="small"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => {
@@ -568,19 +568,26 @@ export default function Marketplace() {
                 }
               }}
               onBlur={() => setPage(0)}
-              sx={{ 
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
                 flex: 1,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
                   backgroundColor: alpha(theme.palette.background.default, 0.6),
                   transition: 'all 0.2s ease',
-                  fontSize: '1rem',
+                  fontSize: '0.875rem',
                   '&:hover': {
                     backgroundColor: alpha(theme.palette.background.default, 0.8),
                   },
                   '&.Mui-focused': {
                     backgroundColor: theme.palette.background.paper,
-                    boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                   },
                 },
               }}
@@ -599,7 +606,7 @@ export default function Marketplace() {
                   setFilterCategory(e.target.value);
                   setPage(0);
                 }}
-                size="medium"
+                size="small"
                 fullWidth
                 displayEmpty
                 sx={{
@@ -607,13 +614,13 @@ export default function Marketplace() {
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
                     transition: 'all 0.2s ease',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     '&:hover': {
                       backgroundColor: alpha(theme.palette.background.default, 0.8),
                     },
                     '&.Mui-focused': {
                       backgroundColor: theme.palette.background.paper,
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                     },
                   },
                 }}
@@ -637,20 +644,20 @@ export default function Marketplace() {
                   setFilterStatus(e.target.value);
                   setPage(0);
                 }}
-                size="medium"
+                size="small"
                 fullWidth
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
                     transition: 'all 0.2s ease',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     '&:hover': {
                       backgroundColor: alpha(theme.palette.background.default, 0.8),
                     },
                     '&.Mui-focused': {
                       backgroundColor: theme.palette.background.paper,
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                     },
                   },
                 }}
@@ -675,20 +682,20 @@ export default function Marketplace() {
                   setSortOrder(e.target.value);
                   setPage(0);
                 }}
-                size="medium"
+                size="small"
                 fullWidth
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
                     transition: 'all 0.2s ease',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     '&:hover': {
                       backgroundColor: alpha(theme.palette.background.default, 0.8),
                     },
                     '&.Mui-focused': {
                       backgroundColor: theme.palette.background.paper,
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                     },
                   },
                 }}
@@ -773,10 +780,10 @@ export default function Marketplace() {
               headerName: 'Mã sản phẩm',
               width: 130,
               render: (value) => (
-                <Typography 
-                  variant="body2" 
+                <Typography
+                  variant="body2"
                   color="text.primary"
-                  sx={{ 
+                  sx={{
                     fontFamily: 'monospace',
                     backgroundColor: alpha(theme.palette.grey[200], 0.5),
                     px: 1,
@@ -892,385 +899,385 @@ export default function Marketplace() {
         />
       )}
 
-       {/* Snackbar for notifications */}
-       <Snackbar
-         open={snackbar.open}
-         autoHideDuration={6000}
-         onClose={handleCloseSnackbar}
-         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-       >
-         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-           {snackbar.message}
-         </Alert>
-       </Snackbar>
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
-       {/* Delete Confirmation Dialog */}
-       <Dialog
-         open={deleteDialog.open}
-         onClose={() => setDeleteDialog({ open: false, productId: null, productName: '' })}
-         aria-labelledby="delete-dialog-title"
-         aria-describedby="delete-dialog-description"
-       >
-         <DialogTitle id="delete-dialog-title" sx={{ fontWeight: 600 }}>
-           Xác nhận xóa dịch vụ
-         </DialogTitle>
-         <DialogContent>
-           <DialogContentText id="delete-dialog-description">
-             Bạn có chắc chắn muốn xóa dịch vụ <strong>"{deleteDialog.productName}"</strong>?
-             <br />
-             Hành động này không thể hoàn tác.
-           </DialogContentText>
-         </DialogContent>
-         <DialogActions sx={{ px: 3, pb: 2 }}>
-           <Button
-             onClick={() => setDeleteDialog({ open: false, productId: null, productName: '' })}
-             variant="outlined"
-             sx={{ textTransform: 'none' }}
-           >
-             Hủy
-           </Button>
-           <Button
-             onClick={handleDeleteConfirm}
-             variant="contained"
-             color="error"
-             sx={{ textTransform: 'none' }}
-             startIcon={<DeleteIcon />}
-           >
-             Xóa
-           </Button>
-         </DialogActions>
-       </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, productId: null, productName: '' })}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title" sx={{ fontWeight: 600 }}>
+          Xác nhận xóa dịch vụ
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Bạn có chắc chắn muốn xóa dịch vụ <strong>"{deleteDialog.productName}"</strong>?
+            <br />
+            Hành động này không thể hoàn tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setDeleteDialog({ open: false, productId: null, productName: '' })}
+            variant="outlined"
+            sx={{ textTransform: 'none' }}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            variant="contained"
+            color="error"
+            sx={{ textTransform: 'none' }}
+            startIcon={<DeleteIcon />}
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-       {/* Product Detail Dialog - Layout giống trang EditProduct */}
-       <Dialog
-         open={detailDialog.open}
-         onClose={handleCloseDetailDialog}
-         maxWidth="lg"
-         fullWidth
-         PaperProps={{
-           sx: {
-             borderRadius: 3,
-             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-           }
-         }}
-       >
-         <DialogContent sx={{ p: 3 }}>
-           {detailDialog.loading ? (
-             <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-               <CircularProgress size={50} thickness={4} />
-             </Box>
-           ) : detailDialog.product ? (
-             <Box>
-               {/* Header - giống EditProduct */}
-               <Box
-                 sx={{
-                   display: 'flex',
-                   alignItems: 'center',
-                   gap: 2,
-                   mb: 4,
-                   p: 3,
-                   borderRadius: 2.5,
-                   background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha('#ff6b9d', 0.06)} 100%)`,
-                   border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-                   boxShadow: `0 2px 12px ${alpha(theme.palette.primary.main, 0.08)}`,
-                 }}
-               >
-                 <Box
-                   sx={{
-                     p: 1.5,
-                     borderRadius: 2,
-                     background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #ff6b9d 100%)`,
-                     display: 'flex',
-                     alignItems: 'center',
-                     justifyContent: 'center',
-                     boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.3)}`,
-                   }}
-                 >
-                   <StorefrontIcon sx={{ fontSize: 32, color: 'white' }} />
-                 </Box>
-                 <Box sx={{ flex: 1 }}>
-                   <Typography 
-                     variant="h4" 
-                     component="h1"
-                     sx={{
-                       fontWeight: 700,
-                       background: `linear-gradient(135deg, ${theme.palette.primary.main}, #ff6b9d)`,
-                       backgroundClip: 'text',
-                       WebkitBackgroundClip: 'text',
-                       WebkitTextFillColor: 'transparent',
-                       mb: 0.5,
-                     }}
-                   >
-                     Chi tiết sản phẩm/dịch vụ
-                   </Typography>
-                 
-                 </Box>
-                 <IconButton 
-                   onClick={handleCloseDetailDialog}
-                   sx={{
-                     color: 'text.secondary',
-                     '&:hover': { 
-                       backgroundColor: alpha(theme.palette.error.main, 0.1),
-                       color: 'error.main',
-                     }
-                   }}
-                 >
-                   <CloseIcon />
-                 </IconButton>
-               </Box>
+      {/* Product Detail Dialog - Layout giống trang EditProduct */}
+      <Dialog
+        open={detailDialog.open}
+        onClose={handleCloseDetailDialog}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 3 }}>
+          {detailDialog.loading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+              <CircularProgress size={50} thickness={4} />
+            </Box>
+          ) : detailDialog.product ? (
+            <Box>
+              {/* Header - giống EditProduct */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  mb: 4,
+                  p: 3,
+                  borderRadius: 2.5,
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha('#ff6b9d', 0.06)} 100%)`,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+                  boxShadow: `0 2px 12px ${alpha(theme.palette.primary.main, 0.08)}`,
+                }}
+              >
+                <Box
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #ff6b9d 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.3)}`,
+                  }}
+                >
+                  <StorefrontIcon sx={{ fontSize: 32, color: 'white' }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={{
+                      fontWeight: 700,
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, #ff6b9d)`,
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      mb: 0.5,
+                    }}
+                  >
+                    Chi tiết sản phẩm/dịch vụ
+                  </Typography>
 
-               <Grid container spacing={3}>
-                
+                </Box>
+                <IconButton
+                  onClick={handleCloseDetailDialog}
+                  sx={{
+                    color: 'text.secondary',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.error.main, 0.1),
+                      color: 'error.main',
+                    }
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Box>
 
-                 {/* Detail Section - Right Side (giống EditProduct nhưng chỉ hiển thị) */}
-                 <Grid item xs={12} md={8}>
-                   <Paper
-                     sx={{
-                       borderRadius: 2.5,
-                       boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.08)}`,
-                       border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-                       background: theme.palette.background.paper,
-                       p: 3,
-                     }}
-                   >
-                     <Box sx={{ maxWidth: 700, ml: 'auto' }}>
-                       <Grid container spacing={2.5}>
-                         {/* Tên sản phẩm */}
-                         <Grid item xs={12} sm={6}>
-                           <Box
-                             sx={{
-                               p: 2,
-                               borderRadius: 1.5,
-                               backgroundColor: alpha(theme.palette.background.default, 0.5),
-                               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                             }}
-                           >
-                             <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
-                               Tên sản phẩm/Dịch vụ
-                             </Typography>
-                             <Typography variant="body1" fontWeight={600}>
-                               {detailDialog.product.name || 'N/A'}
-                             </Typography>
-                           </Box>
-                         </Grid>
+              <Grid container spacing={3}>
 
-                         
 
-                         {/* Mô tả */}
-                         <Grid item xs={12}>
-                           <Box
-                             sx={{
-                               p: 2,
-                               borderRadius: 1.5,
-                               backgroundColor: alpha(theme.palette.background.default, 0.5),
-                               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                               minHeight: 100,
-                             }}
-                           >
-                             <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
-                               Mô tả
-                             </Typography>
-                             <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
-                               {detailDialog.product.description || 'Không có mô tả'}
-                             </Typography>
-                           </Box>
-                         </Grid>
+                {/* Detail Section - Right Side (giống EditProduct nhưng chỉ hiển thị) */}
+                <Grid item xs={12} md={8}>
+                  <Paper
+                    sx={{
+                      borderRadius: 2.5,
+                      boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.08)}`,
+                      border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
+                      background: theme.palette.background.paper,
+                      p: 3,
+                    }}
+                  >
+                    <Box sx={{ maxWidth: 700, ml: 'auto' }}>
+                      <Grid container spacing={2.5}>
+                        {/* Tên sản phẩm */}
+                        <Grid item xs={12} sm={6}>
+                          <Box
+                            sx={{
+                              p: 2,
+                              borderRadius: 1.5,
+                              backgroundColor: alpha(theme.palette.background.default, 0.5),
+                              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                            }}
+                          >
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
+                              Tên sản phẩm/Dịch vụ
+                            </Typography>
+                            <Typography variant="body1" fontWeight={600}>
+                              {detailDialog.product.name || 'N/A'}
+                            </Typography>
+                          </Box>
+                        </Grid>
 
-                         {/* Danh mục */}
-                         <Grid item xs={12} sm={6}>
-                           <Box
-                             sx={{
-                               p: 2,
-                               borderRadius: 1.5,
-                               backgroundColor: alpha(theme.palette.background.default, 0.5),
-                               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                             }}
-                           >
-                             <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
-                               Danh mục
-                             </Typography>
-                             <Chip
-                               label={detailDialog.product.category?.name || getCategoryName(detailDialog.product.categoryId)}
-                               size="small"
-                               color="primary"
-                               variant="outlined"
-                               sx={{ fontWeight: 600 }}
-                             />
-                           </Box>
-                         </Grid>
 
-                         {/* Giá */}
-                         <Grid item xs={12} sm={3}>
-                           <Box
-                             sx={{
-                               p: 2,
-                               borderRadius: 1.5,
-                               backgroundColor: alpha(theme.palette.background.default, 0.5),
-                               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                             }}
-                           >
-                             <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
-                               Giá
-                             </Typography>
-                             <Typography variant="body1" fontWeight={700} color="primary.main">
-                               {new Intl.NumberFormat('vi-VN', {
-                                 style: 'currency',
-                                 currency: 'VND',
-                                 maximumFractionDigits: 0,
-                               }).format(detailDialog.product.price || 0)}
-                             </Typography>
-                           </Box>
-                         </Grid>
 
-                         {/* Đơn vị */}
-                         <Grid item xs={12} sm={3}>
-                           <Box
-                             sx={{
-                               p: 2,
-                               borderRadius: 1.5,
-                               backgroundColor: alpha(theme.palette.background.default, 0.5),
-                               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                             }}
-                           >
-                             <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
-                               Đơn vị
-                             </Typography>
-                             <Typography variant="body1">
-                               {detailDialog.product.unit || 'N/A'}
-                             </Typography>
-                           </Box>
-                         </Grid>
+                        {/* Mô tả */}
+                        <Grid item xs={12}>
+                          <Box
+                            sx={{
+                              p: 2,
+                              borderRadius: 1.5,
+                              backgroundColor: alpha(theme.palette.background.default, 0.5),
+                              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                              minHeight: 100,
+                            }}
+                          >
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
+                              Mô tả
+                            </Typography>
+                            <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+                              {detailDialog.product.description || 'Không có mô tả'}
+                            </Typography>
+                          </Box>
+                        </Grid>
 
-                         
+                        {/* Danh mục */}
+                        <Grid item xs={12} sm={6}>
+                          <Box
+                            sx={{
+                              p: 2,
+                              borderRadius: 1.5,
+                              backgroundColor: alpha(theme.palette.background.default, 0.5),
+                              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                            }}
+                          >
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
+                              Danh mục
+                            </Typography>
+                            <Chip
+                              label={detailDialog.product.category?.name || getCategoryName(detailDialog.product.categoryId)}
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                              sx={{ fontWeight: 600 }}
+                            />
+                          </Box>
+                        </Grid>
 
-                         {/* Hình ảnh */}
-                         <Grid item xs={12}>
-                           <Box sx={{ mb: 2 }}>
-                             <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>
-                               Hình ảnh {detailDialog.product.images?.length > 0 && `(${detailDialog.product.images.length}/5)`}
-                             </Typography>
-                             {detailDialog.product.images && detailDialog.product.images.length > 0 ? (
-                               <Grid container spacing={2}>
-                                 {detailDialog.product.images.map((image, index) => (
-                                   <Grid item xs={6} sm={4} md={3} key={index}>
-                                     <Box
-                                       sx={{
-                                         position: 'relative',
-                                         borderRadius: 1.5,
-                                         overflow: 'hidden',
-                                         boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.1)}`,
-                                         border: `2px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                         transition: 'all 0.3s ease',
-                                         '&:hover': {
-                                           transform: 'translateY(-4px)',
-                                           boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.15)}`,
-                                           borderColor: alpha(theme.palette.primary.main, 0.3),
-                                         },
-                                       }}
-                                     >
-                                       <img 
-                                         src={image} 
-                                         alt={`Preview ${index + 1}`} 
-                                         style={{ 
-                                           width: '100%', 
-                                           height: 150, 
-                                           objectFit: 'cover',
-                                           transition: 'transform 0.3s ease',
-                                         }} 
-                                       />
-                                     </Box>
-                                   </Grid>
-                                 ))}
-                               </Grid>
-                             ) : (
-                               <Box
-                                 sx={{
-                                   p: 3,
-                                   borderRadius: 1.5,
-                                   border: `2px dashed ${alpha(theme.palette.divider, 0.3)}`,
-                                   backgroundColor: alpha(theme.palette.background.default, 0.5),
-                                   textAlign: 'center',
-                                 }}
-                               >
-                                 <Typography variant="body2" color="text.secondary">
-                                   Chưa có hình ảnh
-                                 </Typography>
-                               </Box>
-                             )}
-                           </Box>
-                         </Grid>
+                        {/* Giá */}
+                        <Grid item xs={12} sm={3}>
+                          <Box
+                            sx={{
+                              p: 2,
+                              borderRadius: 1.5,
+                              backgroundColor: alpha(theme.palette.background.default, 0.5),
+                              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                            }}
+                          >
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
+                              Giá
+                            </Typography>
+                            <Typography variant="body1" fontWeight={700} color="primary.main">
+                              {new Intl.NumberFormat('vi-VN', {
+                                style: 'currency',
+                                currency: 'VND',
+                                maximumFractionDigits: 0,
+                              }).format(detailDialog.product.price || 0)}
+                            </Typography>
+                          </Box>
+                        </Grid>
 
-                        
-                       </Grid>
-                     </Box>
-                   </Paper>
+                        {/* Đơn vị */}
+                        <Grid item xs={12} sm={3}>
+                          <Box
+                            sx={{
+                              p: 2,
+                              borderRadius: 1.5,
+                              backgroundColor: alpha(theme.palette.background.default, 0.5),
+                              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                            }}
+                          >
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
+                              Đơn vị
+                            </Typography>
+                            <Typography variant="body1">
+                              {detailDialog.product.unit || 'N/A'}
+                            </Typography>
+                          </Box>
+                        </Grid>
 
-                   {/* Action Buttons */}
-                   <Box 
-                     display="flex" 
-                     gap={2} 
-                     justifyContent="flex-end" 
-                     sx={{ 
-                       mt: 3,
-                       p: 2.5,
-                       borderRadius: 2,
-                       backgroundColor: alpha(theme.palette.background.default, 0.5),
-                       border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                     }}
-                   >
-                     <Button 
-                       variant="outlined" 
-                       onClick={handleCloseDetailDialog}
-                       sx={{ 
-                         textTransform: 'none', 
-                         minWidth: 120,
-                         borderRadius: 1.5,
-                         fontWeight: 600,
-                         borderWidth: 2,
-                         '&:hover': {
-                           borderWidth: 2,
-                         },
-                       }}
-                     >
-                       Đóng
-                     </Button>
-                     <Button 
-                       onClick={() => {
-                         handleCloseDetailDialog();
-                         handleEditProduct(detailDialog.product);
-                       }}
-                       variant="contained"
-                       startIcon={<EditIcon />}
-                       sx={{ 
-                         textTransform: 'none',
-                         borderRadius: 1.5,
-                         padding: theme.spacing(1.25, 3),
-                         background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #ff6b9d 100%)`,
-                         color: 'white',
-                         fontWeight: 600,
-                         boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.3)}`,
-                         transition: 'all 0.3s ease',
-                         '&:hover': {
-                           background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, #ff4d8a 100%)`,
-                           boxShadow: `0 6px 24px ${alpha(theme.palette.primary.main, 0.4)}`,
-                           transform: 'translateY(-2px)',
-                         },
-                         minWidth: 180,
-                       }}
-                     >
-                       Chỉnh sửa sản phẩm
-                     </Button>
-                   </Box>
-                 </Grid>
-               </Grid>
-             </Box>
-           ) : (
-             <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-               <Typography color="text.secondary">Không có dữ liệu</Typography>
-             </Box>
-           )}
-         </DialogContent>
-       </Dialog>
-     </Box>
-   );
- }
+
+
+                        {/* Hình ảnh */}
+                        <Grid item xs={12}>
+                          <Box sx={{ mb: 2 }}>
+                            <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>
+                              Hình ảnh {detailDialog.product.images?.length > 0 && `(${detailDialog.product.images.length}/5)`}
+                            </Typography>
+                            {detailDialog.product.images && detailDialog.product.images.length > 0 ? (
+                              <Grid container spacing={2}>
+                                {detailDialog.product.images.map((image, index) => (
+                                  <Grid item xs={6} sm={4} md={3} key={index}>
+                                    <Box
+                                      sx={{
+                                        position: 'relative',
+                                        borderRadius: 1.5,
+                                        overflow: 'hidden',
+                                        boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.1)}`,
+                                        border: `2px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': {
+                                          transform: 'translateY(-4px)',
+                                          boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.15)}`,
+                                          borderColor: alpha(theme.palette.primary.main, 0.3),
+                                        },
+                                      }}
+                                    >
+                                      <img
+                                        src={image}
+                                        alt={`Preview ${index + 1}`}
+                                        style={{
+                                          width: '100%',
+                                          height: 150,
+                                          objectFit: 'cover',
+                                          transition: 'transform 0.3s ease',
+                                        }}
+                                      />
+                                    </Box>
+                                  </Grid>
+                                ))}
+                              </Grid>
+                            ) : (
+                              <Box
+                                sx={{
+                                  p: 3,
+                                  borderRadius: 1.5,
+                                  border: `2px dashed ${alpha(theme.palette.divider, 0.3)}`,
+                                  backgroundColor: alpha(theme.palette.background.default, 0.5),
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <Typography variant="body2" color="text.secondary">
+                                  Chưa có hình ảnh
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+                        </Grid>
+
+
+                      </Grid>
+                    </Box>
+                  </Paper>
+
+                  {/* Action Buttons */}
+                  <Box
+                    display="flex"
+                    gap={2}
+                    justifyContent="flex-end"
+                    sx={{
+                      mt: 3,
+                      p: 2.5,
+                      borderRadius: 2,
+                      backgroundColor: alpha(theme.palette.background.default, 0.5),
+                      border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                    }}
+                  >
+                    <Button
+                      variant="outlined"
+                      onClick={handleCloseDetailDialog}
+                      sx={{
+                        textTransform: 'none',
+                        minWidth: 120,
+                        borderRadius: 1.5,
+                        fontWeight: 600,
+                        borderWidth: 2,
+                        '&:hover': {
+                          borderWidth: 2,
+                        },
+                      }}
+                    >
+                      Đóng
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        handleCloseDetailDialog();
+                        handleEditProduct(detailDialog.product);
+                      }}
+                      variant="contained"
+                      startIcon={<EditIcon />}
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: 1.5,
+                        padding: theme.spacing(1.25, 3),
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #ff6b9d 100%)`,
+                        color: 'white',
+                        fontWeight: 600,
+                        boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.3)}`,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, #ff4d8a 100%)`,
+                          boxShadow: `0 6px 24px ${alpha(theme.palette.primary.main, 0.4)}`,
+                          transform: 'translateY(-2px)',
+                        },
+                        minWidth: 180,
+                      }}
+                    >
+                      Chỉnh sửa sản phẩm
+                    </Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+          ) : (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+              <Typography color="text.secondary">Không có dữ liệu</Typography>
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
+    </Box>
+  );
+}

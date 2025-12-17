@@ -18,6 +18,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  TextField,
+  InputAdornment,
+  Card,
+  CardContent,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -26,6 +30,7 @@ import {
   Inbox as InboxIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 
 // Custom hook
@@ -77,6 +82,13 @@ const LoadingBox = styled(Box)(({ theme }) => ({
   gap: theme.spacing(2),
 }));
 
+const FilterCard = styled(Card)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(2),
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+}));
+
 /**
  * EventManagement - Main container component
  * Quản lý danh sách sự kiện của enterprise
@@ -91,6 +103,9 @@ const EventManagement = ({ hasPermission = true }) => {
   const [editingEvent, setEditingEvent] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
+
+  // Search input temp state
+  const [searchInput, setSearchInput] = useState("");
 
   // Hook chứa tất cả business logic
   const {
@@ -129,6 +144,22 @@ const EventManagement = ({ hasPermission = true }) => {
     formatDateTimeLocal,
     getCurrentDateTimeLocal,
   } = useEventManagement();
+
+  // Search handlers
+  const handleKeywordKeyDown = (e) => {
+    if (e.key === "Enter") {
+      setSearchTerm(searchInput);
+    }
+  };
+
+  const handleKeywordSearch = () => {
+    setSearchTerm(searchInput);
+  };
+
+  // Sync searchInput with searchTerm on mount
+  React.useEffect(() => {
+    setSearchInput(searchTerm);
+  }, [searchTerm]);
 
   // Dialog handlers
   const handleOpenDialog = (event = null) => {
@@ -332,48 +363,181 @@ const EventManagement = ({ hasPermission = true }) => {
         </Alert>
       )}
 
-      {/* Filters & Search */}
-      <Box sx={{ 
-        display: 'flex', 
-        gap: 2, 
-        alignItems: 'flex-start', 
-        mb: 3, 
-        backgroundColor: '#ffffff',
-        borderRadius: 2,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-        p: 3,
-        minHeight: '100px',
-        maxHeight: '100px',
-      }}>
-        <Box sx={{ flex: 1 }}>
-          <EventFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filterState={filterState}
-            setFilterState={setFilterState}
-            filterFeeType={filterFeeType}
-            setFilterFeeType={setFilterFeeType}
-            filterCategory={filterCategory}
-            setFilterCategory={setFilterCategory}
-            loading={loading || !hasPermission}
-            eventsCount={totalCount}
-            filteredCount={filteredEvents.length}
-            onClearFilters={clearFilters}
-          />
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', pt: 3, paddingTop: '0px' }}>
-          <StyledButton
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            disabled={loading || !hasPermission}
-            size="large"
-          >
-            Tạo mới
-          </StyledButton>
-        </Box>
-      </Box>
+      {/* Filter Bar */}
+      <FilterCard>
+        <CardContent>
+          {/* Keyword Search Row */}
+          <Box sx={{ display: "flex", gap: 2, alignItems: "center", marginBottom: 2 }}>
+            <TextField
+              placeholder="Tìm kiếm sự kiện ..."
+              size="small"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={handleKeywordKeyDown}
+              onBlur={handleKeywordSearch}
+              disabled={loading || !hasPermission}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                flex: 1,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  backgroundColor: alpha(theme.palette.background.default, 0.6),
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.875rem',
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.background.default, 0.8),
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: theme.palette.background.paper,
+                    boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                  },
+                },
+              }}
+            />
+          </Box>
+
+          {/* Filter Controls Row */}
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
+            {/* Filter by Category */}
+            <Box sx={{ width: "calc(25% - 6px)" }}>
+              <TextField
+                select
+                label="Loại sự kiện"
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                size="small"
+                fullWidth
+                disabled={loading || !hasPermission}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    },
+                  },
+                }}
+                SelectProps={{
+                  native: true,
+                }}
+              >
+                <option value="ALL">Tất cả loại</option>
+                <option value="CONFERENCE">Hội nghị</option>
+                <option value="SEMINAR">Hội thảo</option>
+                <option value="WORKSHOP">Workshop</option>
+                <option value="CONCERT">Hòa nhạc</option>
+                <option value="EXHIBITION">Triển lãm</option>
+                <option value="FESTIVAL">Lễ hội</option>
+                <option value="SPORTS">Thể thao</option>
+                <option value="CULTURAL">Văn hóa</option>
+                <option value="CHARITY">Từ thiện</option>
+                <option value="NETWORKING">Giao lưu</option>
+                <option value="ENTERTAINMENT">Giải trí</option>
+                <option value="OTHER">Khác</option>
+              </TextField>
+            </Box>
+
+            {/* Filter by Fee Type */}
+            <Box sx={{ width: "calc(20% - 6px)" }}>
+              <TextField
+                select
+                label="Hình thức"
+                value={filterFeeType}
+                onChange={(e) => setFilterFeeType(e.target.value)}
+                size="small"
+                fullWidth
+                disabled={loading || !hasPermission}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    },
+                  },
+                }}
+                SelectProps={{
+                  native: true,
+                }}
+              >
+                <option value="ALL">Tất cả</option>
+                <option value="FREE">Miễn phí</option>
+                <option value="PAID">Trả phí</option>
+              </TextField>
+            </Box>
+
+            {/* Filter by State */}
+            <Box sx={{ width: "calc(20% - 6px)" }}>
+              <TextField
+                select
+                label="Trạng thái"
+                value={filterState}
+                onChange={(e) => setFilterState(e.target.value)}
+                size="small"
+                fullWidth
+                disabled={loading || !hasPermission}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    },
+                  },
+                }}
+                SelectProps={{
+                  native: true,
+                }}
+              >
+                <option value="ALL">Tất cả trạng thái</option>
+                <option value="DRAFT">Nháp</option>
+                <option value="ACTIVE">Đang hoạt động</option>
+                <option value="COMPLETED">Hoàn thành</option>
+                <option value="CANCELLED">Đã hủy</option>
+              </TextField>
+            </Box>
+
+            {/* Create Button */}
+            <Box sx={{ width: "calc(20% - 6px)" }}>
+              <StyledButton
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={() => handleOpenDialog()}
+                disabled={loading || !hasPermission}
+                fullWidth
+                sx={{ height: 40 }}
+              >
+                Tạo mới
+              </StyledButton>
+            </Box>
+          </Box>
+        </CardContent>
+      </FilterCard>
 
       {/* Content */}
       {!hasPermission ? (

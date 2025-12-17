@@ -132,63 +132,86 @@ export const useEventManagement = () => {
         return;
       }
 
-      // Build query params for pagination and filtering
+      const userId = getCurrentUserId();
+
+      // Build filter object theo API documentation
+      const filter = {};
+      
+      if (searchTerm.trim()) {
+        filter.keyword = searchTerm.trim();
+      }
+      
+      if (filterState !== "ALL") {
+        filter.state = filterState;
+      }
+      
+      if (filterCategory !== "ALL") {
+        filter.category = filterCategory;
+      }
+
+
+      // Build params object - flatten filter params into query params
       const params = {
         page: page,
         size: rowsPerPage,
       };
 
-      // Add filter params if not "ALL"
-      if (searchTerm.trim()) {
-        params.name = searchTerm.trim();
+      // Add filter fields as individual params
+      if (filter.keyword) {
+        params.keyword = filter.keyword;
       }
-      if (filterState !== "ALL") {
-        params.state = filterState;
+      if (filter.state) {
+        params.state = filter.state;
       }
-      if (filterFeeType !== "ALL") {
-        params.feeType = filterFeeType;
+      if (filter.category) {
+        params.category = filter.category;
       }
-      if (filterCategory !== "ALL") {
-        params.category = filterCategory;
-      }
+
 
       const response = await axiosClient.get("/project", {
         headers: {
           Authorization: `Bearer ${token}`,
           "enterprise-id": enterpriseId,
-          owner: "true",
+          "user-id": userId,
+          "owner": "true",
         },
         params: params,
       });
 
+
       // Handle different response structures
-      // Case 1: Response has metadata (paginated response)
-      if (response?.metadata) {
-        const data = response.data || [];
-        const total = response.metadata.total || 0;
-        setEvents(Array.isArray(data) ? data : []);
-        setFilteredEvents(Array.isArray(data) ? data : []);
-        setTotalCount(total);
+      let eventsData = [];
+      let total = 0;
+
+      // Case 1: Paginated response with content
+      if (response?.content && Array.isArray(response.content)) {
+        eventsData = response.content;
+        total = response.totalElements || response.total || response.content.length;
       }
-      // Case 2: Response is array directly (non-paginated)
+      // Case 2: Response has data property with content
+      else if (response?.data?.content && Array.isArray(response.data.content)) {
+        eventsData = response.data.content;
+        total = response.data.totalElements || response.data.total || response.data.content.length;
+      }
+      // Case 3: Response has metadata (old format)
+      else if (response?.metadata) {
+        eventsData = Array.isArray(response.data) ? response.data : [];
+        total = response.metadata.total || 0;
+      }
+      // Case 4: Response is array directly (non-paginated)
       else if (Array.isArray(response)) {
-        setEvents(response);
-        setFilteredEvents(response);
-        setTotalCount(response.length);
+        eventsData = response;
+        total = response.length;
       }
-      // Case 3: Response has data property (array)
-      else if (response?.data) {
-        const dataArray = Array.isArray(response.data) ? response.data : [];
-        setEvents(dataArray);
-        setFilteredEvents(dataArray);
-        setTotalCount(dataArray.length);
+      // Case 5: Response has data property (array)
+      else if (response?.data && Array.isArray(response.data)) {
+        eventsData = response.data;
+        total = response.data.length;
       }
-      // Case 4: Fallback
-      else {
-        setEvents([]);
-        setFilteredEvents([]);
-        setTotalCount(0);
-      }
+
+      setEvents(eventsData);
+      setFilteredEvents(eventsData);
+      setTotalCount(total);
     } catch (err) {
       console.error("❌ Error fetching events:", err);
       setError(
@@ -292,12 +315,10 @@ export const useEventManagement = () => {
       // Priority 2: Use locationId from editing event if exists
       else if (editingEvent && editingEvent.locationId) {
         locationId = parseInt(editingEvent.locationId);
-        console.log(`ℹ️ Using locationId from editing event: ${locationId}`);
       }
       // Priority 3: Use first available location
       else if (locations.length > 0) {
         locationId = locations[0].id;
-        console.log(`ℹ️ No locationId specified, using first location: ${locationId}`);
       }
       // Priority 4: No locations available - throw error
       else {

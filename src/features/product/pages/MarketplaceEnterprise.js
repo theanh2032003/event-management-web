@@ -337,6 +337,7 @@ export default function EnterpriseMarketplace() {
 
   // Filter state
   const [keyword, setKeyword] = useState("");
+  const [keywordInput, setKeywordInput] = useState(""); // Temp input before search
   const [selectedCategory, setSelectedCategory] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [categories, setCategories] = useState([]);
@@ -389,8 +390,50 @@ export default function EnterpriseMarketplace() {
         sortParam = 'name,desc';
       }
 
+      console.log('🔍 Marketplace - Fetching with filters:', filters);
+      console.log('📄 Marketplace - Page:', pageNum, 'Size:', pageSize, 'Sort:', sortParam);
+
       const response = await productApi.getProducts(filters, pageNum, pageSize, sortParam);
-      const fetchedProducts = response.data || response.products || [];
+      
+      console.log('📥 Marketplace - Full response:', response);
+
+      // Handle different response structures
+      let fetchedProducts = [];
+      let total = 0;
+      let totalPages = 0;
+
+      // Case 1: Paginated response with content array
+      if (response?.content && Array.isArray(response.content)) {
+        fetchedProducts = response.content;
+        total = response.totalElements || response.total || 0;
+        totalPages = response.totalPages || Math.ceil(total / pageSize);
+      }
+      // Case 2: Response has data.content
+      else if (response?.data?.content && Array.isArray(response.data.content)) {
+        fetchedProducts = response.data.content;
+        total = response.data.totalElements || response.data.total || 0;
+        totalPages = response.data.totalPages || Math.ceil(total / pageSize);
+      }
+      // Case 3: Response has data array directly
+      else if (response?.data && Array.isArray(response.data)) {
+        fetchedProducts = response.data;
+        total = response.totalElements || response.total || response.data.length;
+        totalPages = response.totalPages || Math.ceil(total / pageSize);
+      }
+      // Case 4: Response is array directly
+      else if (Array.isArray(response)) {
+        fetchedProducts = response;
+        total = response.length;
+        totalPages = 1;
+      }
+      // Case 5: Response has products array
+      else if (response?.products && Array.isArray(response.products)) {
+        fetchedProducts = response.products;
+        total = response.total || response.products.length;
+        totalPages = response.totalPages || Math.ceil(total / pageSize);
+      }
+
+      console.log('✅ Marketplace - Parsed products:', fetchedProducts.length, 'Total:', total, 'Pages:', totalPages);
 
       if (isLoadMore) {
         setProducts(prev => [...prev, ...fetchedProducts]);
@@ -398,7 +441,6 @@ export default function EnterpriseMarketplace() {
         setProducts(fetchedProducts);
       }
 
-      const totalPages = response.totalPages || Math.ceil((response.total || 0) / pageSize);
       setHasMore(pageNum < totalPages - 1);
       setPage(pageNum);
     } catch (error) {
@@ -429,17 +471,21 @@ export default function EnterpriseMarketplace() {
     }
   }, [page, hasMore, loading, fetchProducts]);
 
-  // Debounce search
-  const debouncedSearch = useCallback(
-    debounce((value) => {
-      setKeyword(value);
-    }, 300),
-    []
-  );
-
-  const handleSearchChange = (e) => {
-    debouncedSearch(e.target.value);
+  // Search handlers
+  const handleKeywordKeyDown = (e) => {
+    if (e.key === "Enter") {
+      setKeyword(keywordInput);
+    }
   };
+
+  const handleKeywordSearch = () => {
+    setKeyword(keywordInput);
+  };
+
+  // Sync keywordInput with keyword on mount
+  React.useEffect(() => {
+    setKeywordInput(keyword);
+  }, [keyword]);
 
   const handleViewDetail = useCallback((product) => {
     navigate(`/enterprise/${enterpriseId}/marketplace/${product.id}`);
@@ -476,11 +522,13 @@ export default function EnterpriseMarketplace() {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                placeholder="Tìm kiếm"
+                placeholder="Tìm kiếm sản phẩm, dịch vụ ..."
                 variant="outlined"
                 size="small"
-                onChange={handleSearchChange}
-                defaultValue=""
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                onKeyDown={handleKeywordKeyDown}
+                onBlur={handleKeywordSearch}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">

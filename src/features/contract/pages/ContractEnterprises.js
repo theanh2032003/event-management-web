@@ -27,6 +27,7 @@ import {
   useMediaQuery,
   styled,
   alpha,
+  InputAdornment,
 } from "@mui/material";
 import { useToast } from '../../../app/providers/ToastContext';
 import {
@@ -37,6 +38,7 @@ import {
   Send as SendIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import useEnterpriseUserPermissions from "../../permission/hooks/useEnterpriseUserPermissions";
 import contractApi from "../api/contract.api";
@@ -697,6 +699,13 @@ export default function Contracts() {
                   }
                 }}
                 onBlur={() => setPage(0)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -729,7 +738,7 @@ export default function Contracts() {
                 fullWidth
                 displayEmpty
                 sx={{
-                  minWidth:200,
+                  minWidth: 200,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
@@ -767,7 +776,7 @@ export default function Contracts() {
                 size="small"
                 fullWidth
                 sx={{
-                  minWidth: 100 ,
+                  minWidth: 100,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
