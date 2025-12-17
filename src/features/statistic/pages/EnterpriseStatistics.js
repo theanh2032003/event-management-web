@@ -6,6 +6,7 @@ import {
   Tabs,
   Tab,
   CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,
@@ -38,11 +39,47 @@ import {
 import KpiCard from '../components/KpiCard';
 import ChartWrapper from '../components/ChartWrapper';
 import statisticApi from '../api/statistic.api';
+import useUserPermissions from '../../../shared/hooks/usePermission';
+import { PERMISSION_CODES, PERMISSION_TYPES } from '../../../shared/constants/permissions';
+
+/**
+ * Lấy owner flag từ token
+ */
+const getIsOwner = () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+    
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    
+    let payload = parts[1];
+    switch (payload.length % 4) {
+      case 0:
+        break;
+      case 2:
+        payload += '==';
+        break;
+      case 3:
+        payload += '=';
+        break;
+      default:
+        throw new Error('Invalid token');
+    }
+    
+    const decoded = JSON.parse(atob(payload));
+    return decoded?.owner === true;
+  } catch (e) {
+    console.error('Error decoding owner flag:', e);
+    return false;
+  }
+};
 
 /**
  * Enterprise Statistics - Trang thống kê của doanh nghiệp
  */
-export default function EnterpriseStatistics({ hasPermission = true }) {
+export default function EnterpriseStatistics() {
+  const { hasPermission, loading: permissionLoading } = useUserPermissions();
   const [currentTab, setCurrentTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
@@ -54,48 +91,60 @@ export default function EnterpriseStatistics({ hasPermission = true }) {
     suppliers: null,
   });
 
+  // Check owner first, then permission
+  const isOwner = getIsOwner();
+  const canViewStatistics = isOwner || hasPermission(PERMISSION_CODES.STATISTICAL_VIEW, PERMISSION_TYPES.ENTERPRISE);
+
   // Load data based on current tab
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        switch (currentTab) {
-          case 0: // Overview
-            const overviewData = await statisticApi.getOverall();
-            setData(prev => ({ ...prev, overview: overviewData }));
-            break;
-          case 1: // Ticketing
-            const ticketingData = await statisticApi.getTicketing();
-            setData(prev => ({ ...prev, ticketing: ticketingData }));
-            break;
-          case 2: // Finance
-            const financeData = await statisticApi.getFinance();
-            setData(prev => ({ ...prev, finance: financeData }));
-            break;
-          case 3: // Attendees
-            const attendeesData = await statisticApi.getAttendees();
-            setData(prev => ({ ...prev, attendees: attendeesData }));
-            break;
-          case 4: // Feedback
-            const feedbackData = await statisticApi.getFeedback();
-            setData(prev => ({ ...prev, feedback: feedbackData }));
-            break;
-          case 5: // Suppliers
-            const suppliersData = await statisticApi.getSuppliers();
-            setData(prev => ({ ...prev, suppliers: suppliersData }));
-            break;
-          default:
-            break;
+    // Only fetch data if user has permission
+    if (!permissionLoading && !canViewStatistics) {
+      setLoading(false);
+      return;
+    }
+
+    if (!permissionLoading && canViewStatistics) {
+      const loadData = async () => {
+        setLoading(true);
+        try {
+          switch (currentTab) {
+            case 0: // Overview
+              const overviewData = await statisticApi.getOverall();
+              setData(prev => ({ ...prev, overview: overviewData }));
+              break;
+            case 1: // Ticketing
+              const ticketingData = await statisticApi.getTicketing();
+              setData(prev => ({ ...prev, ticketing: ticketingData }));
+              break;
+            case 2: // Finance
+              const financeData = await statisticApi.getFinance();
+              setData(prev => ({ ...prev, finance: financeData }));
+              break;
+            case 3: // Attendees
+              const attendeesData = await statisticApi.getAttendees();
+              setData(prev => ({ ...prev, attendees: attendeesData }));
+              break;
+            case 4: // Feedback
+              const feedbackData = await statisticApi.getFeedback();
+              setData(prev => ({ ...prev, feedback: feedbackData }));
+              break;
+            case 5: // Suppliers
+              const suppliersData = await statisticApi.getSuppliers();
+              setData(prev => ({ ...prev, suppliers: suppliersData }));
+              break;
+            default:
+              break;
+          }
+        } catch (error) {
+          console.error('Error loading data:', error);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadData();
-  }, [currentTab]);
+      };
+      
+      loadData();
+    }
+  }, [currentTab, permissionLoading, canViewStatistics]);
 
   const handleTabChange = (event, newValue) => {
     // Reset data của tab vừa chuyển sang để hiển thị loading state
@@ -206,26 +255,29 @@ export default function EnterpriseStatistics({ hasPermission = true }) {
     </div>
   );
 
+  // If loading permissions
+  if (permissionLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress size={50} thickness={4} />
+      </Box>
+    );
+  }
+
+  // If no permission
+  if (!canViewStatistics) {
+    return (
+      <Box sx={{ p: { xs: 2, md: 3 } }}>
+        <Alert severity="error" sx={{ borderRadius: 2 }}>
+          Bạn không có quyền xem thống kê. Vui lòng liên hệ quản trị viên.
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', minHeight: '100vh' }}>
-      {/* Permission Alert */}
-      {!hasPermission && (
-        <Box sx={{ 
-          mb: 3, 
-          p: 2, 
-          bgcolor: 'warning.light', 
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'warning.main',
-        }}>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: 'warning.dark' }}>
-            Bạn không có quyền truy cập chức năng này
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Vui lòng liên hệ với quản trị viên để được cấp quyền
-          </Typography>
-        </Box>
-      )}
+      {/* Tabs Navigation */}
 
       {/* Tabs Navigation */}
       <Box sx={{ 

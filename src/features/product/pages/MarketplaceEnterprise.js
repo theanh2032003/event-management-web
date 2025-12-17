@@ -31,6 +31,7 @@ import {
 } from "@mui/icons-material";
 import { useToast } from '../../../app/providers/ToastContext';
 import useEnterpriseUserPermissions from "../../permission/hooks/useEnterpriseUserPermissions";
+import { PERMISSION_CODES, PERMISSION_TYPES } from '../../../shared/constants/permissions';
 import { debounce } from "lodash";
 import productApi from "../api/product.api";
 import categoryApi from "../api/category.api";
@@ -324,8 +325,8 @@ export default function EnterpriseMarketplace() {
   };
 
   const userId = getUserId();
-  const { isOwner, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
-  const isUnauthorized = !permissionsLoading && !isOwner;
+  const { isOwner, hasPermission, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
+  const canAccessMarketplace = isOwner || hasPermission(PERMISSION_CODES.MARKETPLACE_VIEW, PERMISSION_TYPES.ENTERPRISE);
 
   // State
   const [products, setProducts] = useState([]);
@@ -345,7 +346,7 @@ export default function EnterpriseMarketplace() {
 
   // Load categories
   useEffect(() => {
-    if (isUnauthorized) return;
+    if (!permissionsLoading && !canAccessMarketplace) return;
 
     const loadCategories = async () => {
       try {
@@ -359,11 +360,11 @@ export default function EnterpriseMarketplace() {
       }
     };
     loadCategories();
-  }, [isUnauthorized, showToast]);
+  }, [canAccessMarketplace, permissionsLoading, showToast]);
 
   // Fetch products with lazy load
   const fetchProducts = useCallback(async (pageNum = 0, isLoadMore = false) => {
-    if (isUnauthorized) return;
+    if (!permissionsLoading && !canAccessMarketplace) return;
 
     try {
       setLoading(true);
@@ -406,16 +407,16 @@ export default function EnterpriseMarketplace() {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, keyword, sortOrder, showToast, isUnauthorized]);
+  }, [selectedCategory, keyword, sortOrder, showToast, permissionsLoading, canAccessMarketplace]);
 
   // Initial fetch
   useEffect(() => {
-    if (isUnauthorized) return;
+    if (!permissionsLoading && !canAccessMarketplace) return;
 
     setPage(0);
     setProducts([]);
     fetchProducts(0, false);
-  }, [keyword, selectedCategory, sortOrder, fetchProducts, isUnauthorized]);
+  }, [keyword, selectedCategory, sortOrder, fetchProducts, canAccessMarketplace, permissionsLoading]);
 
   // Handle scroll for lazy load
   const handleProductsScroll = useCallback((e) => {
@@ -455,7 +456,7 @@ export default function EnterpriseMarketplace() {
     );
   }
 
-  if (isUnauthorized) {
+  if (!permissionsLoading && !canAccessMarketplace) {
     return (
       <Box>
         <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>

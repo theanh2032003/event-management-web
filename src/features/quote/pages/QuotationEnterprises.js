@@ -29,6 +29,7 @@ import {
   Info as InfoIcon,
 } from "@mui/icons-material";
 import useEnterpriseUserPermissions from "../../permission/hooks/useEnterpriseUserPermissions";
+import { PERMISSION_CODES, PERMISSION_TYPES } from '../../../shared/constants/permissions';
 import quoteApi from "../api/quote.api";
 import QuotationDetail from "./QuotationDetailEnterprise";
 import { CommonTable } from "../../../shared/components/CommonTable";
@@ -120,8 +121,8 @@ export default function Quotations() {
   };
 
   const userId = getUserId();
-  const { isOwner, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
-  const isUnauthorized = !permissionsLoading && !isOwner;
+  const { isOwner, hasPermission, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
+  const canManageQuotes = isOwner || hasPermission(PERMISSION_CODES.QUOTE_MANAGE, PERMISSION_TYPES.ENTERPRISE);
 
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -182,14 +183,14 @@ export default function Quotations() {
       }
     };
 
-    if (!permissionsLoading && !isUnauthorized) {
+    if (!permissionsLoading && canManageQuotes) {
       const timer = setTimeout(() => {
         fetchDropdownData();
       }, 300);
 
       return () => clearTimeout(timer);
     }
-  }, [permissionsLoading, isUnauthorized, projectKeyword, supplierKeyword]);
+  }, [permissionsLoading, canManageQuotes, projectKeyword, supplierKeyword]);
 
   // Fetch quotations
   useEffect(() => {
@@ -215,10 +216,10 @@ export default function Quotations() {
       }
     };
 
-    if (!permissionsLoading && !isUnauthorized) {
+    if (!permissionsLoading && canManageQuotes) {
       fetchQuotations();
     }
-  }, [enterpriseId, permissionsLoading, isUnauthorized, showToast, filters]);
+  }, [enterpriseId, permissionsLoading, canManageQuotes, showToast, filters]);
 
   const handleOpenDetail = (quote) => {
     setSelectedQuote(quote);
@@ -397,7 +398,7 @@ export default function Quotations() {
     );
   }
 
-  if (isUnauthorized) {
+  if (!permissionsLoading && !canManageQuotes) {
     return (
       <Box>
         <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>

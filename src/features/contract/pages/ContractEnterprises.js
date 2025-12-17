@@ -111,8 +111,10 @@ export default function Contracts() {
   };
 
   const userId = getUserId();
-  const { isOwner, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
-  const isUnauthorized = !permissionsLoading && !isOwner;
+  const { isOwner, hasPermission, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
+
+  // Check owner first, then permission
+  const canManageContracts = isOwner || hasPermission(PERMISSION_CODES.CONTRACT_MANAGE);
 
   // Data states
   const [contracts, setContracts] = useState([]);
@@ -172,10 +174,10 @@ export default function Contracts() {
       }
     };
 
-    if (!permissionsLoading && !isUnauthorized) {
+    if (!permissionsLoading && canManageContracts) {
       loadProjects();
     }
-  }, [enterpriseId, permissionsLoading, isUnauthorized]);
+  }, [enterpriseId, permissionsLoading, canManageContracts]);
 
   // Load payment approvals
   useEffect(() => {
@@ -190,10 +192,10 @@ export default function Contracts() {
       }
     };
 
-    if (!permissionsLoading && !isUnauthorized) {
+    if (!permissionsLoading && canManageContracts) {
       loadPaymentApprovals();
     }
-  }, [permissionsLoading, isUnauthorized]);
+  }, [permissionsLoading, canManageContracts]);
 
   // Fetch contracts
   useEffect(() => {
@@ -244,10 +246,10 @@ export default function Contracts() {
       }
     };
 
-    if (!permissionsLoading && !isUnauthorized) {
+    if (!permissionsLoading && canManageContracts) {
       fetchContracts();
     }
-  }, [enterpriseId, permissionsLoading, isUnauthorized, filterState, filterKeyword, filterProjectId, page, rowsPerPage, showToast]);
+  }, [enterpriseId, permissionsLoading, canManageContracts, filterState, filterKeyword, filterProjectId, page, rowsPerPage, showToast]);
 
   const handleOpenDetail = (contract) => {
     setSelectedContract(contract);
