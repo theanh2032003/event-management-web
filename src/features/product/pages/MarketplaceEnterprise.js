@@ -336,6 +336,7 @@ export default function EnterpriseMarketplace() {
 
   // Filter state
   const [keyword, setKeyword] = useState("");
+  const [keywordInput, setKeywordInput] = useState(""); // Temp input before search
   const [selectedCategory, setSelectedCategory] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [categories, setCategories] = useState([]);
@@ -428,17 +429,21 @@ export default function EnterpriseMarketplace() {
     }
   }, [page, hasMore, loading, fetchProducts]);
 
-  // Debounce search
-  const debouncedSearch = useCallback(
-    debounce((value) => {
-      setKeyword(value);
-    }, 300),
-    []
-  );
-
-  const handleSearchChange = (e) => {
-    debouncedSearch(e.target.value);
+  // Search handlers
+  const handleKeywordKeyDown = (e) => {
+    if (e.key === "Enter") {
+      setKeyword(keywordInput);
+    }
   };
+
+  const handleKeywordSearch = () => {
+    setKeyword(keywordInput);
+  };
+
+  // Sync keywordInput with keyword on mount
+  React.useEffect(() => {
+    setKeywordInput(keyword);
+  }, [keyword]);
 
   const handleViewDetail = useCallback((product) => {
     navigate(`/enterprise/${enterpriseId}/marketplace/${product.id}`);
@@ -475,11 +480,13 @@ export default function EnterpriseMarketplace() {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                placeholder="Tìm kiếm"
+                placeholder="Tìm kiếm sản phẩm, dịch vụ ..."
                 variant="outlined"
                 size="small"
-                onChange={handleSearchChange}
-                defaultValue=""
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                onKeyDown={handleKeywordKeyDown}
+                onBlur={handleKeywordSearch}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
