@@ -554,61 +554,28 @@ export default function Marketplace() {
         }}
       >
         <CardContent>
-          {/* Keyword Search Row */}
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center", marginBottom: 2 }}>
-            {/* Keyword Search */}
-            <TextField
-              placeholder="Tìm kiếm"
-              size="small"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setPage(0);
-                }
-              }}
-              onBlur={() => setPage(0)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                flex: 1,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  backgroundColor: alpha(theme.palette.background.default, 0.6),
-                  transition: 'all 0.2s ease',
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.background.default, 0.8),
-                  },
-                  '&.Mui-focused': {
-                    backgroundColor: theme.palette.background.paper,
-                    boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
-                  },
-                },
-              }}
-            />
-          </Box>
-
-          {/* Filter Controls Row */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
-            {/* Category Filter */}
-            <Box sx={{ width: "calc(25% - 6px)" }}>
+          <Grid container spacing={2} alignItems="center">
+            {/* Search Input */}
+            <Grid item xs={12} md={6}>
               <TextField
-                select
-                label="Danh mục"
-                value={filterCategory}
-                onChange={(e) => {
-                  setFilterCategory(e.target.value);
-                  setPage(0);
-                }}
-                size="small"
                 fullWidth
-                displayEmpty
+                placeholder="Tìm kiếm sản phẩm, dịch vụ..."
+                size="small"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setPage(0);
+                  }
+                }}
+                onBlur={() => setPage(0)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -624,30 +591,55 @@ export default function Marketplace() {
                     },
                   },
                 }}
-              >
-                <MenuItem value="ALL">-- Tất cả --</MenuItem>
-                {categories.map((category) => (
-                  <MenuItem key={category.id || category._id} value={category.id || category._id}>
-                    {category.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
+              />
+            </Grid>
+
+            {/* Category Filter */}
+            <Grid item xs={12} sm={6} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Danh mục</InputLabel>
+                <Select
+                  value={filterCategory}
+                  label="Danh mục"
+                  onChange={(e) => {
+                    setFilterCategory(e.target.value);
+                    setPage(0);
+                  }}
+                  sx={{
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                    },
+                  }}
+                >
+                  <MenuItem value="ALL">Tất cả</MenuItem>
+                  {categories.map((category) => (
+                    <MenuItem key={category.id || category._id} value={category.id || category._id}>
+                      {category.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
             {/* Status Filter */}
-            <Box sx={{ width: "calc(20% - 6px)" }}>
-              <TextField
-                select
-                label="Trạng thái"
-                value={filterStatus}
-                onChange={(e) => {
-                  setFilterStatus(e.target.value);
-                  setPage(0);
-                }}
-                size="small"
-                fullWidth
-                sx={{
-                  '& .MuiOutlinedInput-root': {
+            <Grid item xs={12} sm={6} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Trạng thái</InputLabel>
+                <Select
+                  value={filterStatus}
+                  label="Trạng thái"
+                  onChange={(e) => {
+                    setFilterStatus(e.target.value);
+                    setPage(0);
+                  }}
+                  sx={{
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
                     transition: 'all 0.2s ease',
@@ -657,35 +649,33 @@ export default function Marketplace() {
                     },
                     '&.Mui-focused': {
                       backgroundColor: theme.palette.background.paper,
-                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                     },
-                  },
-                }}
-              >
-                <MenuItem value="ALL">-- Tất cả --</MenuItem>
-                {availableStatuses.includes('active') && (
-                  <MenuItem value="active">Đang bán</MenuItem>
-                )}
-                {availableStatuses.includes('inactive') && (
-                  <MenuItem value="inactive">Tạm dừng</MenuItem>
-                )}
-              </TextField>
-            </Box>
+                  }}
+                >
+                  <MenuItem value="ALL">Tất cả</MenuItem>
+                  {availableStatuses.includes('active') && (
+                    <MenuItem value="active">Đang bán</MenuItem>
+                  )}
+                  {availableStatuses.includes('inactive') && (
+                    <MenuItem value="inactive">Tạm dừng</MenuItem>
+                  )}
+                </Select>
+              </FormControl>
+            </Grid>
 
             {/* Sort Filter */}
-            <Box sx={{ width: "calc(20% - 6px)" }}>
-              <TextField
-                select
-                label="Sắp xếp"
-                value={sortOrder}
-                onChange={(e) => {
-                  setSortOrder(e.target.value);
-                  setPage(0);
-                }}
-                size="small"
-                fullWidth
-                sx={{
-                  '& .MuiOutlinedInput-root': {
+            <Grid item xs={12} sm={6} md={2}>
+              <FormControl fullWidth   size="small">
+                <InputLabel>Sắp xếp</InputLabel>
+                <Select
+                  value={sortOrder}
+                  label="Sắp xếp"
+                  onChange={(e) => {
+                    setSortOrder(e.target.value);
+                    setPage(0);
+                  }}
+                  sx={{
+                    minWidth : 120,
                     borderRadius: 2,
                     backgroundColor: alpha(theme.palette.background.default, 0.6),
                     transition: 'all 0.2s ease',
@@ -695,30 +685,27 @@ export default function Marketplace() {
                     },
                     '&.Mui-focused': {
                       backgroundColor: theme.palette.background.paper,
-                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                     },
-                  },
-                }}
-              >
-                <MenuItem value="">-- Mặc định --</MenuItem>
-                <MenuItem value="price_asc">Giá: Thấp → Cao</MenuItem>
-                <MenuItem value="price_desc">Giá: Cao → Thấp</MenuItem>
-              </TextField>
-            </Box>
+                  }}
+                >
+                  <MenuItem value="">Mặc định</MenuItem>
+                  <MenuItem value="price_asc">Giá: Thấp → Cao</MenuItem>
+                  <MenuItem value="price_desc">Giá: Cao → Thấp</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
 
-            {/* Create Button */}
-            <Box sx={{ width: "calc(20% - 6px)", marginLeft: "160px" }}>
-              <StyledButton
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={() => navigate(`/supplier/${supplierId}/create-product`)}
-                fullWidth
-                sx={{ height: 40 }}
-              >
-                Tạo dịch vụ
-              </StyledButton>
-            </Box>
+          {/* Create Button - Separate Row */}
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <StyledButton
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={() => navigate(`/supplier/${supplierId}/create-product`)}
+            >
+              Tạo dịch vụ
+            </StyledButton>
           </Box>
         </CardContent>
       </Card>

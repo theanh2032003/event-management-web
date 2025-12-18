@@ -505,7 +505,6 @@ export default function QuoteRequests() {
       const stateOptions = [
         { id: 'DRAFT', name: 'Bản nháp' },
         { id: 'SENT', name: 'Đã gửi' },
-        { id: 'CANCELLED', name: 'Đã hủy' },
       ];
 
       const filtered = stateOptions.filter(s =>

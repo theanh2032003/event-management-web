@@ -260,7 +260,7 @@ export default function Quotations() {
   const [loading, setLoading] = useState(true);
 
   // Filter states
-  const [filterStates, setFilterStates] = useState([]);
+  const [filterState, setFilterState] = useState("");
   const [filterKeyword, setFilterKeyword] = useState("");
 
   // Delete dialog state
@@ -308,8 +308,8 @@ export default function Quotations() {
         setLoading(true);
 
         const filters = {};
-        if (filterStates.length > 0) {
-          filters.states = filterStates;
+        if (filterState) {
+          filters.states = [filterState]; // API expect array
         }
         if (filterKeyword) {
           filters.keyword = filterKeyword;
@@ -345,7 +345,7 @@ export default function Quotations() {
     };
 
     fetchQuotes();
-  }, [page, rowsPerPage, filterStates, filterKeyword, showToast]);
+  }, [page, rowsPerPage, filterState, filterKeyword, showToast]);
 
   const handleOpenDetail = (quote) => {
     setSelectedQuote(quote);
@@ -498,7 +498,7 @@ export default function Quotations() {
 
       // Refresh list
       const filters = {};
-      if (filterStates.length > 0) filters.states = filterStates;
+      if (filterState) filters.states = [filterState]; // API expect array
       if (filterKeyword) filters.keyword = filterKeyword;
 
       const listResponse = await quoteApi.getQuotes(filters, page, rowsPerPage);
@@ -542,7 +542,7 @@ export default function Quotations() {
 
       // Refresh list
       const filters = {};
-      if (filterStates.length > 0) filters.states = filterStates;
+      if (filterState) filters.states = [filterState]; // API expect array
       if (filterKeyword) filters.keyword = filterKeyword;
 
       const response = await quoteApi.getQuotes(filters, page, rowsPerPage);
@@ -584,7 +584,7 @@ export default function Quotations() {
 
       // Refresh list
       const filters = {};
-      if (filterStates.length > 0) filters.states = filterStates;
+      if (filterState) filters.states = [filterState]; // API expect array
       if (filterKeyword) filters.keyword = filterKeyword;
 
       const response = await quoteApi.getQuotes(filters, page, rowsPerPage);
@@ -670,54 +670,70 @@ export default function Quotations() {
 
       {/* Filters */}
       <FilterCard>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
-            <TextField
-              label="Tìm kiếm"
-              size="small"
-              value={filterKeyword}
-              onChange={(e) => setFilterKeyword(e.target.value)}
-              placeholder="Tìm theo tên..."
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                minWidth: 250,
-                flex: 1,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  backgroundColor: alpha(theme.palette.background.default, 0.6),
-                  transition: 'all 0.2s ease',
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.background.default, 0.8),
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            {/* Search Input */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                placeholder="Tìm kiếm báo giá..."
+                size="small"
+                value={filterKeyword}
+                onChange={(e) => setFilterKeyword(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    },
                   },
-                  '&.Mui-focused': {
-                    backgroundColor: theme.palette.background.paper,
-                    boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
-                  },
-                },
-              }}
-            />
+                }}
+              />
+            </Grid>
 
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Trạng thái</InputLabel>
-              <Select
-                multiple
-                value={filterStates}
-                label="Trạng thái"
-                onChange={(e) => setFilterStates(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
-                sx={{ borderRadius: 1 }}
-              >
-                <MenuItem value="DRAFT">Nháp</MenuItem>
-                <MenuItem value="SUBMITTED">Đã gửi</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+            {/* Status Filter */}
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Trạng thái</InputLabel>
+                <Select
+                  value={filterState}
+                  label="Trạng thái"
+                  onChange={(e) => setFilterState(e.target.value)}
+                  sx={{
+                    minWidth:120,
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                    },
+                  }}
+                >
+                  <MenuItem value="">Tất cả trạng thái</MenuItem>
+                  <MenuItem value="DRAFT">Nháp</MenuItem>
+                  <MenuItem value="SUBMITTED">Đã gửi</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
         </CardContent>
       </FilterCard>
 
@@ -757,13 +773,7 @@ export default function Quotations() {
                 minWidth: 120,
                 render: (value) => value || "N/A",
               },
-              {
-                field: 'productName',
-                headerName: 'Sản phẩm',
-                flex: 0.9,
-                minWidth: 130,
-                render: (value) => value || "N/A",
-              },
+             
               {
                 field: 'quantity',
                 headerName: 'Số lượng',

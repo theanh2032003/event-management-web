@@ -542,57 +542,73 @@ export default function Contracts() {
 
       {/* Filters */}
       <FilterCard>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
-            <TextField
-              label="Tìm kiếm"
-              size="small"
-              value={filterKeyword}
-              onChange={(e) => setFilterKeyword(e.target.value)}
-              placeholder="Tìm theo tên hợp đồng..."
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                minWidth: 250,
-                flex: 1,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  backgroundColor: alpha(theme.palette.background.default, 0.6),
-                  transition: 'all 0.2s ease',
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.background.default, 0.8),
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            {/* Search Input */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                placeholder="Tìm kiếm hợp đồng..."
+                size="small"
+                value={filterKeyword}
+                onChange={(e) => setFilterKeyword(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    },
                   },
-                  '&.Mui-focused': {
-                    backgroundColor: theme.palette.background.paper,
-                    boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
-                  },
-                },
-              }}
-            />
+                }}
+              />
+            </Grid>
 
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Trạng thái</InputLabel>
-              <Select
-                value={filterState}
-                label="Trạng thái"
-                onChange={(e) => setFilterState(e.target.value)}
-                sx={{ borderRadius: 2 }}
-              >
-                <MenuItem value="">Tất cả trạng thái</MenuItem>
-                <MenuItem value="DRAFT">Bản nháp</MenuItem>
-                <MenuItem value="SUBMITTED">Đã gửi</MenuItem>
-                <MenuItem value="IN_PROGRESS">Đang thực hiện</MenuItem>
-                <MenuItem value="COMPLETED">Hoàn thành</MenuItem>
-                <MenuItem value="CANCELED">Đã hủy</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+            {/* Status Filter */}
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Trạng thái</InputLabel>
+                <Select
+                  value={filterState}
+                  label="Trạng thái"
+                  onChange={(e) => setFilterState(e.target.value)}
+                  sx={{
+                    minWidth: 120,
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                    },
+                  }}
+                >
+                  <MenuItem value="">Tất cả</MenuItem>
+                  <MenuItem value="DRAFT">Bản nháp</MenuItem>
+                  <MenuItem value="SUBMITTED">Đã gửi</MenuItem>
+                  <MenuItem value="IN_PROGRESS">Đang thực hiện</MenuItem>
+                  <MenuItem value="COMPLETED">Hoàn thành</MenuItem>
+                  <MenuItem value="CANCELED">Đã hủy</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
         </CardContent>
       </FilterCard>
 

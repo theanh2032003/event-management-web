@@ -39,6 +39,7 @@ import {
   CalendarToday as CalendarIcon,
   EventNote as EventNoteIcon,
   Description as DescriptionIcon,
+  Search as SearchIcon,
   Inventory as InventoryIcon,
   AccessTime as AccessTimeIcon,
   CheckCircle as CheckCircleIcon,
@@ -574,44 +575,41 @@ export default function RFQ() {
 
       {/* Filters */}
       <FilterCard>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
-            <TextField
-              label="Tìm kiếm"
-              size="small"
-              value={filterKeyword}
-              onChange={(e) => setFilterKeyword(e.target.value)}
-              placeholder="Tìm theo tên yêu cầu, doanh nghiệp..."
-              sx={{ 
-                minWidth: 250, 
-                flex: 1,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  backgroundColor: alpha(theme.palette.background.default, 0.6),
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.background.default, 0.8),
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            {/* Search Input */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                placeholder="Tìm kiếm yêu cầu báo giá..."
+                size="small"
+                value={filterKeyword}
+                onChange={(e) => setFilterKeyword(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.background.default, 0.6),
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.default, 0.8),
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    },
                   },
-                  '&.Mui-focused': {
-                    backgroundColor: theme.palette.background.paper,
-                    boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
-                  },
-                },
-              }}
-            />
-
-            {/* <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Dự án</InputLabel>
-              <Select
-                value={filterProjectId}
-                label="Dự án"
-                onChange={(e) => setFilterProjectId(e.target.value)}
-                sx={{ borderRadius: 1 }}
-              >
-                <MenuItem value="">Tất cả dự án</MenuItem>
-              </Select>
-            </FormControl> */}
-          </Box>
+                }}
+              />
+            </Grid>
+          </Grid>
         </CardContent>
       </FilterCard>
 

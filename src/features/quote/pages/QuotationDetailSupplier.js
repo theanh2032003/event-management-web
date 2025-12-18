@@ -296,11 +296,11 @@ const SupplierQuotationDetail = ({ quotation, onBack, onEdit }) => {
                       color="text.secondary"
                       sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
                     >
-                      Thuế
+                      Phụ phí
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {quotation.tax
-                        ? quotation.tax.toLocaleString("vi-VN") + "₫"
+                      {quotation.otherFee
+                        ? quotation.otherFee.toLocaleString("vi-VN") + "₫"
                         : "0₫"}
                     </Typography>
                   </Box>
