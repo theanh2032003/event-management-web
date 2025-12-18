@@ -662,7 +662,7 @@ export default function EventOverview({
             </Box>
           )}
 
-          {/* Attributes Section */}
+          {/* Attributes Section
           <Box sx={{ mb: 4 }}>
             <SectionTitle>Thuộc tính</SectionTitle>
               <Stack direction="column" spacing={2}>
@@ -685,7 +685,7 @@ export default function EventOverview({
               
               </Stack>
             </Box>
-        
+         */}
 
           {/* Gallery Section */}
           {currentEventData.images?.length > 0 && (

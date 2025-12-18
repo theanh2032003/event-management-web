@@ -637,7 +637,7 @@ const EventDialog = ({
               </FormControl>
             </Grid> */}
 
-            <Grid item xs={12} sm={6}>
+            {/* <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Quyền truy cập</InputLabel>
                 <Select
@@ -651,8 +651,8 @@ const EventDialog = ({
                   <MenuItem value="PRIVATE">Riêng tư</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
-
+            </Grid> */}
+{/* 
           <Grid item xs={12} sm={6}>
             <FormControl
               fullWidth
@@ -673,35 +673,11 @@ const EventDialog = ({
                 <MenuItem value="INVITE_ONLY">Chỉ mời</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
+          </Grid> */}
 
 
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Thời gian bắt đầu"
-                type="datetime-local"
-                fullWidth
-                required
-                value={eventForm.startedAt || ""}
-                onChange={(e) => setEventForm({ ...eventForm, startedAt: e.target.value })}
-                disabled={submitting}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Thời gian kết thúc"
-                type="datetime-local"
-                fullWidth
-                required
-                value={eventForm.endedAt || ""}
-                onChange={(e) => setEventForm({ ...eventForm, endedAt: e.target.value })}
-                disabled={submitting}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
+           
 
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth required>
@@ -744,14 +720,14 @@ const EventDialog = ({
                       style: {
                         maxHeight: 400,
                         width: 'auto',
-                        minWidth: '400px',
+                        // minWidth: '100px',
                       },
                     },
                   }}
                 >
                   {locations.map((loc) => (
                     <MenuItem key={loc.id} value={loc.id}>
-                      {loc.name}{loc.address ? ` - ${loc.address}` : ''}
+                      {loc.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -765,6 +741,31 @@ const EventDialog = ({
             </Grid>
           </Grid>
 
+ <Grid item xs={12} sm={6}>
+              <TextField
+                label="Thời gian bắt đầu"
+                type="datetime-local"
+                fullWidth
+                required
+                value={eventForm.startedAt || ""}
+                onChange={(e) => setEventForm({ ...eventForm, startedAt: e.target.value })}
+                disabled={submitting}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Thời gian kết thúc"
+                type="datetime-local"
+                fullWidth
+                required
+                value={eventForm.endedAt || ""}
+                onChange={(e) => setEventForm({ ...eventForm, endedAt: e.target.value })}
+                disabled={submitting}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
           {/* Multiple Images Upload */}
           <Box>
             <Typography variant="body2" sx={{ mb: 1.5, fontWeight: 500 }}>
