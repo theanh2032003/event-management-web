@@ -168,7 +168,7 @@ export default function LocationManagement() {
   const fetchLocations = async () => {
     try {
       setLoading(true);
-      const response = await locationApi.getLocations(supplierId);
+      const response = await locationApi.getLocations();
       const data = Array.isArray(response) ? response : response.data || [];
       setLocations(data);
     } catch (error) {
