@@ -63,8 +63,36 @@ const FilterCard = styled(Card)(({ theme }) => ({
   border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
 }));
 
+// Responsive grid cho danh sách sản phẩm
+const ProductsGrid = styled(Box)(({ theme }) => ({
+  display: "grid",
+  gap: theme.spacing(2),
+
+  // Mobile <600px
+  gridTemplateColumns: "repeat(1, minmax(0, 1fr))",
+  justifyItems: "center",
+
+  // Small devices ≥600px (2 cột)
+  [theme.breakpoints.up("sm")]: {
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    justifyItems: "stretch",
+  },
+
+  // Medium devices ≥900px (3 cột)
+  [theme.breakpoints.up("md")]: {
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  },
+
+  // Large devices ≥1200px (4 cột)
+  [theme.breakpoints.up("lg")]: {
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  },
+}));
+
+
 const ProductCard = styled(Card)(({ theme }) => ({
-  height: "100%",
+  height: 400,
+  width:320,
   display: "flex",
   flexDirection: "column",
   borderRadius: theme.spacing(1.5),
@@ -84,7 +112,8 @@ const ProductCard = styled(Card)(({ theme }) => ({
 
 const ProductImageWrapper = styled(Box)(({ theme }) => ({
   width: "100%",
-  paddingTop: "100%", // 1:1 aspect ratio
+  // image 4:3
+  paddingTop: "75%",
   backgroundColor: alpha(theme.palette.grey[100], 0.5),
   position: "relative",
   overflow: "hidden",
@@ -514,7 +543,7 @@ export default function EnterpriseMarketplace() {
 
   return (
     <Box>
-      {/* Filters - Shopee Style */}
+      {/* Filters -  */}
       <FilterCard>
         <CardContent sx={{ p: 3 }}>
           <Grid container spacing={2} alignItems="center">
@@ -661,20 +690,20 @@ export default function EnterpriseMarketplace() {
       ) : (
         <Box
           sx={{
-            maxHeight: 'calc(100vh - 280px)',
-            overflowY: 'auto',
+            maxHeight: "calc(100vh - 280px)",
+            overflowY: "auto",
             paddingRight: 1,
-            '&::-webkit-scrollbar': {
+            "&::-webkit-scrollbar": {
               width: 8,
             },
-            '&::-webkit-scrollbar-track': {
+            "&::-webkit-scrollbar-track": {
               background: alpha(theme.palette.divider, 0.1),
               borderRadius: 4,
             },
-            '&::-webkit-scrollbar-thumb': {
+            "&::-webkit-scrollbar-thumb": {
               background: alpha(theme.palette.primary.main, 0.5),
               borderRadius: 4,
-              '&:hover': {
+              "&:hover": {
                 background: alpha(theme.palette.primary.main, 0.7),
               },
             },
@@ -682,39 +711,22 @@ export default function EnterpriseMarketplace() {
           onScroll={handleProductsScroll}
           ref={productsGridRef}
         >
-          <Grid
-            container
-            spacing={2}
-            sx={{
-              justifyContent: 'center',
-            }}
-          >
+          <ProductsGrid>
             {products.map((product) => (
-              <Grid
-                item
-                xs={6}
-                sm={4}
-                md={3}
+              <Box
                 key={product.id}
                 sx={{
+                  height: "100%",
                   display: "flex",
-                  [theme.breakpoints.up('lg')]: {
-                    flexBasis: '20%',
-                    maxWidth: '20%',
-                  },
-                  [theme.breakpoints.up('xl')]: {
-                    flexBasis: '16.666667%',
-                    maxWidth: '16.666667%',
-                  },
                 }}
               >
                 <StyledProductCard
                   product={product}
                   onViewDetail={handleViewDetail}
                 />
-              </Grid>
+              </Box>
             ))}
-          </Grid>
+          </ProductsGrid>
 
           {/* Loading more indicator */}
           {loading && products.length > 0 && (
