@@ -119,6 +119,7 @@ function SupplierRoutes() {
         <Route path="edit-product/:productId" element={<EditProduct />} />
         <Route path="locations" element={<LocationSupplier />} />
         <Route path="locations/:locationId" element={<LocationDetail />} />
+        <Route path="profile" element={<EnterpriseProfile />} />
         <Route path="info" element={<SupplierInfo />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Routes>

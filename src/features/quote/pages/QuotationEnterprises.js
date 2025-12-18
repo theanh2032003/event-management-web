@@ -454,19 +454,6 @@ export default function Quotations() {
               />
             </Grid>
 
-            {/* Filter Controls */}
-            <Grid item xs={12} sm={4} md={3}>
-              {renderAutocompleteFilter(
-                'states',
-                'Trạng thái',
-                states,
-                statesKeyword,
-                setStatesKeyword,
-                handleStateSearch,
-                () => handleStateSearch(''),
-                true
-              )}
-            </Grid>
 
             <Grid item xs={12} sm={4} md={3}>
               {renderAutocompleteFilter(
@@ -542,12 +529,7 @@ export default function Quotations() {
               align: 'center',
               render: (value) => value || 0,
             },
-            {
-              field: 'unitPrice',
-              headerName: 'Đơn giá',
-              align: 'right',
-              render: (value) => value ? value.toLocaleString("vi-VN") + '₫' : '0₫',
-            },
+           
             {
               field: 'finalPrice',
               headerName: 'Tổng tiền',
@@ -561,7 +543,7 @@ export default function Quotations() {
             },
             {
               field: 'actions',
-              headerName: 'Hành động',
+              headerName: 'Xem chi tiết',
               align: 'center',
               render: (value, row) => (
                 <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>

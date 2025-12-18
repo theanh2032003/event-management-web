@@ -863,10 +863,7 @@ export default function PaymentApproval() {
             Đang tải dữ liệu...
           </Typography>
         </LoadingBox>
-      ) : !isOwner && !permissionsLoading ? (
-        <Alert severity="warning" icon={<LockIcon />}>
-          Bạn không có quyền truy cập vào mục này. Chỉ chủ doanh nghiệp mới có quyền này.
-        </Alert>
+     
       ) : payments.length > 0 ? (
         <CommonTable
           columns={[
@@ -1117,27 +1114,6 @@ export default function PaymentApproval() {
                 </FormControl>
               )}
 
-              {/* Chọn Task - Chỉ hiển thị nếu loại là TASK */}
-              {editFormData.type === "TASK" && (
-                <FormControl fullWidth size="small">
-                  <InputLabel id="task-label">Công Việc</InputLabel>
-                  <Select
-                    label="Công Việc *"
-                    name="taskId"
-                    value={editFormData.taskId}
-                    onChange={handleEditInputChange}
-                    onOpen={handleEditTasksOpen}
-                    size="small"
-                    fullWidth
-                  >
-                    {tasks.map((task) => (
-                      <MenuItem key={task.id} value={task.id.toString()}>
-                        {task.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
 
               {/* Số tiền */}
               <TextField
@@ -1341,7 +1317,6 @@ export default function PaymentApproval() {
               fullWidth
               required
               size="small"
-              placeholder="VD: Thanh toán tháng 11"
             />
 
             {/* Loại */}
@@ -1386,29 +1361,7 @@ export default function PaymentApproval() {
               </FormControl>
             )}
 
-            {/* Chọn Task - Chỉ hiển thị nếu loại là TASK */}
-            {createFormData.type === "TASK" && (
-              <FormControl fullWidth size="small">
-                <InputLabel id="create-task-label" sx={{ textAlign: 'center' }}>Công Việc</InputLabel>
-                <Select
-                  labelId="create-task-label"
-                  label="Công Việc"
-                  name="taskId"
-                  value={createFormData.taskId}
-                  onChange={handleCreateInputChange}
-                  onOpen={handleCreateTasksOpen}
-                  size="small"
-                  fullWidth
-                  disabled={!createFormData.projectId}
-                >
-                  {tasks.map((task) => (
-                    <MenuItem key={task.id} value={task.id.toString()}>
-                      {task.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
+            
 
 
             {/* Số tiền */}
@@ -1425,7 +1378,7 @@ export default function PaymentApproval() {
 
             {/* Mục đích */}
             <TextField
-              label="Mục Đích"
+              label="Ghi chú"
               name="purpose"
               value={createFormData.purpose}
               onChange={handleCreateInputChange}
@@ -1433,7 +1386,6 @@ export default function PaymentApproval() {
               size="small"
               multiline
               rows={3}
-              placeholder="Nhập mục đích thanh toán..."
             />
           </Box>
         </DialogContent>

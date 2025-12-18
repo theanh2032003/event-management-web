@@ -200,8 +200,21 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
       boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
     },
     '&.Mui-disabled': {
-      backgroundColor: alpha(theme.palette.action.disabledBackground, 0.3),
+      backgroundColor: 'transparent',
+      '& .MuiOutlinedInput-notchedOutline': {
+        border: 'none',
+      },
     },
+  },
+  '& .MuiInputLabel-root.Mui-disabled': {
+    color: theme.palette.text.secondary,
+    fontWeight: 600,
+    fontSize: '0.875rem',
+  },
+  '& .MuiInputBase-input.Mui-disabled': {
+    WebkitTextFillColor: theme.palette.text.primary,
+    color: theme.palette.text.primary,
+    fontWeight: 500,
   },
 }));
 
@@ -217,6 +230,22 @@ const StyledFormControl = styled(FormControl)(({ theme }) => ({
       backgroundColor: theme.palette.background.paper,
       boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
     },
+    '&.Mui-disabled': {
+      backgroundColor: 'transparent',
+      '& .MuiOutlinedInput-notchedOutline': {
+        border: 'none',
+      },
+    },
+  },
+  '& .MuiInputLabel-root.Mui-disabled': {
+    color: theme.palette.text.secondary,
+    fontWeight: 600,
+    fontSize: '0.875rem',
+  },
+  '& .MuiInputBase-input.Mui-disabled': {
+    WebkitTextFillColor: theme.palette.text.primary,
+    color: theme.palette.text.primary,
+    fontWeight: 500,
   },
 }));
 
@@ -277,9 +306,8 @@ export default function Quotations() {
   const [deletingQuoteId, setDeletingQuoteId] = useState(null);
 
   // Modal states
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedQuote, setSelectedQuote] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [isViewMode, setIsViewMode] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editingQuote, setEditingQuote] = useState(null);
 
@@ -348,16 +376,29 @@ export default function Quotations() {
   }, [page, rowsPerPage, filterState, filterKeyword, showToast]);
 
   const handleOpenDetail = (quote) => {
-    setSelectedQuote(quote);
-    setDetailOpen(true);
-  };
-
-  const handleCloseDetail = () => {
-    setDetailOpen(false);
-    setSelectedQuote(null);
+    setIsViewMode(true);
+    setEditingQuote(quote);
+    setEditFormData({
+      name: quote.name || "",
+      expiredAt: quote.expiredAt ? new Date(quote.expiredAt).toISOString().slice(0, 16) : "",
+      quantity: quote.quantity?.toString() || "",
+      unitPrice: quote.unitPrice?.toString() || "",
+      totalPrice: quote.totalPrice?.toString() || "",
+      tax: quote.tax?.toString() || "",
+      discount: quote.discount?.toString() || "",
+      shippingFee: quote.shippingFee?.toString() || "",
+      otherFee: quote.otherFee?.toString() || "",
+      finalPrice: quote.finalPrice?.toString() || "",
+      paymentMethod: quote.paymentMethod || "VNPAY",
+      paymentTerms: quote.paymentTerms || "",
+      guarantee: quote.guarantee || "",
+      files: quote.files || [],
+    });
+    setEditOpen(true);
   };
 
   const handleOpenEdit = (quote) => {
+    setIsViewMode(false);
     setEditingQuote(quote);
     setEditFormData({
       name: quote.name || "",
@@ -381,6 +422,7 @@ export default function Quotations() {
   const handleCloseEdit = () => {
     if (!editSubmitting) {
       setEditOpen(false);
+      setIsViewMode(false);
       setEditingQuote(null);
       setEditFormData({
         name: "",
@@ -727,7 +769,7 @@ export default function Quotations() {
                     },
                   }}
                 >
-                  <MenuItem value="">Tất cả trạng thái</MenuItem>
+                  <MenuItem value="">--Tất cả--</MenuItem>
                   <MenuItem value="DRAFT">Nháp</MenuItem>
                   <MenuItem value="SUBMITTED">Đã gửi</MenuItem>
                 </Select>
@@ -781,15 +823,7 @@ export default function Quotations() {
                 minWidth: 100,
                 render: (value) => value?.toLocaleString("vi-VN") || "N/A",
               },
-              {
-                field: 'unitPrice',
-                headerName: 'Đơn giá',
-                align: 'right',
-                flex: 0.8,
-                minWidth: 110,
-                render: (value) => `${formatCurrency(value)}₫`,
-                cellSx: { textAlign: 'right' },
-              },
+            
               {
                 field: 'finalPrice',
                 headerName: 'Giá cuối',
@@ -933,195 +967,6 @@ export default function Quotations() {
         </>
       )}
 
-      {/* Detail Dialog */}
-      <Dialog
-        open={detailOpen}
-        onClose={handleCloseDetail}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-          }
-        }}
-      >
-        <DialogTitle sx={{
-          fontWeight: 700,
-          fontSize: "1.25rem",
-          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          pb: 2,
-        }}>
-          Chi tiết báo giá
-        </DialogTitle>
-
-        <DialogContent sx={{ pt: 3 }}>
-          {selectedQuote && (
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Box sx={{
-                  p: 2,
-                  backgroundColor: alpha(theme.palette.primary.main, 0.06),
-                  borderRadius: 2,
-                  borderLeft: `4px solid ${theme.palette.primary.main}`,
-                }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                    Tên báo giá
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {selectedQuote.name || "N/A"}
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Số lượng
-                </Typography>
-                <Typography variant="body2">
-                  {selectedQuote.quantity?.toLocaleString("vi-VN") || "N/A"}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Đơn giá
-                </Typography>
-                <Typography variant="body2">
-                  {formatCurrency(selectedQuote.unitPrice)}₫
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Tổng giá
-                </Typography>
-                <Typography variant="body2">
-                  {formatCurrency(selectedQuote.totalPrice)}₫
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Thuế
-                </Typography>
-                <Typography variant="body2">
-                  {formatCurrency(selectedQuote.tax)}₫
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Giảm giá
-                </Typography>
-                <Typography variant="body2">
-                  {formatCurrency(selectedQuote.discount)}₫
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Giá cuối cùng
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '1.1rem', color: theme.palette.primary.main }}>
-                  {formatCurrency(selectedQuote.finalPrice)}₫
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Hạn chót
-                </Typography>
-                <Typography variant="body2">
-                  {formatDateTime(selectedQuote.expiredAt)}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Trạng thái
-                </Typography>
-                <Chip
-                  label={getStateLabel(selectedQuote.state)}
-                  color={getStateColor(selectedQuote.state)}
-                  size="small"
-                  variant={selectedQuote.state === "SUBMITTED" ? "filled" : "outlined"}
-                  icon={selectedQuote.state === "SUBMITTED" ? <CheckCircleIcon sx={{ fontSize: 16 }} /> : undefined}
-                  sx={{
-                    fontWeight: 600,
-                    ...(selectedQuote.state === "SUBMITTED" && {
-                      backgroundColor: alpha(theme.palette.success.main, 0.15),
-                      color: theme.palette.success.main,
-                      border: `1px solid ${alpha(theme.palette.success.main, 0.4)}`
-                    })
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                  Phương thức thanh toán
-                </Typography>
-                <Typography variant="body2">
-                  {selectedQuote.paymentMethod || "N/A"}
-                </Typography>
-              </Grid>
-
-              {selectedQuote.paymentTerms && (
-                <Grid item xs={12}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                    Điều khoản thanh toán
-                  </Typography>
-                  <Typography variant="body2">
-                    {selectedQuote.paymentTerms}
-                  </Typography>
-                </Grid>
-              )}
-
-              {selectedQuote.guarantee && (
-                <Grid item xs={12}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                    Bảo hành
-                  </Typography>
-                  <Typography variant="body2">
-                    {selectedQuote.guarantee}
-                  </Typography>
-                </Grid>
-              )}
-            </Grid>
-          )}
-        </DialogContent>
-
-        <DialogActions sx={{
-          p: 3,
-          pt: 2,
-          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          gap: 2,
-        }}>
-          <Button
-            onClick={handleCloseDetail}
-            variant="outlined"
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
-          >
-            Đóng
-          </Button>
-          {selectedQuote && selectedQuote.state === "DRAFT" && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<EditIcon />}
-              onClick={() => {
-                handleCloseDetail();
-                handleOpenEdit(selectedQuote);
-              }}
-              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
-            >
-              Sửa báo giá
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
-
       {/* Edit Dialog */}
       <Dialog
         open={editOpen}
@@ -1160,10 +1005,10 @@ export default function Quotations() {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Chỉnh sửa báo giá
+                {isViewMode ? 'Chi tiết báo giá' : 'Chỉnh sửa báo giá'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Cập nhật thông tin và điều chỉnh chi phí nhanh chóng
+                {isViewMode ? 'Xem thông tin chi tiết báo giá' : 'Cập nhật thông tin và điều chỉnh chi phí nhanh chóng'}
               </Typography>
             </Box>
           </Box>
@@ -1195,6 +1040,7 @@ export default function Quotations() {
                 onChange={handleEditInputChange}
                 required
                 fullWidth
+                disabled={isViewMode}
                 placeholder="VD: Báo giá Đèn Follow Spot 2500W - Tháng 11/2025"
               />
             </Grid>
@@ -1209,6 +1055,7 @@ export default function Quotations() {
                 onChange={handleEditInputChange}
                 required
                 fullWidth
+                disabled={isViewMode}
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
@@ -1223,6 +1070,7 @@ export default function Quotations() {
                 onChange={handleEditInputChange}
                 required
                 fullWidth
+                disabled={isViewMode}
               />
             </Grid>
 
@@ -1235,6 +1083,7 @@ export default function Quotations() {
                 onChange={handleEditInputChange}
                 required
                 fullWidth
+                disabled={isViewMode}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -1251,6 +1100,7 @@ export default function Quotations() {
                 label="Tổng giá"
                 value={formatCurrency(editFormData.totalPrice)}
                 fullWidth
+                disabled={isViewMode}
                 InputProps={{
                   readOnly: true,
                   endAdornment: (
@@ -1270,6 +1120,7 @@ export default function Quotations() {
                 value={formatCurrency(editFormData.otherFee)}
                 onChange={handleEditInputChange}
                 fullWidth
+                disabled={isViewMode}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -1288,6 +1139,7 @@ export default function Quotations() {
                 value={formatCurrency(editFormData.discount)}
                 onChange={handleEditInputChange}
                 fullWidth
+                disabled={isViewMode}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -1304,6 +1156,7 @@ export default function Quotations() {
                 label="Giá cuối cùng"
                 value={formatCurrency(editFormData.finalPrice)}
                 fullWidth
+                disabled={isViewMode}
                 InputProps={{
                   readOnly: true,
                   endAdornment: (
@@ -1324,6 +1177,7 @@ export default function Quotations() {
                   value={editFormData.paymentMethod}
                   onChange={handleEditInputChange}
                   label="Phương thức thanh toán"
+                  disabled={isViewMode}
                 >
                   <MenuItem value="VNPAY">VNPAY</MenuItem>
                   <MenuItem value="BANK_TRANSFER">Chuyển khoản</MenuItem>
@@ -1344,6 +1198,7 @@ export default function Quotations() {
                 multiline
                 rows={2}
                 fullWidth
+                disabled={isViewMode}
               />
             </Grid>
 
@@ -1357,6 +1212,7 @@ export default function Quotations() {
                 multiline
                 rows={2}
                 fullWidth
+                disabled={isViewMode}
               />
             </Grid>
 
@@ -1378,28 +1234,30 @@ export default function Quotations() {
               borderColor: alpha(theme.palette.divider, 0.3),
               color: 'text.primary',
               '&:hover': {
-                borderColor: theme.palette.error.main,
-                color: theme.palette.error.main,
-                backgroundColor: alpha(theme.palette.error.main, 0.05),
+                borderColor: isViewMode ? theme.palette.primary.main : theme.palette.error.main,
+                color: isViewMode ? theme.palette.primary.main : theme.palette.error.main,
+                backgroundColor: alpha(isViewMode ? theme.palette.primary.main : theme.palette.error.main, 0.05),
               },
             }}
           >
-            Hủy
+            {isViewMode ? 'Đóng' : 'Hủy'}
           </StyledButton>
-          <StyledButton
-            variant="contained"
-            onClick={handleEditSubmit}
-            disabled={editSubmitting}
-            startIcon={editSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
-            sx={{
-              boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-              '&:hover': {
-                boxShadow: `0 6px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
-              },
-            }}
-          >
-            {editSubmitting ? "Đang cập nhật..." : "Cập nhật"}
-          </StyledButton>
+          {!isViewMode && (
+            <StyledButton
+              variant="contained"
+              onClick={handleEditSubmit}
+              disabled={editSubmitting}
+              startIcon={editSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
+              sx={{
+                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                '&:hover': {
+                  boxShadow: `0 6px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
+                },
+              }}
+            >
+              {editSubmitting ? "Đang cập nhật..." : "Cập nhật"}
+            </StyledButton>
+          )}
         </DialogActions>
       </Dialog>
 

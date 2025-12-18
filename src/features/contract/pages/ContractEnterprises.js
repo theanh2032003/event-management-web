@@ -626,10 +626,10 @@ export default function Contracts() {
   const getStateLabel = (state) => {
     const labels = {
       DRAFT: "Bản nháp",
-      SUBMITTED: "Đã gửi",
-      SIGNED: "Đã ký",
-      IN_PROGRESS: "Đang thực hiện",
-      COMPLETED: "Hoàn thành",
+      SUBMITTED: "Đang chờ",
+      // SIGNED: "Đã ký",
+      // IN_PROGRESS: "Đang thực hiện",
+      COMPLETED: "Đã ký",
       CANCELED: "Đã hủy",
     };
     return labels[state] || state;
@@ -794,9 +794,8 @@ export default function Contracts() {
               >
                 <MenuItem value="">-- Tất cả --</MenuItem>
                 <MenuItem value="DRAFT">Bản nháp</MenuItem>
-                <MenuItem value="SUBMITTED">Đã gửi</MenuItem>
-                <MenuItem value="IN_PROGRESS">Đang thực hiện</MenuItem>
-                <MenuItem value="COMPLETED">Hoàn thành</MenuItem>
+                <MenuItem value="SUBMITTED">Đang chờ</MenuItem>
+                <MenuItem value="COMPLETED">Đã ký</MenuItem>
                 <MenuItem value="CANCELED">Đã hủy</MenuItem>
               </TextField>
             </Grid>
@@ -889,7 +888,7 @@ export default function Contracts() {
             },
             {
               field: "actions",
-              headerName: "Hành động",
+              headerName: "Chi tiết",
               align: "center",
               render: (value, contract) => (
                 <Box sx={{ display: "flex", gap: 1, justifyContent: "center", alignItems: "center" }}>

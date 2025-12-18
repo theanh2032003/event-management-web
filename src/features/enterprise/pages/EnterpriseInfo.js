@@ -526,11 +526,9 @@ export default function EnterpriseInfo() {
                 onChange={handleInputChange}
                 disabled={!isEditing}
                 fullWidth
-                multiline
-                rows={2}
+                
                 size="small"
                 variant={isEditing ? 'outlined' : 'standard'}
-                placeholder="Nhập địa chỉ doanh nghiệp..."
               />
             </FullWidthField>
 
@@ -544,7 +542,6 @@ export default function EnterpriseInfo() {
                 disabled={!isEditing}
                 fullWidth
                 multiline
-                rows={2}
                 size="small"
                 variant={isEditing ? 'outlined' : 'standard'}
                 placeholder="Nhập mô tả doanh nghiệp..."
