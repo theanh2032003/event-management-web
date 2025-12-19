@@ -344,7 +344,7 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
                   {payment.approvedLv1At && (
                     <>
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                        {payment?.projectOwnerName || "—"}
+                        {payment?.projectOwnerName || payment?.userLv1.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                         {formatDate(payment.approvedLv1At)}

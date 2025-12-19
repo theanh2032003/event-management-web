@@ -126,18 +126,16 @@ const paymentApprovalApi = {
 
   /**
    * 🟢 Duyệt cấp 1 (Level 1 Approval)
-   * DELETE /project/{projectId}/payment-approval/{id}/lv1
+   * PATCH /payment-approval/{id}/lv1
    */
   approvalLv1: async (id, approvalData) => {
     try {
-      console.log(`[PAYMENT_APPROVAL_API] 📡 DELETE /payment-approval/${id}/lv1 with data:`, approvalData);
-      const response = await axiosClient.delete(`/payment-approval/${id}/lv1`, {
-        data: approvalData, // { state, note }
-      });
-      console.log(`[PAYMENT_APPROVAL_API] ✅ DELETE /payment-approval/${id}/lv1 response:`, response);
+      console.log(`[PAYMENT_APPROVAL_API] 📡 PATCH /payment-approval/${id}/lv1 with data:`, approvalData);
+      const response = await axiosClient.patch(`/payment-approval/${id}/lv1`, approvalData);
+      console.log(`[PAYMENT_APPROVAL_API] ✅ PATCH /payment-approval/${id}/lv1 response:`, response);
       return response;
     } catch (error) {
-      console.error(`[PAYMENT_APPROVAL_API] ❌ DELETE /payment-approval/${id}/lv1 error:`, {
+      console.error(`[PAYMENT_APPROVAL_API] ❌ PATCH /payment-approval/${id}/lv1 error:`, {
         message: error?.response?.data?.message || error.message,
         status: error?.response?.status,
         data: error?.response?.data,

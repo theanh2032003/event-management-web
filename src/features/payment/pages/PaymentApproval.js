@@ -140,6 +140,7 @@ export default function PaymentApproval() {
   const [stateChanging, setStateChanging] = useState(null);
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [selectedProjectDetails, setSelectedProjectDetails] = useState(null);
 
   // Pagination states
   const [page, setPage] = useState(0);
@@ -205,6 +206,43 @@ export default function PaymentApproval() {
       loadProjects();
     }
   }, [enterpriseId, permissionsLoading, showToast]);
+
+  // Load selected project details to check if current user is project creator
+  useEffect(() => {
+    const loadProjectDetails = async () => {
+      if (!selectedProjectId) {
+        setSelectedProjectDetails(null);
+        return;
+      }
+      try {
+        const response = await projectApi.getById(selectedProjectId);
+        const projectData = response?.data || response;
+        setSelectedProjectDetails(projectData);
+      } catch (error) {
+        console.error('Error loading project details:', error);
+        setSelectedProjectDetails(null);
+      }
+    };
+
+    loadProjectDetails();
+  }, [selectedProjectId]);
+
+  // Helper function to check if current user is project creator
+  const isProjectCreator = (payment) => {
+    // If no project selected, check from payment's projectId
+    if (payment?.projectId) {
+      // Find project in projects list
+      const project = projects.find(p => p.id === payment.projectId);
+      if (project && project.createdUserId) {
+        return project.createdUserId === userId;
+      }
+    }
+    // Fallback to selectedProjectDetails if available
+    if (selectedProjectDetails && selectedProjectDetails.createdUserId) {
+      return selectedProjectDetails.createdUserId === userId;
+    }
+    return false;
+  };
 
   // Helper function to fetch payments
   const refreshPayments = async (newPage = 0, newRowsPerPage = rowsPerPage) => {
@@ -363,7 +401,7 @@ export default function PaymentApproval() {
       changes.push({ value: "REJECTED_LV2", label: "Từ chối" });
     }
     // Nếu có quyền duyệt cấp 1 (và không có cấp 2), chỉ hiện trạng thái cấp 1
-    else if (payment.canApproveLv1) {
+    if (payment.canApproveLv1) {
       changes.push({ value: "APPROVED_LV1", label: "Duyệt cấp 1" });
       changes.push({ value: "REJECTED_LV1", label: "Từ chối cấp 1" });
     }
@@ -508,9 +546,21 @@ export default function PaymentApproval() {
   const handleCreateQuotesOpen = async () => {
     if (!createFormData.projectId) return;
     try {
-      const quotesResponse = await quoteApi.getQuotes({ projectId: createFormData.projectId }, 0, 100);
-      const quotesData = quotesResponse?.data || quotesResponse || [];
-      setQuotes(Array.isArray(quotesData) ? quotesData : []);
+      const quotesResponse = await quoteApi.getQuotes({ projectId: parseInt(createFormData.projectId) }, 0, 100);
+      // Xử lý response structure: có thể là array hoặc object với content
+      let quotesData = [];
+      if (quotesResponse?.content && Array.isArray(quotesResponse.content)) {
+        quotesData = quotesResponse.content;
+      } else if (Array.isArray(quotesResponse)) {
+        quotesData = quotesResponse;
+      } else if (quotesResponse?.data) {
+        if (Array.isArray(quotesResponse.data)) {
+          quotesData = quotesResponse.data;
+        } else if (quotesResponse.data.content && Array.isArray(quotesResponse.data.content)) {
+          quotesData = quotesResponse.data.content;
+        }
+      }
+      setQuotes(quotesData);
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách báo giá";
       showToast(`${errorMessage}`, "error", 3000);
@@ -553,9 +603,21 @@ export default function PaymentApproval() {
   const handleEditQuotesOpen = async () => {
     if (!editFormData?.projectId) return;
     try {
-      const quotesResponse = await quoteApi.getQuotes({ projectId: editFormData.projectId }, 0, 100);
-      const quotesData = quotesResponse?.data || quotesResponse || [];
-      setQuotes(Array.isArray(quotesData) ? quotesData : []);
+      const quotesResponse = await quoteApi.getQuotes({ projectId: parseInt(editFormData.projectId) }, 0, 100);
+      // Xử lý response structure: có thể là array hoặc object với content
+      let quotesData = [];
+      if (quotesResponse?.content && Array.isArray(quotesResponse.content)) {
+        quotesData = quotesResponse.content;
+      } else if (Array.isArray(quotesResponse)) {
+        quotesData = quotesResponse;
+      } else if (quotesResponse?.data) {
+        if (Array.isArray(quotesResponse.data)) {
+          quotesData = quotesResponse.data;
+        } else if (quotesResponse.data.content && Array.isArray(quotesResponse.data.content)) {
+          quotesData = quotesResponse.data.content;
+        }
+      }
+      setQuotes(quotesData);
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách báo giá";
       showToast(`${errorMessage}`, "error", 3000);
@@ -930,7 +992,19 @@ export default function PaymentApproval() {
               align: "center",
               render: (value, payment) => (
                 <Box sx={{ display: "flex", gap: 1, justifyContent: "center", alignItems: "center" }}>
-                  {/* Icon Chi tiết - Luôn hiển thị */}
+                {payment.state === "DRAFT" && payment.canSubmit && (
+                    <Tooltip title="Gửi duyệt" arrow>
+                      <ActionButton
+                        size="small"
+                        onClick={() => handleStateChange(payment.id, "PENDING")}
+                        disabled={stateChanging === payment.id}
+                        sx={{ color: "primary.main" }}
+                      >
+                        <SendIcon fontSize="small" />
+                      </ActionButton>
+                    </Tooltip>
+                  )}
+                  {/* Icon Sửa - Chỉ cho phép sửa khi DRAFT, không cho sửa khi REJECTED_LV1 */}
                   {payment.state === "DRAFT" && (
                     <Tooltip title="Sửa" arrow>
                       <ActionButton
@@ -974,11 +1048,15 @@ export default function PaymentApproval() {
                     </ActionButton>
                   </Tooltip>
 
-                  {/* Icon Duyệt - Chỉ hiển thị cho owner khi chưa duyệt */}
-                  {isOwner && 
-                    payment.state !== "DRAFT" &&
-                    !["APPROVED_ALL", "REJECTED_LV2"].includes(payment.state) &&
-                    (payment.canApproveLv1 || payment.canApproveLv2) && (
+                  {/* Icon Duyệt - Người tạo sự kiện duyệt cấp 1 (PENDING), chủ doanh nghiệp duyệt cấp 2 (APPROVED_LV1) */}
+                  {payment.state !== "DRAFT" &&
+                    !["APPROVED_ALL", "REJECTED_LV2", "REJECTED_LV1"].includes(payment.state) &&
+                    (
+                      // Người tạo sự kiện có thể duyệt cấp 1 khi payment ở trạng thái PENDING
+                      (payment.canApproveLv1 && payment.state === "PENDING" && isProjectCreator(payment)) ||
+                      // Chủ doanh nghiệp có thể duyệt cấp 2 khi payment ở trạng thái APPROVED_LV1
+                      (payment.canApproveLv2 && payment.state === "APPROVED_LV1" && isOwner)
+                    ) && (
                       <Tooltip title="Duyệt" arrow>
                         <ActionButton
                           size="small"
