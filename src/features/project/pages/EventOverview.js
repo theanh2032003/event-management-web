@@ -368,8 +368,7 @@ export default function EventOverview({
         onRefresh();
       }
     } catch (error) {
-      console.error('Error deleting event:', error);
-      toast.error('Không thể xóa sự kiện. Vui lòng thử lại.');
+      toast.error(error?.response?.data?.message || 'Không thể xóa sự kiện.');
     } finally {
       setDeleting(false);
     }
@@ -455,9 +454,6 @@ export default function EventOverview({
       }
       return { success: true };
     } catch (err) {
-      console.error("❌ Error saving event:", err);
-      console.error("❌ Error response:", err?.response?.data);
-      console.error("❌ Error status:", err?.response?.status);
 
       let errorMessage = "Không thể lưu sự kiện.";
       

@@ -11,8 +11,7 @@ const isDirect = API_BASE_URL.startsWith('http');
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
-    'device-id': 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    'Content-Type': 'application/json'
   },
   timeout: 30000, // 10 seconds timeout
   // Use credentials only when going direct to server (not through proxy)
@@ -63,18 +62,18 @@ axiosClient.interceptors.request.use(
     }
     
     // Log request headers for debugging
-    if (['put', 'post', 'delete', 'patch', 'get'].includes(config.method?.toLowerCase())) {
-      console.log(`🌐 ${config.method?.toUpperCase()} ${config.url}`, {
-        headers: {
-          Authorization: config.headers.Authorization ? `Bearer ${config.headers.Authorization.substring(7, 27)}...` : 'None',
-          'enterprise-id': config.headers['enterprise-id'],
-          'supplier-id': config.headers['supplier-id'],
-          'user-id': config.headers['user-id'],
-        },
-        params: config.params,
-        data: config.data
-      });
-    }
+    // if (['put', 'post', 'delete', 'patch', 'get'].includes(config.method?.toLowerCase())) {
+    //   console.log(`🌐 ${config.method?.toUpperCase()} ${config.url}`, {
+    //     headers: {
+    //       Authorization: config.headers.Authorization ? `Bearer ${config.headers.Authorization.substring(7, 27)}...` : 'None',
+    //       'enterprise-id': config.headers['enterprise-id'],
+    //       'supplier-id': config.headers['supplier-id'],
+    //       'user-id': config.headers['user-id'],
+    //     },
+    //     params: config.params,
+    //     data: config.data
+    //   });
+    // }
     
     return config;
   },
@@ -87,12 +86,12 @@ axiosClient.interceptors.request.use(
 axiosClient.interceptors.response.use(
   (response) => {
     // Log successful response for debugging POST/PUT/DELETE
-    if (['put', 'post', 'delete', 'patch'].includes(response.config.method?.toLowerCase())) {
-      console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url} Response:`, {
-        status: response.status,
-        data: response.data
-      });
-    }
+    // if (['put', 'post', 'delete', 'patch'].includes(response.config.method?.toLowerCase())) {
+    //   console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url} Response:`, {
+    //     status: response.status,
+    //     data: response.data
+    //   });
+    // }
     // Return the response data directly
     return response.data;
   },
@@ -121,7 +120,7 @@ axiosClient.interceptors.response.use(
             originalRequest.url?.includes('/auth/refresh-token') ||
             originalRequest.url?.includes('/auth/register')) {
           // Don't show toast for auth endpoints - let the page handle it
-          console.log('⚠️ Auth endpoint returned 401:', originalRequest.url);
+          // console.log('⚠️ Auth endpoint returned 401:', originalRequest.url);
           return Promise.reject(error);
         }
         
@@ -145,7 +144,7 @@ axiosClient.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken');
         
         if (!refreshToken) {
-          console.log('⚠️ No refresh token found, redirecting to login');
+          // console.log('⚠️ No refresh token found, redirecting to login');
           isRefreshing = false;
           localStorage.removeItem('token');
           localStorage.removeItem('user');
@@ -194,7 +193,7 @@ axiosClient.interceptors.response.use(
             return axiosClient(originalRequest);
           }
         } catch (refreshError) {
-          console.error('❌ Token refresh failed:', refreshError);
+          // console.error('❌ Token refresh failed:', refreshError);
           
           // Process queue with error
           processQueue(refreshError, null);
