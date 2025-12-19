@@ -164,24 +164,32 @@ export default function SignIn(props) {
       if (response.accessToken) {
         // Extract user info from JWT token
         try {
-          // Decode JWT token (base64 decode the payload)
+          // Decode JWT token (base64 decode the payload) with UTF-8 support
           const tokenParts = response.accessToken.split('.');
           if (tokenParts.length === 3) {
-            const payload = JSON.parse(atob(tokenParts[1]));
+            // Fix UTF-8 encoding for Vietnamese characters
+            const binaryString = atob(tokenParts[1]);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            const decodedString = new TextDecoder('utf-8').decode(bytes);
+            const payload = JSON.parse(decodedString);
             
             // Extract user info from JWT
             const userId = payload['user-id'] || payload.userId || payload.id || payload.sub;
             const userName = payload['user-name'] || payload.userName || payload.name;
             const userEmail = payload['user-email'] || payload.userEmail || payload.email;
-            
+            const userAvatar = payload['user-avatar'] || payload.userAvatar || payload.avatar || '';
      
             
             if (userId) {
               // Create user object from JWT data
               const user = {
                 id: userId,
-                name: userName,
-                email: userEmail
+                name: userName || 'User',
+                email: userEmail,
+                avatar: userAvatar || null,
               };
               
               // Use auth.login() from AuthContext to save token and user
@@ -200,7 +208,6 @@ export default function SignIn(props) {
           }
         } catch (jwtError) {
           // Continue anyway, maybe backend will add user object later
-          console.error('JWT decode error:', jwtError);
         }
         
       } else {
@@ -208,7 +215,6 @@ export default function SignIn(props) {
         toast.error('Đăng nhập thất bại. Vui lòng thử lại.');
       }
     } catch (error) {
-      console.error('Login error:', error);
       
       // Handle specific error messages from backend
       if (error.response?.data?.message) {

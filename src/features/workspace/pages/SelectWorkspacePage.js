@@ -361,7 +361,7 @@ export default function SelectWorkspacePage() {
       
       // Get suppliers from API
       try {
-        const suppliersResponse = await supplierApi.getSuppliers('', 0, 100); // Fetch first 100 suppliers
+        const suppliersResponse = await supplierApi.getSuppliers('', 0, 100, null, true); // Fetch first 100 suppliers
         
         // Extract data array from response
         let suppliersArray = [];

@@ -92,6 +92,7 @@ export default function EnterpriseLayout({ children }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [enterpriseName, setEnterpriseName] = useState('Doanh nghiệp');
+  const [userData, setUserData] = useState({ name: 'User', avatar: null });
   const navigate = useNavigate();
   const location = useLocation();
   const { id: enterpriseId } = useParams();
@@ -101,6 +102,37 @@ export default function EnterpriseLayout({ children }) {
   useEffect(() => {
     setContextSidebarCollapsed(sidebarCollapsed);
   }, [sidebarCollapsed, setContextSidebarCollapsed]);
+
+  // Helper function to generate avatar color based on name
+  const generateAvatarColor = (name) => {
+    if (!name) return '#1976d2';
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  // Helper function to get user data from localStorage
+  const loadUserData = () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        setUserData({
+          name: user.name || 'User',
+          avatar: user.avatar || null,
+        });
+      }
+    } catch (error) {
+    }
+  };
+
+  // Load user data on mount
+  useEffect(() => {
+    loadUserData();
+  }, []);
 
   // Helper function to get user ID
   const getUserId = () => {
@@ -115,7 +147,6 @@ export default function EnterpriseLayout({ children }) {
       }
       return 1;
     } catch (error) {
-      console.error('Error getting userId:', error);
       return 1;
     }
   };
@@ -131,7 +162,7 @@ export default function EnterpriseLayout({ children }) {
         }
       }
     } catch (error) {
-      console.error('Error loading enterprise name:', error);
+      console.error('Error loading workspace:', error);
     }
   }, []);
 
@@ -357,8 +388,18 @@ export default function EnterpriseLayout({ children }) {
               onClick={handleMenuClick}
               color="inherit"
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                <AccountCircle />
+              <Avatar 
+                sx={{ 
+                  width: 32, 
+                  height: 32, 
+                  bgcolor: userData.avatar ? 'transparent' : generateAvatarColor(userData.name),
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+                src={userData.avatar || undefined}
+                alt={userData.name}
+              >
+                {!userData.avatar && userData.name.charAt(0).toUpperCase()}
               </Avatar>
             </IconButton>
             <Menu
@@ -376,6 +417,19 @@ export default function EnterpriseLayout({ children }) {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
+              <MenuItem disabled sx={{ pointerEvents: 'none' }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontWeight: 600,
+                    color: 'text.primary',
+                    width: '100%',
+                  }}
+                >
+                  {userData.name}
+                </Typography>
+              </MenuItem>
+              <Divider sx={{ my: 0.5 }} />
               <MenuItem onClick={handleProfile}>
                 <ListItemIcon>
                   <PersonIcon fontSize="small" />

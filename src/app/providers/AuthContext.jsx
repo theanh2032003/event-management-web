@@ -77,13 +77,15 @@ export function AuthProvider({ children }) {
         // Check if already in a workspace route (don't redirect if user is already in a workspace path)
         const currentPath = window.location.pathname;
         const isInWorkspacePath = /^\/(enterprise|supplier)\//.test(currentPath);
+        const isInSelectWorkspacePath = currentPath === '/select-workspace';
         
         console.log('  - CurrentPath:', currentPath);
         console.log('  - IsInWorkspacePath:', isInWorkspacePath);
+        console.log('  - IsInSelectWorkspacePath:', isInSelectWorkspacePath);
 
-        if (isInWorkspacePath) {
-          // Already in a workspace route -> don't redirect, just mark auth as checked
-          console.log('✅ [AuthProvider] Already in workspace route, not redirecting');
+        if (isInWorkspacePath || isInSelectWorkspacePath) {
+          // Already in a workspace route or select-workspace route -> don't redirect, just mark auth as checked
+          console.log('✅ [AuthProvider] Already in workspace/select-workspace route, not redirecting');
           setAuthChecked(true);
           return;
         }

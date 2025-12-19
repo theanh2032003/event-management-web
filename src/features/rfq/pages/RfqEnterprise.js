@@ -13,6 +13,7 @@ import {
   IconButton,
   Tooltip,
   useTheme,
+  Container,
   useMediaQuery,
   styled,
   alpha,
@@ -29,6 +30,7 @@ import {
   Edit as EditIcon,
   Add as AddIcon,
   CheckCircle as CheckCircleIcon,
+  Lock as LockIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import useEnterpriseUserPermissions from "../../permission/hooks/useEnterpriseUserPermissions";
@@ -516,6 +518,29 @@ export default function QuoteRequests() {
     setStateSearchTimer(timer);
   };
 
+  const PageContainer = styled(Container)(({ theme }) => ({
+    paddingTop: theme.spacing(4),
+    paddingBottom: theme.spacing(4),
+  }));
+
+  const FormCard = styled(Card)(({ theme }) => ({
+  borderRadius: theme.spacing(2),
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+  maxWidth: 900,
+  margin: '0 auto',
+  }));
+
+  const LockedOverlay = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing(2),
+    padding: theme.spacing(6),
+    textAlign: 'center',
+  }));
+
   if (permissionsLoading) {
     return (
       <LoadingBox>
@@ -529,11 +554,26 @@ export default function QuoteRequests() {
 
   if (isUnauthorized) {
     return (
-      <Box>
-        <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
-          Bạn không có quyền truy cập vào mục này.
-        </Alert>
-      </Box>
+      <PageContainer maxWidth="sm">
+        <FormCard>
+          <CardContent>
+            <LockedOverlay>
+              <LockIcon
+                sx={{
+                  fontSize: 64,
+                  color: theme.palette.warning.main,
+                }}
+              />
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Truy cập bị từ chối
+              </Typography>
+              <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                Bạn không có quyền truy cập yêu cầu báo giá.
+              </Typography>
+            </LockedOverlay>
+          </CardContent>
+        </FormCard>
+      </PageContainer>
     );
   }
 

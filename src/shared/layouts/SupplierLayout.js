@@ -90,9 +90,42 @@ export default function SupplierLayout({ children }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [supplierName, setSupplierName] = useState('Nhà cung cấp');
+  const [userData, setUserData] = useState({ name: 'User', avatar: null });
   const navigate = useNavigate();
   const location = useLocation();
   const { id: supplierId } = useParams();
+
+  // Helper function to generate avatar color based on name
+  const generateAvatarColor = (name) => {
+    if (!name) return '#1976d2';
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  // Helper function to get user data from localStorage
+  const loadUserData = () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        setUserData({
+          name: user.name || 'User',
+          avatar: user.avatar || null,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  // Load user data on mount
+  useEffect(() => {
+    loadUserData();
+  }, []);
 
   // Helper function to get user ID
   const getUserId = () => {
@@ -291,32 +324,6 @@ export default function SupplierLayout({ children }) {
           })}
         </List>
       </Box>
-      {/* <Divider />
-        <Box
-          sx={{
-            p: 1,
-            display: 'flex',
-            justifyContent: sidebarCollapsed ? 'center' : 'flex-end',
-            alignItems: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <IconButton
-            onClick={handleSidebarToggle}
-            sx={{
-              backgroundColor: theme.palette.background.paper,
-              border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-              width: 36,
-              height: 36,
-              '&:hover': {
-                backgroundColor: alpha(theme.palette.primary.main, 0.08),
-              },
-              transition: 'all 0.3s ease',
-            }}
-          >
-            {sidebarCollapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
-          </IconButton>
-        </Box> */}
     </Box>
   );
 
@@ -361,8 +368,18 @@ export default function SupplierLayout({ children }) {
               onClick={handleMenuClick}
               color="inherit"
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                <AccountCircle />
+              <Avatar 
+                sx={{ 
+                  width: 32, 
+                  height: 32, 
+                  bgcolor: userData.avatar ? 'transparent' : generateAvatarColor(userData.name),
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+                src={userData.avatar || undefined}
+                alt={userData.name}
+              >
+                {!userData.avatar && userData.name.charAt(0).toUpperCase()}
               </Avatar>
             </IconButton>
             <Menu
@@ -380,6 +397,19 @@ export default function SupplierLayout({ children }) {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
+              <MenuItem disabled sx={{ pointerEvents: 'none' }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontWeight: 600,
+                    color: 'text.primary',
+                    width: '100%',
+                  }}
+                >
+                  {userData.name}
+                </Typography>
+              </MenuItem>
+              <Divider sx={{ my: 0.5 }} />
               <MenuItem onClick={handleProfile}>
                 <ListItemIcon>
                   <PersonIcon fontSize="small" />

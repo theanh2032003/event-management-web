@@ -3,18 +3,18 @@ import axiosClient from '../../../app/axios/axiosClient';
 
 const supplierApi = {
   // Get all suppliers for the current user
-  getSuppliers: async (keyword = '', page = 0, size = 10, projectId = null) => {
+  getSuppliers: async (keyword = '', page = 0, size = 10, projectId = null, isOwner) => {
     try {
-      const raw = localStorage.getItem('user');
-      const user = raw ? JSON.parse(raw) : {};
+      // const raw = localStorage.getItem('user');
+      // const user = raw ? JSON.parse(raw) : {};
       
-      const userId = user?.id || user?._id || user?.userId || null;
-      const userIdBackup = localStorage.getItem('userId');
-      const ownerId = userId || userIdBackup;
+      // const userId = user?.id || user?._id || user?.userId || null;
+      // const userIdBackup = localStorage.getItem('userId');
+      // const ownerId = userId || userIdBackup;
 
-      if (!ownerId) {
-        throw new Error('User ID not found. Please login again.');
-      }
+      // if (!ownerId) {
+      //   throw new Error('User ID not found. Please login again.');
+      // }
 
       const params = {
         keyword: keyword,
@@ -25,6 +25,10 @@ const supplierApi = {
       // Add projectId if provided
       if (projectId) {
         params.projectId = projectId;
+      }
+
+      if (isOwner) {
+        params.isOwner = isOwner;
       }
 
       const response = await axiosClient.get('/api/suppliers', {
