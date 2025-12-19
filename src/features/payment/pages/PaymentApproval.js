@@ -401,7 +401,7 @@ export default function PaymentApproval() {
       changes.push({ value: "REJECTED_LV2", label: "Từ chối" });
     }
     // Nếu có quyền duyệt cấp 1 (và không có cấp 2), chỉ hiện trạng thái cấp 1
-    if (payment.canApproveLv1) {
+    else if (payment.canApproveLv1) {
       changes.push({ value: "APPROVED_LV1", label: "Duyệt cấp 1" });
       changes.push({ value: "REJECTED_LV1", label: "Từ chối cấp 1" });
     }
@@ -1180,11 +1180,15 @@ export default function PaymentApproval() {
                     size="small"
                     fullWidth
                   >
-                    {quotes.map((quote) => (
-                      <MenuItem key={quote.id} value={quote.id.toString()}>
-                        {`${quote.name || `Quote #${quote.id}`} - ${quote.finalPrice ? quote.finalPrice.toLocaleString("vi-VN") : 0}₫`}
-                      </MenuItem>
-                    ))}
+                    {quotes.length === 0 ? (
+                      <MenuItem disabled>Chưa có báo giá</MenuItem>
+                    ) : (
+                      quotes.map((quote) => (
+                        <MenuItem key={quote.id} value={quote.id.toString()}>
+                          {`${quote.name || `Quote #${quote.id}`} - ${quote.finalPrice ? quote.finalPrice.toLocaleString("vi-VN") : 0}₫`}
+                        </MenuItem>
+                      ))
+                    )}
                   </Select>
                 </FormControl>
               )}
@@ -1447,12 +1451,15 @@ export default function PaymentApproval() {
                   fullWidth
                   disabled={!createFormData.projectId || loadingQuotesAndTasks}
                 >
-                  <MenuItem value="">-- Không chọn --</MenuItem>
-                  {quotes.map((quote) => (
-                    <MenuItem key={quote.id} value={quote.id.toString()}>
-                      {`${quote.name || `Quote #${quote.id}`} - ${quote.finalPrice ? quote.finalPrice.toLocaleString("vi-VN") : 0}₫`}
-                    </MenuItem>
-                  ))}
+                  {quotes.length === 0 ? (
+                    <MenuItem disabled>Chưa có báo giá</MenuItem>
+                  ) : (
+                    quotes.map((quote) => (
+                      <MenuItem key={quote.id} value={quote.id.toString()}>
+                        {`${quote.name || `Quote #${quote.id}`} - ${quote.finalPrice ? quote.finalPrice.toLocaleString("vi-VN") : 0}₫`}
+                      </MenuItem>
+                    ))
+                  )}
                 </Select>
               </FormControl>
             )}
