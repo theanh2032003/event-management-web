@@ -42,10 +42,7 @@ function PaymentApprovalDetailPage() {
     navigate(`/enterprise/${enterpriseId}/payment-approvals`);
   };
 
-  const handleEdit = () => {
-    // TODO: Implement edit functionality if needed
-    showToast('Tính năng chỉnh sửa sẽ được cập nhật sớm', 'error', 3000);
-  };
+
 
   if (loading) {
     return (
@@ -84,7 +81,7 @@ function PaymentApprovalDetailPage() {
     );
   }
 
-  return <PaymentApprovalDetail payment={payment} onBack={handleBack} onEdit={handleEdit} />;
+  return <PaymentApprovalDetail payment={payment} onBack={handleBack}  />;
 }
 
 export default PaymentApprovalDetailPage;

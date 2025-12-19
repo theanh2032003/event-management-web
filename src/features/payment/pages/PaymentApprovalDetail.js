@@ -67,10 +67,10 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
         // Fetch task if exists
         if (payment.taskId) {
           try {
-            const taskResponse = await taskApi.getTasks({ taskId: payment.taskId }, 0, 1);
-            const taskData = taskResponse?.data || taskResponse || [];
-            if (Array.isArray(taskData) && taskData.length > 0) {
-              setTaskInfo(taskData[0]);
+            const taskResponse = await taskApi.getById(payment.taskId);
+            const taskData = taskResponse?.data || taskResponse;
+            if (taskData) {
+              setTaskInfo(taskData);
             }
           } catch (error) {
           }
@@ -278,25 +278,19 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
             <Box>
               <Table size="small" sx={{ '& td': { py: 1.2 } }}>
                 <TableBody>
-                  <TableRow>
-                    <TableCell sx={{ width: '200px', fontWeight: 600, color: 'text.secondary' }}>Mã công việc</TableCell>
-                    <TableCell>#{payment.taskId}</TableCell>
-                  </TableRow>
-                  {taskInfo && (
+                  {taskInfo ? (
                     <>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Tên công việc</TableCell>
+                        <TableCell sx={{ width: '200px', fontWeight: 600, color: 'text.secondary' }}>Tên công việc</TableCell>
                         <TableCell>{taskInfo.name || "—"}</TableCell>
                       </TableRow>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Ngân sách task</TableCell>
-                        <TableCell>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
-                            {formatCurrency(taskInfo.budget || 0)}₫
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
+                     
                     </>
+                  ) : (
+                    <TableRow>
+                      <TableCell sx={{ width: '200px', fontWeight: 600, color: 'text.secondary' }}>Công việc ID</TableCell>
+                      <TableCell>{payment.taskId}</TableCell>
+                    </TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -364,7 +358,7 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
                   )}
                   {!payment.approvedLv1At && (
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                      {payment.userLv1Id ? "Chưa thực hiện" : "Không áp dụng"}
+                      {payment.userLv1Id ? "Chưa thực hiện" : ""}
                     </Typography>
                   )}
                 </Box>
@@ -402,7 +396,7 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
                   )}
                   {!payment.approvedLv2At && (
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                      {payment.userLv2Id ? "Chưa thực hiện" : "Không áp dụng"}
+                      {payment.userLv2Id ? "Chưa thực hiện" : ""}
                     </Typography>
                   )}
                 </Box>

@@ -505,11 +505,10 @@ export default function EventUserPermission({ eventData, enterpriseId, eventId }
             flex: 1,
             minWidth: 200,
             render: (value, row) => {
-              // Nếu là chủ doanh nghiệp, hiển thị "Chủ doanh nghiệp"
               if (row.isOwner) {
                 return (
                   <Chip
-                    label="Chủ doanh nghiệp"
+                    label="Chủ sự kiện"
                     size="small"
                     variant="outlined"
                     sx={{ fontWeight: 600 }}

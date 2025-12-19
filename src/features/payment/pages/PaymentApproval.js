@@ -201,10 +201,10 @@ export default function PaymentApproval() {
       }
     };
 
-    if (!permissionsLoading && isOwner) {
+    if (!permissionsLoading) {
       loadProjects();
     }
-  }, [enterpriseId, permissionsLoading, isOwner, showToast]);
+  }, [enterpriseId, permissionsLoading, showToast]);
 
   // Helper function to fetch payments
   const refreshPayments = async (newPage = 0, newRowsPerPage = rowsPerPage) => {
@@ -216,6 +216,11 @@ export default function PaymentApproval() {
       if (filterType) filters.type = filterType;
       if (filterKeyword) filters.keyword = filterKeyword;
       if (filterSupplierIds.length > 0) filters.supplierIds = filterSupplierIds;
+      
+      // Nếu không phải owner thì chỉ xem payment mình tạo
+      if (!isOwner) {
+        filters.createdUserId = userId;
+      }
 
       const response = await paymentApprovalApi.getPaymentApprovals(selectedProjectId || null, filters, newPage, newRowsPerPage);
 
@@ -254,7 +259,7 @@ export default function PaymentApproval() {
 
   // Fetch payments
   useEffect(() => {
-    if (!permissionsLoading && isOwner) {
+    if (!permissionsLoading) {
       refreshPayments(page, rowsPerPage);
     }
   }, [selectedProjectId, filterStates, filterType, filterKeyword, filterSupplierIds, page, rowsPerPage, permissionsLoading, isOwner, showToast]);
@@ -295,8 +300,10 @@ export default function PaymentApproval() {
   };
 
   const handleEditFromDetail = () => {
-    setViewMode("list");
+    if (!selectedPayment) return;
     handleOpenEdit(selectedPayment);
+    setViewMode("list");
+    setSelectedPayment(null);
   };
 
   const handleStateChange = async (paymentId, newState) => {
@@ -339,7 +346,7 @@ export default function PaymentApproval() {
       case "REJECTED_LV1":
         return "Từ chối cấp 1";
       case "APPROVED_ALL":
-        return "Duyệt";
+        return "Đã Duyệt";
       case "REJECTED_LV2":
         return "Từ chối";
       default:
@@ -514,12 +521,19 @@ export default function PaymentApproval() {
   const handleCreateTasksOpen = async () => {
     if (!createFormData.projectId) return;
     try {
-      const tasksResponse = await taskApi.getTasks({ projectId: createFormData.projectId }, 0, 100);
-      const tasksData = tasksResponse?.data || tasksResponse || [];
+      setLoadingQuotesAndTasks(true);
+      const tasksResponse = await taskApi.getAll({ 
+        projectId: createFormData.projectId,
+        page: 0,
+        size: 100
+      });
+      const tasksData = tasksResponse?.data?.content || tasksResponse?.content || tasksResponse?.data || tasksResponse || [];
       setTasks(Array.isArray(tasksData) ? tasksData : []);
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách công việc";
       showToast(`${errorMessage}`, "error", 3000);
+    } finally {
+      setLoadingQuotesAndTasks(false);
     }
   };
 
@@ -552,12 +566,19 @@ export default function PaymentApproval() {
   const handleEditTasksOpen = async () => {
     if (!editFormData?.projectId) return;
     try {
-      const tasksResponse = await taskApi.getTasks({ projectId: editFormData.projectId }, 0, 100);
-      const tasksData = tasksResponse?.data || tasksResponse || [];
+      setLoadingQuotesAndTasks(true);
+      const tasksResponse = await taskApi.getAll({ 
+        projectId: editFormData.projectId,
+        page: 0,
+        size: 100
+      });
+      const tasksData = tasksResponse?.data?.content || tasksResponse?.content || tasksResponse?.data || tasksResponse || [];
       setTasks(Array.isArray(tasksData) ? tasksData : []);
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách công việc";
       showToast(`${errorMessage}`, "error", 3000);
+    } finally {
+      setLoadingQuotesAndTasks(false);
     }
   };
 
@@ -863,7 +884,7 @@ export default function PaymentApproval() {
             Đang tải dữ liệu...
           </Typography>
         </LoadingBox>
-     
+  
       ) : payments.length > 0 ? (
         <CommonTable
           columns={[
@@ -909,20 +930,53 @@ export default function PaymentApproval() {
               align: "center",
               render: (value, payment) => (
                 <Box sx={{ display: "flex", gap: 1, justifyContent: "center", alignItems: "center" }}>
-                  {payment.state === "DRAFT" && payment.canSubmit && (
-                    <Tooltip title="Gửi duyệt" arrow>
+                  {/* Icon Chi tiết - Luôn hiển thị */}
+                  {payment.state === "DRAFT" && (
+                    <Tooltip title="Sửa" arrow>
                       <ActionButton
                         size="small"
-                        onClick={() => handleStateChange(payment.id, "PENDING")}
-                        disabled={stateChanging === payment.id}
-                        sx={{ color: "primary.main" }}
+                        color="primary"
+                        onClick={() => handleOpenEdit(payment)}
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                            transform: 'scale(1.1)',
+                          },
+                        }}
                       >
-                        <SendIcon fontSize="small" />
+                        <EditIcon fontSize="small" />
                       </ActionButton>
                     </Tooltip>
                   )}
+                  {(payment.state === "DRAFT") && (
+                    <Tooltip title="Xoá" arrow>
+                      <ActionButton
+                        size="small"
+                        onClick={() => handleOpenDeleteConfirm(payment.id)}
+                        sx={{ color: "error.main" }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </ActionButton>
+                    </Tooltip>
+                  )}
+                  <Tooltip title="Chi tiết" arrow>
+                    <ActionButton
+                      size="small"
+                      onClick={() => handleOpenDetail(payment)}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: alpha(theme.palette.info.main, 0.1),
+                          color: theme.palette.info.main,
+                        },
+                      }}
+                    >
+                      <InfoIcon fontSize="small" />
+                    </ActionButton>
+                  </Tooltip>
 
-                  {payment.state !== "DRAFT" &&
+                  {/* Icon Duyệt - Chỉ hiển thị cho owner khi chưa duyệt */}
+                  {isOwner && 
+                    payment.state !== "DRAFT" &&
                     !["APPROVED_ALL", "REJECTED_LV2"].includes(payment.state) &&
                     (payment.canApproveLv1 || payment.canApproveLv2) && (
                       <Tooltip title="Duyệt" arrow>
@@ -944,63 +998,6 @@ export default function PaymentApproval() {
                         </ActionButton>
                       </Tooltip>
                     )}
-
-                  {(payment.state === "APPROVED_ALL" || payment.state === "REJECTED_LV2") && (
-                    <Tooltip title={payment.state === "APPROVED_ALL" ? "Đã duyệt" : "Bị từ chối"} arrow>
-                      <span>
-                        <ActionButton
-                          size="small"
-                          disabled
-                          sx={{ color: payment.state === "APPROVED_ALL" ? "success.main" : "error.main" }}
-                        >
-                          {payment.state === "APPROVED_ALL" ? <ApproveIcon fontSize="small" /> : <RejectIcon fontSize="small" />}
-                        </ActionButton>
-                      </span>
-                    </Tooltip>
-                  )}
-
-                  <Tooltip title="Chi tiết" arrow>
-                    <ActionButton
-                      size="small"
-                      onClick={() => handleOpenDetail(payment)}
-                      sx={{
-                        '&:hover': {
-                          backgroundColor: alpha(theme.palette.info.main, 0.1),
-                          color: theme.palette.info.main,
-                        },
-                      }}
-                    >
-                      <InfoIcon fontSize="small" />
-                    </ActionButton>
-                  </Tooltip>
-                  {payment.state === "DRAFT" && (
-                    <Tooltip title="Sửa" arrow>
-                      <ActionButton
-                        size="small"
-                        color="primary"
-                        onClick={() => handleOpenEdit(payment)}
-                        sx={{
-                          '&:hover': {
-                            backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                            transform: 'scale(1.1)',
-                          },
-                        }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </ActionButton>
-                    </Tooltip>
-                  )}
-                  {(payment.state === "DRAFT" || payment.state === "PENDING") && (
-                    <Tooltip title="Xoá" arrow>
-                      <ActionButton
-                        size="small"
-                        onClick={() => handleOpenDeleteConfirm(payment.id)}
-                        sx={{ color: "error.main" }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </ActionButton>
-                    </Tooltip>
-                  )}
                 </Box>
               ),
             },
@@ -1114,6 +1111,27 @@ export default function PaymentApproval() {
                 </FormControl>
               )}
 
+              {/* Chọn Task - Chỉ hiển thị nếu loại là TASK */}
+              {editFormData.type === "TASK" && (
+                <FormControl fullWidth size="small">
+                  <InputLabel id="task-label">Công Việc</InputLabel>
+                  <Select
+                    label="Công Việc *"
+                    name="taskId"
+                    value={editFormData.taskId}
+                    onChange={handleEditInputChange}
+                    onOpen={handleEditTasksOpen}
+                    size="small"
+                    fullWidth
+                  >
+                    {tasks.map((task) => (
+                      <MenuItem key={task.id} value={task.id.toString()}>
+                        {task.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
 
               {/* Số tiền */}
               <TextField
@@ -1361,7 +1379,29 @@ export default function PaymentApproval() {
               </FormControl>
             )}
 
-            
+            {/* Chọn Task - Chỉ hiển thị nếu loại là TASK */}
+            {createFormData.type === "TASK" && (
+              <FormControl fullWidth size="small">
+                <InputLabel id="create-task-label" sx={{ textAlign: 'center' }}>Công Việc</InputLabel>
+                <Select
+                  labelId="create-task-label"
+                  label="Công Việc"
+                  name="taskId"
+                  value={createFormData.taskId}
+                  onChange={handleCreateInputChange}
+                  onOpen={handleCreateTasksOpen}
+                  size="small"
+                  fullWidth
+                  disabled={!createFormData.projectId}
+                >
+                  {tasks.map((task) => (
+                    <MenuItem key={task.id} value={task.id.toString()}>
+                      {task.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
 
 
             {/* Số tiền */}
