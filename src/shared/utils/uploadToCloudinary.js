@@ -10,8 +10,15 @@ export const uploadToCloudinary = async (file) => {
         data.append("upload_preset", "chillnet");
         data.append("cloud_name", "dmgmnyu6k");
 
-        // Xác định loại tài nguyên (image hoặc video)
-        const resourceType = file.type.startsWith("video") ? "video" : "image";
+        // Xác định loại tài nguyên (image, video, hoặc raw cho các file khác)
+        let resourceType = "raw"; // Default to raw for documents
+        
+        if (file.type.startsWith("video")) {
+            resourceType = "video";
+        } else if (file.type.startsWith("image")) {
+            resourceType = "image";
+        }
+        // Các file khác như .doc, .xls, .ppt, .pdf sẽ dùng "raw" resource type
 
         const res = await fetch(`https://api.cloudinary.com/v1_1/dmgmnyu6k/${resourceType}/upload`, {
             method: "POST",

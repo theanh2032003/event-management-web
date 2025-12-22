@@ -34,6 +34,7 @@ import {
   getCurrentDateTimeLocal,
 } from "../../../shared/utils/dateFormatter";
 import projectApi from "../../project/api/project.api";
+import { useToast } from "../../../app/providers/ToastContext";
 
 // Styled Components
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -77,6 +78,7 @@ const StageDialog = ({
   projectId,
 }) => {
   const theme = useTheme();
+  const { showToast } = useToast();
   const [error, setError] = useState("");
   const [stageForm, setStageForm] = useState({
     name: "",
@@ -86,28 +88,26 @@ const StageDialog = ({
     userIds: [],
   });
   const [users, setUsers] = useState([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [usersError, setUsersError] = useState("");
+  const [usersFetched, setUsersFetched] = useState(false);
 
   // Fetch users when dialog opens
   useEffect(() => {
-    if (open && projectId) {
+    if (open) {
       fetchUsers();
     }
   }, [open, projectId]);
 
   const fetchUsers = async () => {
-    setLoadingUsers(true);
-    setUsersError("");
+    // Prevent multiple fetch calls
+    if (usersFetched) return;
+
     try {
       const response = await projectApi.getUsers(projectId);
       setUsers(response.data || response || []);
+      setUsersFetched(true);
     } catch (err) {
-      console.error("Error fetching users:", err);
-      setUsersError("Không thể tải danh sách người dùng");
+      showToast("Không thể tải danh sách người dùng", "error");
       setUsers([]);
-    } finally {
-      setLoadingUsers(false);
     }
   };
 
@@ -194,7 +194,7 @@ const StageDialog = ({
       {/* Header with Gradient */}
       <DialogTitle
         sx={{
-          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.secondary.main, 0.08)})`,
+          background: `${alpha(theme.palette.primary.main, 0.08)}`,
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           display: "flex",
           alignItems: "center",
@@ -203,62 +203,25 @@ const StageDialog = ({
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-            }}
-          >
-            <LayersIcon sx={{ color: "white", fontSize: 28 }} />
-          </Box>
           <Box>
             <Typography variant="h5" fontWeight={700}>
               {stage ? "Chỉnh sửa giai đoạn" : "Tạo giai đoạn mới"}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {stage ? "Cập nhật thông tin giai đoạn" : "Thêm giai đoạn mới vào dự án"}
-            </Typography>
           </Box>
         </Box>
-        <IconButton
-          onClick={handleClose}
-          disabled={submitting}
-          sx={{
-            bgcolor: alpha(theme.palette.grey[500], 0.1),
-            "&:hover": {
-              bgcolor: alpha(theme.palette.grey[500], 0.2),
-            },
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
       </DialogTitle>
 
       <DialogContent sx={{ bgcolor: alpha(theme.palette.background.default, 0.3), py: 3 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, mt: 2 }}>
+
+          {/* Error Alert */}
           {error && (
-            <Alert 
-              severity="error" 
-              onClose={() => setError("")}
-              sx={{ borderRadius: 2 }}
-            >
+            <Alert severity="error" sx={{ borderRadius: 2, mb: 1 }}>
               {error}
             </Alert>
           )}
 
           {/* Basic Info Section */}
-          <StyledPaper elevation={0}>
-            <SectionTitle>
-              <DescriptionIcon fontSize="small" />
-              Thông tin cơ bản
-            </SectionTitle>
-            
             {/* Name */}
             <TextField
               label="Tên giai đoạn"
@@ -271,7 +234,6 @@ const StageDialog = ({
               disabled={submitting}
               placeholder="Nhập tên giai đoạn"
               sx={{
-                mb: 2,
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 2,
                   "&:hover": {
@@ -282,68 +244,20 @@ const StageDialog = ({
                 },
               }}
             />
-
-            {/* Description */}
-            <TextField
-              label="Mô tả"
-              fullWidth
-              required
-              multiline
-              rows={3}
-              value={stageForm.description}
-              onChange={(e) =>
-                setStageForm({
-                  ...stageForm,
-                  description: e.target.value,
-                })
-              }
-              disabled={submitting}
-              placeholder="Mô tả chi tiết về giai đoạn"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                  "&:hover": {
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      borderColor: theme.palette.primary.main,
-                    },
-                  },
-                },
-              }}
-            />
-          </StyledPaper>
 
           {/* Personnel Section */}
-          <StyledPaper elevation={0}>
-            <SectionTitle>
-              <PeopleIcon fontSize="small" />
-              Người tham gia
-              <Chip 
-                label={stageForm.userIds.length} 
-                size="small" 
-                color="primary"
-                sx={{ ml: 1, fontWeight: 700 }}
-              />
-            </SectionTitle>
-            
-            {loadingUsers ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                <CircularProgress size={32} />
-              </Box>
-            ) : usersError ? (
-              <Alert severity="warning" sx={{ borderRadius: 2 }}>{usersError}</Alert>
-            ) : (
-              <Autocomplete
-                multiple
-                fullWidth
-                options={users}
-                getOptionLabel={(option) => option.name || `${option.name} (${option.email})`}
-                value={users.filter((u) => stageForm.userIds.includes(u.id))}
-                onChange={(event, newValue) => {
-                  const ids = newValue.map((user) => user.id);
-                  setStageForm((prev) => ({ ...prev, userIds: ids }));
-                }}
-                disabled={submitting}
-                disablePortal={false}
+            <Autocomplete
+              multiple
+              fullWidth
+              options={users}
+              getOptionLabel={(option) => option.name || `${option.name} (${option.email})`}
+              value={users.filter((u) => stageForm.userIds.includes(u.id))}
+              onChange={(event, newValue) => {
+                const ids = newValue.map((user) => user.id);
+                setStageForm((prev) => ({ ...prev, userIds: ids }));
+              }}
+              disabled={submitting}
+              disablePortal={false}
                 componentsProps={{
                   popper: {
                     placement: 'bottom-start',
@@ -376,7 +290,7 @@ const StageDialog = ({
                     {...params}
                     fullWidth
                     label="Chọn người tham gia"
-                    placeholder="Tìm và chọn thành viên..."
+                    placeholder={stageForm.userIds.length === 0 ? "Tìm và chọn thành viên..." : ""}
                     InputLabelProps={{
                       ...params.InputLabelProps,
                       sx: {
@@ -433,77 +347,91 @@ const StageDialog = ({
                   </Box>
                 )}
               />
-            )}
-          </StyledPaper>
 
           {/* Time Schedule Section */}
-          <StyledPaper elevation={0}>
-            <SectionTitle>
-              <CalendarIcon fontSize="small" />
-              Thời gian thực hiện
-            </SectionTitle>
-            
-            <Grid container spacing={2}>
-              {/* Start time */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Thời gian bắt đầu"
-                  type="datetime-local"
-                  fullWidth
-                  required
-                  value={stageForm.startedAt || ""}
-                  onChange={(e) =>
-                    setStageForm({
-                      ...stageForm,
-                      startedAt: e.target.value,
-                    })
-                  }
-                  disabled={submitting}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ step: 60 }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                      "&:hover": {
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          borderColor: theme.palette.primary.main,
-                        },
-                      },
-                    },
-                  }}
-                />
-              </Grid>
+        {/* Start time */}
+          <TextField
+            label="Thời gian bắt đầu"
+            type="datetime-local"
+            fullWidth
+            required
+            value={stageForm.startedAt || ""}
+            onChange={(e) =>
+              setStageForm({
+                ...stageForm,
+                startedAt: e.target.value,
+              })
+            }
+            disabled={submitting}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ step: 60 }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                "&:hover": {
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: theme.palette.primary.main,
+                  },
+                },
+              },
+            }}
+          />
 
-              {/* End time */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Thời gian kết thúc"
-                  type="datetime-local"
-                  fullWidth
-                  required
-                  value={stageForm.endedAt || ""}
-                  onChange={(e) =>
-                    setStageForm({ ...stageForm, endedAt: e.target.value })
-                  }
-                  disabled={submitting}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ step: 60 }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                      "&:hover": {
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          borderColor: theme.palette.primary.main,
-                        },
-                      },
+        {/* End time */}
+          <TextField
+            label="Thời gian kết thúc"
+            type="datetime-local"
+            fullWidth
+            required
+            value={stageForm.endedAt || ""}
+            onChange={(e) =>
+              setStageForm({ ...stageForm, endedAt: e.target.value })
+            }
+            disabled={submitting}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ step: 60 }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                "&:hover": {
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: theme.palette.primary.main,
+                  },
+                },
+              },
+            }}
+          />
+
+                      {/* Description */}
+            <TextField
+              label="Mô tả"
+              fullWidth
+              required
+              multiline
+              rows={3}
+              value={stageForm.description}
+              onChange={(e) =>
+                setStageForm({
+                  ...stageForm,
+                  description: e.target.value,
+                })
+              }
+              disabled={submitting}
+              placeholder="Mô tả chi tiết về giai đoạn"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  "&:hover": {
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: theme.palette.primary.main,
                     },
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </StyledPaper>
+                  },
+                },
+              }}
+            />
         </Box>
       </DialogContent>
+
       
       {/* Footer with Gradient */}
       <DialogActions
@@ -511,14 +439,13 @@ const StageDialog = ({
           px: 3,
           py: 2,
           borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.95)}, ${alpha(theme.palette.background.default, 0.9)})`,
+          background: `${alpha(theme.palette.background.paper, 0.95)}`,
           gap: 1.5,
         }}
       >
         <Button
           onClick={handleClose}
           disabled={submitting}
-          startIcon={<CloseIcon />}
           size="large"
           sx={{
             borderRadius: 2,
@@ -533,17 +460,17 @@ const StageDialog = ({
           onClick={handleSave}
           variant="contained"
           disabled={submitting}
-          startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+          startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : null}
           size="large"
           sx={{
             borderRadius: 2,
             px: 3,
             textTransform: "none",
             fontWeight: 600,
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            background: `${theme.palette.primary.main}`,
             boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
             "&:hover": {
-              background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
+              background: `${theme.palette.primary.dark}`,
               boxShadow: `0 6px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
             },
           }}

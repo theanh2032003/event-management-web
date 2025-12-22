@@ -17,6 +17,11 @@ const stageApi = {
     return axiosClient.get(url, { params });
   },
 
+  getById: (projectId, stageId) => {
+    const url = `/project/${projectId}/stage/${stageId}`;
+    return axiosClient.get(url);
+  },
+
   /**
    * Tạo giai đoạn mới
    * POST /event-manage/project/{projectId}/stage

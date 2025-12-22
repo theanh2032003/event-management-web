@@ -34,6 +34,10 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Image as ImageIcon,
+  VideoLibrary as VideoIcon,
+  Description as FileIcon,
+  InsertDriveFile as GenericFileIcon,
+  OpenInNew as OpenInNewIcon,
 } from "@mui/icons-material";
 import { formatDateTime } from "../../../shared/utils/dateFormatter";
 import taskApi from "../api/task.api";
@@ -148,8 +152,6 @@ export default function TaskDetailDrawer({
   const theme = useTheme();
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [statusDropdownValue, setStatusDropdownValue] = useState('');
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   
   // State for task detail
   const [taskDetail, setTaskDetail] = useState(null);
@@ -188,7 +190,6 @@ export default function TaskDetailDrawer({
   const handleDrawerClose = () => {
     setMenuAnchor(null);
     setStatusDropdownValue('');
-    setDeleteConfirmOpen(false);
     setTaskDetail(null);
     setDetailError(null);
     onClose();
@@ -202,6 +203,24 @@ export default function TaskDetailDrawer({
     { value: 'CANCELLED', label: 'Hủy bỏ' },
   ];
 
+  // Get file extension from URL
+  const getFileExtension = (url) => {
+    return url.split('.').pop().split('?')[0].toLowerCase();
+  };
+
+  // Get icon based on file type
+  const getFileIcon = (url) => {
+    const ext = getFileExtension(url);
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    const videoExts = ['mp4', 'avi', 'mov', 'mkv', 'webm'];
+    const docExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+
+    if (imageExts.includes(ext)) return <ImageIcon />;
+    if (videoExts.includes(ext)) return <VideoIcon />;
+    if (docExts.includes(ext)) return <FileIcon />;
+    return <GenericFileIcon />;
+  };
+
   // Update task status
   const updateTaskStatus = async (taskId, newStatus) => {
     if (onChangeStatus) {
@@ -212,8 +231,6 @@ export default function TaskDetailDrawer({
       }
     }
   };
-
-
 
   // Confirm delete
   const handleConfirmDelete = async () => {
@@ -295,8 +312,8 @@ export default function TaskDetailDrawer({
           <Divider sx={{ my: 0.5 }} />
           <MenuItem
             onClick={() => {
-              setDeleteConfirmOpen(true);
               setMenuAnchor(null);
+              onDelete(taskDetail || task);
             }}
             sx={{ color: "error.main" }}
           >
@@ -514,16 +531,105 @@ export default function TaskDetailDrawer({
           {/* Attachments */}
           {displayTask.images?.length > 0 && (
             <Box sx={{ mb: 2 }}>
-              <SectionTitle sx={{ fontSize: "0.9rem", fontWeight: 600, mb: 1 }}>Tệp đính kèm</SectionTitle>
-              <ImageGrid>
-                {displayTask.images.map((image, idx) => (
-                  <ImageThumbnail 
-                    key={idx} 
-                    src={typeof image === 'string' ? image : (image.url || image)} 
-                    alt={`Attachment ${idx + 1}`} 
-                  />
-                ))}
-              </ImageGrid>
+              <SectionTitle sx={{ fontSize: "0.9rem", fontWeight: 600, mb: 1 }}>Tệp đính kèm ({displayTask.images.length})</SectionTitle>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 1.5 }}>
+                {displayTask.images.map((fileUrl, index) => {
+                  const url = typeof fileUrl === 'string' ? fileUrl : (fileUrl.url || fileUrl);
+                  const ext = getFileExtension(url);
+                  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext);
+                  
+                  return (
+                    <Box
+                      key={index}
+                      sx={{
+                        position: 'relative',
+                        width: '100%',
+                        paddingBottom: '100%',
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        bgcolor: alpha(theme.palette.background.default, 0.8),
+                        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          transform: 'scale(1.05)',
+                          borderColor: theme.palette.primary.main,
+                        },
+                        '&:hover .file-actions': {
+                          opacity: 1,
+                        }
+                      }}
+                    >
+                      {isImage ? (
+                        <img
+                          src={url}
+                          alt={`File ${index + 1}`}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 0.5,
+                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          }}
+                        >
+                          <Box sx={{ color: theme.palette.primary.main, display: 'flex', alignItems: 'center' }}>
+                            {getFileIcon(url)}
+                          </Box>
+                          <Typography variant="caption" sx={{ fontSize: '9px', textAlign: 'center', px: 0.5 }}>
+                            {ext.toUpperCase()}
+                          </Typography>
+                        </Box>
+                      )}
+                      <Box
+                        className="file-actions"
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 0.5,
+                          bgcolor: alpha(theme.palette.common.black, 0.5),
+                          opacity: 0,
+                          transition: 'opacity 0.3s ease',
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          sx={{ color: 'white' }}
+                          onClick={() => window.open(url, '_blank')}
+                          title="Xem file"
+                        >
+                          <OpenInNewIcon sx={{ fontSize: '1.2rem' }} />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
             </Box>
           )}
             </>
@@ -531,39 +637,6 @@ export default function TaskDetailDrawer({
 
         </DrawerContent>
       </Drawer>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog 
-        open={deleteConfirmOpen} 
-        onClose={() => setDeleteConfirmOpen(false)}
-        sx={{
-          zIndex: 9999,
-        }}
-        BackdropProps={{
-          sx: { zIndex: 9998 }
-        }}
-        PaperProps={{
-          sx: { zIndex: 9999 }
-        }}
-      >
-        <DialogTitle>Xác nhận xóa công việc</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Bạn có chắc muốn xóa công việc "{task.name}"? Hành động này không thể hoàn tác.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteConfirmOpen(false)}>Hủy</Button>
-          <Button
-            onClick={handleConfirmDelete}
-            color="error"
-            variant="contained"
-            disabled={submitting}
-          >
-            {submitting ? <CircularProgress size={20} /> : "Xóa"}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 }

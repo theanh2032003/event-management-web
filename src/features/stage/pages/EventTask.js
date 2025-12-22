@@ -5,7 +5,10 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   useMediaQuery,
   useTheme,
   Paper,
@@ -22,6 +25,7 @@ import {
   Inbox as InboxIcon,
 } from "@mui/icons-material";
 import { useParams } from "react-router-dom";
+import { useToast } from "../../../app/providers/ToastContext";
 import stageApi from "../api/stage.api";
 import projectApi from "../../project/api/project.api";
 import groupTaskTypeApi from "../../type_setting/api/groupTaskTypeApi";
@@ -82,6 +86,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   const { eventId, id: paramsEnterpriseId } = useParams();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { showToast } = useToast();
 
   // Use projectId and enterpriseId from props if provided, otherwise use params
   const projectId = propProjectId || eventId;
@@ -95,11 +100,11 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   const [error, setError] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedStage, setSelectedStage] = useState(null);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+  
+  // Delete confirmation dialog states
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteType, setDeleteType] = useState(null); // 'stage' or 'task'
 
   // Dialog states
   const [editingTask, setEditingTask] = useState(null);
@@ -144,7 +149,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
     } catch (err) {
       console.error("❌ Error fetching stages:", err);
       setError(err.message || "Không thể tải danh sách giai đoạn");
-      showSnackbar("Không thể tải danh sách giai đoạn", "error");
+      showToast("Không thể tải danh sách giai đoạn", "error");
     } finally {
       setLoading(false);
     }
@@ -262,18 +267,18 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       if (stageId) {
         // Update
         await stageApi.update(eventId, stageId, payload);
-        showSnackbar("Cập nhật giai đoạn thành công", "success");
+        showToast("Cập nhật giai đoạn thành công", "success");
       } else {
         // Create
         await stageApi.create(eventId, payload);
-        showSnackbar("Tạo giai đoạn thành công", "success");
+        showToast("Tạo giai đoạn thành công", "success");
       }
 
       setDialogOpen(false);
       setSelectedStage(null);
       fetchStages();
     } catch (err) {
-      showSnackbar(
+      showToast(
         err.message || "Không thể lưu giai đoạn",
         "error"
       );
@@ -286,18 +291,29 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
    * Handle delete stage
    */
   const handleDeleteStage = async (stage) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa giai đoạn "${stage.name}"?`)) {
-      return;
-    }
+    setItemToDelete(stage);
+    setDeleteType('stage');
+    setDeleteConfirmOpen(true);
+  };
+
+  /**
+   * Confirm delete stage
+   */
+  const handleConfirmDeleteStage = async () => {
+    if (!itemToDelete) return;
 
     try {
-      await stageApi.delete(eventId, stage.id);
-      showSnackbar("Xóa giai đoạn thành công", "success");
+      await stageApi.delete(eventId, itemToDelete.id);
+      showToast("Xóa giai đoạn thành công", "success");
       fetchStages();
     } catch (err) {
       // Check for specific error message from backend
       const errorMessage = err.response?.data?.message || "Không thể xóa giai đoạn";
-      showSnackbar(errorMessage, "error");
+      showToast(errorMessage, "error");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setItemToDelete(null);
+      setDeleteType(null);
     }
   };
 
@@ -323,7 +339,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
 
       // Call API to update stage status
       await stageApi.updateStatus(eventId, stage.id, newStatus);
-      showSnackbar("Cập nhật trạng thái giai đoạn thành công", "success");
+      showToast("Cập nhật trạng thái giai đoạn thành công", "success");
     } catch (err) {
       // Revert on error
       setStages(prev =>
@@ -334,7 +350,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
         )
       );
       const errorMessage = err.response?.data?.message || "Không thể cập nhật trạng thái giai đoạn";
-      showSnackbar(errorMessage, "error");
+      showToast(errorMessage, "error");
     }
   };
 
@@ -346,7 +362,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
     
     if (!task || !task.id) {
       console.error("❌ Task or task.id is undefined:", task);
-      showSnackbar("Lỗi: Không xác định được công việc", "error");
+      showToast("Lỗi: Không xác định được công việc", "error");
       return;
     }
     
@@ -382,7 +398,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       // Call API in background to update task status only
       await taskApi.updateStatus(task.id, newStatus);
       console.log("✅ Task status updated successfully");
-      showSnackbar("Cập nhật trạng thái công việc thành công", "success");
+      showToast("Cập nhật trạng thái công việc thành công", "success");
     } catch (err) {
       console.error("❌ Error updating task status:", err);
       console.error("❌ Error response:", err.response?.data);
@@ -409,7 +425,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
       );
       
       const errorMessage = err.response?.data?.message || err.message || "Không thể cập nhật trạng thái công việc";
-      showSnackbar(errorMessage, "error");
+      showToast(errorMessage, "error");
     }
   };
 
@@ -422,55 +438,69 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   };
 
   /**
-   * Open dialog for editing stage
+   * Fetch stage detail by ID and users
    */
-  const handleEditStage = (stage) => {
-    setSelectedStage(stage);
-    setDialogOpen(true);
+  const fetchStageDetail = async (stageId) => {
+    try {
+      // Fetch stage detail and users in parallel
+      const [stageResponse, usersResponse] = await Promise.all([
+        stageApi.getById(eventId, stageId),
+        stageApi.getUsers(eventId, stageId),
+      ]);
+
+      const stageDetail = stageResponse.data || stageResponse;
+      const stageUsers = usersResponse.data || usersResponse || [];
+
+      // Map user IDs from users list
+      const userIds = stageUsers.map((user) => user.id);
+
+      // Merge user information into stage detail
+      return {
+        ...stageDetail,
+        users: stageUsers,
+        userIds: userIds,
+      };
+    } catch (err) {
+      console.error("Error fetching stage detail:", err);
+      showToast("Không thể tải chi tiết giai đoạn", "error");
+      return null;
+    }
   };
 
   /**
-   * Handle create task - add to local state without refetch
+   * Open dialog for editing stage
+   */
+  const handleEditStage = async (stage) => {
+    try {
+      // Fetch detailed stage information
+      const stageDetail = await fetchStageDetail(stage.id);
+      if (stageDetail) {
+        setSelectedStage(stageDetail);
+        setDialogOpen(true);
+      }
+    } catch (err) {
+      showToast("Không thể mở dialog chỉnh sửa giai đoạn", "error");
+    }
+  };
+
+  /**
+   * Handle create task - create then fetch updated list
    */
   const handleCreateTask = async (stageId, taskData) => {
     setSubmittingTask(true);
     try {
-      const taskResponse = await taskApi.create(taskData);
-      const responseData = taskResponse.data || taskResponse.data?.data || {};
-
-     
+      await taskApi.create(taskData);
       
-      // Merge response with original taskData to ensure all fields are present
-      const newTask = {
-        ...taskData,
-        ...responseData,
-        // Ensure startedAt/endedAt are preserved if missing from response
-        startedAt: responseData.startedAt || taskData.startedAt || taskData.startAt,
-        endedAt: responseData.endedAt || taskData.endedAt || taskData.endAt,
-        // Ensure supplier data is preserved
-        supplierId: responseData.supplierId || taskData.supplierId,
-        supplier: responseData.supplier || (taskData.supplierId ? { id: taskData.supplierId } : null),
-      };
-
-      // Add new task to local state
-      setStages(prev =>
-        prev.map(stage =>
-          stage.id === stageId && stage.tasks
-            ? {
-                ...stage,
-                tasks: [...stage.tasks, newTask],
-              }
-            : stage
-        )
-      );
-
-      showSnackbar("Tạo công việc thành công", "success");
+      showToast("Tạo công việc thành công", "success");
       setCreateTaskDialogOpen(false);
       setNewTaskData({ stageId: null, taskTypeId: null, stageName: '' });
-      return newTask;
+      
+      // Fetch updated task list for this stage
+      await fetchTasksForStage(stageId);
+      
+      return true;
     } catch (err) {
-      console.error("❌ Error creating task:", err);
-      showSnackbar(err.message || "Không thể tạo công việc", "error");
+      showToast(err.message || "Không thể tạo công việc", "error");
       throw err;
     } finally {
       setSubmittingTask(false);
@@ -482,6 +512,12 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
    */
   const handleEditTask = (task) => {
     if (!task) return;
+    
+    // Validate that task has ID
+    if (!task.id) {
+      showToast("Lỗi: Không xác định được ID công việc", "error");
+      return;
+    }
     
     // Find stage of this task
     const stage = stages.find(s => s.tasks?.some(t => t.id === task.id));
@@ -498,53 +534,56 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
   };
 
   /**
-   * Handle save edited task
+   * Handle open edit task dialog from drawer
+   */
+  const handleEditTaskFromDrawer = async (task) => {
+    if (!task || !task.id) {
+      showToast("Lỗi: Không xác định được công việc", "error");
+      return;
+    }
+
+    // Find stage of this task
+    const stage = stages.find(s => s.tasks?.some(t => t.id === task.id));
+
+    // Set task data for editing
+    setNewTaskData({
+      stageId: task.stageId || stage?.id,
+      taskTypeId: task.typeId || task.taskType?.id,
+      stageName: stage?.name || '',
+    });
+    setEditingTask(task);
+    setCreateTaskDialogOpen(true);
+    setTaskDetailOpen(false); // Close drawer when opening edit dialog
+  };
+
+  /**
+   * Handle save edited task - update then fetch list
    */
   const handleSaveEditTask = async (taskData) => {
     if (!editingTask) return;
+    
+    // Validate that editingTask has ID
+    if (!editingTask.id) {
+      showToast("Lỗi: Không xác định được ID công việc", "error");
+      return;
+    }
+
+    const stageId = editingTask.stageId || stages.find(s => s.tasks?.some(t => t.id === editingTask.id))?.id;
 
     try {
-  
-      // Merge updated data with existing task to preserve all fields
-      const updatedTask = {
-        ...editingTask,
-        ...taskData,
-        // Ensure startedAt/endedAt are preserved
-        startedAt: taskData.startedAt || taskData.startAt || editingTask.startedAt,
-        endedAt: taskData.endedAt || taskData.endAt || editingTask.endedAt,
-        // Ensure supplier data is preserved
-        supplierId: taskData.supplierId !== undefined ? taskData.supplierId : editingTask.supplierId,
-        supplier: taskData.supplierId ? { id: taskData.supplierId, ...(editingTask.supplier || {}) } : editingTask.supplier,
-      };
+      // Call API to update task
+      await taskApi.update(editingTask.id, taskData);
       
-      // Update local state immediately
-      setStages(prev =>
-        prev.map(stage =>
-          stage.tasks
-            ? {
-                ...stage,
-                tasks: stage.tasks.map(t =>
-                  t.id === editingTask.id 
-                    ? updatedTask
-                    : t
-                ),
-              }
-            : stage
-        )
-      );
-
-      // Call API in background
-      const updateResponse = await taskApi.update(editingTask.id, taskData);
+      showToast("Cập nhật công việc thành công", "success");
+      setCreateTaskDialogOpen(false);
+      setEditingTask(null);
       
-      
-      showSnackbar("Cập nhật công việc thành công", "success");
-    } catch (err) {
-      // Revert on error - refetch for this stage
-      const taskStageId = stages.find(s => s.tasks?.some(t => t.id === editingTask.id))?.id;
-      if (taskStageId) {
-        fetchTasksForStage(taskStageId);
+      // Fetch updated task list for this stage
+      if (stageId) {
+        await fetchTasksForStage(stageId);
       }
-      showSnackbar(err.message || "Không thể cập nhật công việc", "error");
+    } catch (err) {
+      showToast(err.message || "Không thể cập nhật công việc", "error");
       throw err;
     }
   };
@@ -553,46 +592,60 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
    * Handle delete task - remove from local state only
    */
   const handleDeleteTask = async (task) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa công việc "${task.name}"?`)) {
-      return;
-    }
+    setItemToDelete(task);
+    setDeleteType('task');
+    setDeleteConfirmOpen(true);
+  };
+
+  /**
+   * Handle delete task from drawer - close drawer first, then show confirmation
+   */
+  const handleDeleteTaskFromDrawer = async (task) => {
+    // Close drawer first
+    setTaskDetailOpen(false);
+    setSelectedTask(null);
+    
+    // Then open delete confirmation dialog
+    setItemToDelete(task);
+    setDeleteType('task');
+    setDeleteConfirmOpen(true);
+  };
+
+  /**
+   * Handle confirm delete task - delete then fetch list
+   */
+  const handleConfirmDeleteTask = async () => {
+    if (!itemToDelete || !itemToDelete.id) return;
+
+    const stageId = itemToDelete.stageId || stages.find(s => s.tasks?.some(t => t.id === itemToDelete.id))?.id;
 
     try {
-      // Remove from local state immediately
-      setStages(prev =>
-        prev.map(stage =>
-          stage.tasks
-            ? {
-                ...stage,
-                tasks: stage.tasks.filter(t => t.id !== task.id),
-              }
-            : stage
-        )
-      );
-
-      // Call API in background
-      await taskApi.delete(task.id);
-      showSnackbar("Xóa công việc thành công", "success");
+      // Call API to delete
+      await taskApi.delete(itemToDelete.id);
+      showToast("Xóa công việc thành công", "success");
+      
+      // Fetch updated task list for this stage
+      if (stageId) {
+        await fetchTasksForStage(stageId);
+      }
     } catch (err) {
-      // Revert on error
-      fetchTasksForStage(task.stageId || stages.find(s => s.tasks?.some(t => t.id === task.id))?.id);
-      console.error("❌ Error deleting task:", err);
-      showSnackbar(err.message || "Không thể xóa công việc", "error");
+      showToast(err.message || "Không thể xóa công việc", "error");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setItemToDelete(null);
+      setDeleteType(null);
     }
   };
 
-  /**
-   * Show snackbar notification
-   */
-  const showSnackbar = (message, severity = "success") => {
-    setSnackbar({ open: true, message, severity });
-  };
+
 
   /**
-   * Close snackbar
+   * Close delete confirmation dialog
    */
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+  const handleCloseDeleteConfirm = () => {
+    setDeleteConfirmOpen(false);
+    setItemToDelete(null);
+    setDeleteType(null);
   };
 
   return (
@@ -609,7 +662,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           Thêm giai đoạn
         </StyledButton>
       </Box>
-      {/* Error Alert */}
+      {/* Error Alert
       {error && (
         <Alert 
           severity="error" 
@@ -621,7 +674,7 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
         >
           {error}
         </Alert>
-      )}
+      )} */}
 
       {/* Content - Luôn hiển thị, không cần alert quyền */}
       <>
@@ -642,9 +695,22 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
             onDeleteStage={handleDeleteStage}
             onChangeStageStatus={handleChangeStageStatus}
             onChangeTaskStatus={handleChangeTaskStatus}
-            onSelectTask={(task) => {
-              setSelectedTask(task);
-              setTaskDetailOpen(true);
+            onSelectTask={async (task) => {
+              // Fetch task detail before opening drawer
+              if (!task || !task.id) {
+                showToast("Lỗi: Không xác định được công việc", "error");
+                return;
+              }
+              
+              try {
+                const taskDetail = await taskApi.getById(task.id);
+                const detailedTask = taskDetail.data || taskDetail || task;
+                setSelectedTask(detailedTask);
+                setTaskDetailOpen(true);
+              } catch (err) {
+                console.error("Error fetching task detail:", err);
+                showToast("Không thể tải chi tiết công việc", "error");
+              }
             }}
             onToggleStage={fetchTasksForStage}
             onAddTask={(stageId, taskTypeId) => {
@@ -704,29 +770,56 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
           }}
           stageName={stages.find(s => s.tasks?.some(t => t.id === selectedTask?.id))?.name || ""}
           task={selectedTask}
-          onEdit={handleEditTask}
-          onDelete={handleDeleteTask}
+          onEdit={handleEditTaskFromDrawer}
+          onDelete={handleDeleteTaskFromDrawer}
           onChangeStatus={handleChangeTaskStatus}
           users={[]}
           taskTypes={taskTypes}
           taskStates={TASK_STATES}
         />
 
-        {/* Snackbar */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={4000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteConfirmOpen}
+          onClose={handleCloseDeleteConfirm}
+          maxWidth="sm"
+          fullWidth
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbar.severity}
-            sx={{ width: "100%" }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+          <DialogTitle sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
+            {deleteType === 'stage' ? 'Xóa giai đoạn' : 'Xóa công việc'}
+          </DialogTitle>
+          <DialogContent sx={{ pt: 2 }}>
+            <Typography>
+              {deleteType === 'stage'
+                ? `Bạn có chắc muốn xóa giai đoạn "${itemToDelete?.name}"? Hành động này không thể hoàn tác.`
+                : `Bạn có chắc muốn xóa công việc "${itemToDelete?.name}"? Hành động này không thể hoàn tác.`
+              }
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
+            <Button
+              onClick={handleCloseDeleteConfirm}
+              variant="outlined"
+              sx={{ textTransform: 'none', fontWeight: 600 }}
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={() => {
+                if (deleteType === 'stage') {
+                  handleConfirmDeleteStage();
+                } else {
+                  handleConfirmDeleteTask();
+                }
+              }}
+              variant="contained"
+              color="error"
+              sx={{ textTransform: 'none', fontWeight: 600 }}
+            >
+              Xóa
+            </Button>
+          </DialogActions>
+        </Dialog>
       </>
     </Box>
   );

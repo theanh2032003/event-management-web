@@ -15,7 +15,6 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
-import Snackbar from '@mui/material/Snackbar';
 import AddIcon from '@mui/icons-material/Add';
 import CircularProgress from '@mui/material/CircularProgress';
 import Chip from '@mui/material/Chip';
@@ -30,6 +29,7 @@ import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
+import ClearIcon from '@mui/icons-material/Clear';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import LanguageIcon from '@mui/icons-material/Language';
@@ -37,6 +37,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import BadgeIcon from '@mui/icons-material/Badge';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useToast } from '../../../app/providers/ToastContext';
 import authApi from '../../auth/api/auth.api';
 import enterpriseApi from '../../enterprise/api/enterprise.api';
 import supplierApi from '../../supplier/api/supplier.api';
@@ -308,6 +309,7 @@ export default function SelectWorkspacePage() {
   const theme = useTheme();
   const auth = useAuth();
   const permissionContext = useContext(PermissionContext);
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = React.useState('company');
   const [suppliers, setSuppliers] = React.useState([]);
   const [companies, setCompanies] = React.useState([]);
@@ -348,11 +350,6 @@ export default function SelectWorkspacePage() {
   const [avatarFile, setAvatarFile] = React.useState(null);
   const [avatarPreview, setAvatarPreview] = React.useState(null);
   const [uploadingAvatar, setUploadingAvatar] = React.useState(false);
-  const [snackbar, setSnackbar] = React.useState({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
 
   const fetchWorkspaces = React.useCallback(async () => {
     try {
@@ -517,11 +514,7 @@ export default function SelectWorkspacePage() {
         errorMessage = error.message;
       }
       
-      setSnackbar({
-        open: true,
-        message: errorMessage,
-        severity: 'error'
-      });
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -735,11 +728,7 @@ export default function SelectWorkspacePage() {
           ...prev,
           avatar: uploadedUrl
         }));
-        setSnackbar({
-          open: true,
-          message: 'Tải ảnh lên thành công!',
-          severity: 'success'
-        });
+        showToast('Tải ảnh lên thành công!', 'success');
       } else {
         setFormErrors(prev => ({
           ...prev,
@@ -837,11 +826,7 @@ export default function SelectWorkspacePage() {
         // Call API to create new supplier
         const response = await supplierApi.createSupplier(submitData);
         
-        setSnackbar({
-          open: true,
-          message: 'Tạo nhà cung cấp thành công!',
-          severity: 'success'
-        });
+        showToast('Tạo nhà cung cấp thành công!', 'success');
         
         // Reload suppliers list
         await fetchWorkspaces();
@@ -851,11 +836,7 @@ export default function SelectWorkspacePage() {
         // Call API to create new enterprise
         const response = await enterpriseApi.createEnterprise(submitData);
         
-        setSnackbar({
-          open: true,
-          message: 'Tạo doanh nghiệp thành công!',
-          severity: 'success'
-        });
+        showToast('Tạo doanh nghiệp thành công!', 'success');
         
         // Reload enterprises list
         await fetchWorkspaces();
@@ -863,9 +844,6 @@ export default function SelectWorkspacePage() {
         handleCloseDialog();
       }
     } catch (error) {
-      console.error('❌ Create error:', error);
-      console.error('❌ Error response:', error?.response);
-      console.error('❌ Error data:', error?.response?.data);
       
       // Extract error message from response and update form errors
       let errorMessage = `Không thể tạo ${dialogType === 'supplier' ? 'nhà cung cấp' : 'doanh nghiệp'}.`;
@@ -912,18 +890,10 @@ export default function SelectWorkspacePage() {
         errorMessage = error.message;
       }
       
-      setSnackbar({
-        open: true,
-        message: errorMessage,
-        severity: 'error'
-      });
+      showToast(errorMessage, 'error');
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   return (
@@ -1116,11 +1086,10 @@ export default function SelectWorkspacePage() {
         open={openDialog}
         onClose={handleCloseDialog}
         maxWidth="sm"
-        fullWidth
-        fullScreen={theme.breakpoints.down('sm')}
         PaperProps={{
           sx: {
-            borderRadius: { xs: 0, sm: 3 },
+            width: { xs: '100%', sm: 720 },
+            maxHeight: '90vh',
           },
         }}
       >
@@ -1139,22 +1108,6 @@ export default function SelectWorkspacePage() {
               : `linear-gradient(135deg, ${theme.palette.secondary.main}08, transparent)`,
           }}
         >
-          <Box
-            sx={{
-              p: 1,
-              borderRadius: 1.5,
-              backgroundColor: dialogType === 'supplier' ? 'primary.light' : 'secondary.light',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {dialogType === 'supplier' ? (
-              <StoreIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-            ) : (
-              <BusinessIcon sx={{ color: 'secondary.main', fontSize: 24 }} />
-            )}
-          </Box>
           Tạo {dialogType === 'supplier' ? 'nhà cung cấp' : 'doanh nghiệp'} mới
         </DialogTitle>
         <DialogContent>
@@ -1175,18 +1128,6 @@ export default function SelectWorkspacePage() {
                 error={!!formErrors.name}
                 helperText={formErrors.name}
                 placeholder={dialogType === 'supplier' ? 'Nhập tên nhà cung cấp' : 'Nhập tên doanh nghiệp'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <BadgeIcon 
-                        sx={{ 
-                          color: formErrors.name ? 'error.main' : 'action.active',
-                          fontSize: 20
-                        }} 
-                      />
-                    </InputAdornment>
-                  ),
-                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -1221,20 +1162,8 @@ export default function SelectWorkspacePage() {
                 type="email"
                 required
                 error={!!formErrors.email}
-                helperText={formErrors.email || 'Email sẽ được sử dụng để liên hệ'}
+                helperText={formErrors.email}
                 placeholder="example@email.com"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon 
-                        sx={{ 
-                          color: formErrors.email ? 'error.main' : 'action.active',
-                          fontSize: 20
-                        }} 
-                      />
-                    </InputAdornment>
-                  ),
-                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -1267,20 +1196,8 @@ export default function SelectWorkspacePage() {
                 fullWidth
                 variant="outlined"
                 error={!!formErrors.phone}
-                helperText={formErrors.phone || 'Nhập số điện thoại 10 số bắt đầu bằng 0 (VD: 0123456789)'}
+                helperText={formErrors.phone}
                 placeholder="0123456789"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PhoneIcon 
-                        sx={{ 
-                          color: formErrors.phone ? 'error.main' : 'action.active',
-                          fontSize: 20
-                        }} 
-                      />
-                    </InputAdornment>
-                  ),
-                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -1313,18 +1230,6 @@ export default function SelectWorkspacePage() {
                 fullWidth
                 variant="outlined"
                 placeholder="Nhập mã số thuế (tùy chọn)"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <ReceiptIcon 
-                        sx={{ 
-                          color: 'action.active',
-                          fontSize: 20
-                        }} 
-                      />
-                    </InputAdornment>
-                  ),
-                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -1357,20 +1262,8 @@ export default function SelectWorkspacePage() {
                 fullWidth
                 variant="outlined"
                 error={!!formErrors.website}
-                helperText={formErrors.website || 'URL website của bạn (tùy chọn)'}
+                helperText={formErrors.website }
                 placeholder="https://example.com"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LanguageIcon 
-                        sx={{ 
-                          color: formErrors.website ? 'error.main' : 'action.active',
-                          fontSize: 20
-                        }} 
-                      />
-                    </InputAdornment>
-                  ),
-                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -1393,7 +1286,7 @@ export default function SelectWorkspacePage() {
             {/* Fanpage */}
             <FormControl fullWidth>
               <FormLabel htmlFor="fanpage" sx={{ mb: 1, fontWeight: 600, fontSize: '0.875rem' }}>
-                Fanpage Facebook
+                Fanpage
               </FormLabel>
               <TextField
                 id="fanpage"
@@ -1403,20 +1296,8 @@ export default function SelectWorkspacePage() {
                 fullWidth
                 variant="outlined"
                 error={!!formErrors.fanpage}
-                helperText={formErrors.fanpage || 'URL fanpage Facebook (tùy chọn)'}
+                helperText={formErrors.fanpage}
                 placeholder="https://facebook.com/yourpage"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FacebookIcon 
-                        sx={{ 
-                          color: formErrors.fanpage ? 'error.main' : 'action.active',
-                          fontSize: 20
-                        }} 
-                      />
-                    </InputAdornment>
-                  ),
-                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -1451,18 +1332,6 @@ export default function SelectWorkspacePage() {
                 multiline
                 rows={4}
                 placeholder="Nhập mô tả về nhà cung cấp/doanh nghiệp của bạn (tùy chọn)"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start" sx={{ alignSelf: 'flex-start', pt: 1.5 }}>
-                      <DescriptionIcon 
-                        sx={{ 
-                          color: 'action.active',
-                          fontSize: 20
-                        }} 
-                      />
-                    </InputAdornment>
-                  ),
-                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -1484,134 +1353,105 @@ export default function SelectWorkspacePage() {
             </FormControl>
 
             {/* Avatar Upload */}
-            <FormControl fullWidth>
+            <FormControl>
               <FormLabel htmlFor="avatar" sx={{ mb: 1, fontWeight: 600, fontSize: '0.875rem' }}>
-                Ảnh đại diện
+                Logo
               </FormLabel>
               
-              {avatarPreview ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 <Box
+                  component="label"
                   sx={{
                     position: 'relative',
-                    width: '100%',
+                    width: 120,
+                    height: 120,
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    border: 2,
+                    borderColor: formErrors.avatar ? 'error.main' : 'divider',
+                    backgroundColor: 'action.hover',
+                    cursor: uploadingAvatar ? 'not-allowed' : 'pointer',
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      borderColor: uploadingAvatar ? (formErrors.avatar ? 'error.main' : 'divider') : 'primary.main',
+                      backgroundColor: uploadingAvatar ? 'action.hover' : 'action.selected',
+                      '& .delete-icon': {
+                        opacity: 1,
+                      }
+                    },
                   }}
                 >
-                  <Box
-                    sx={{
-                      position: 'relative',
-                      width: '100%',
-                      maxWidth: 200,
-                      mx: 'auto',
-                      borderRadius: 2,
-                      overflow: 'hidden',
-                      border: 2,
-                      borderColor: 'divider',
-                    }}
-                  >
-                    <img
-                      src={avatarPreview}
-                      alt="Avatar preview"
-                      style={{
-                        width: '100%',
-                        height: 'auto',
-                        display: 'block',
-                      }}
-                    />
-                    {uploadingAvatar && (
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                  {avatarPreview ? (
+                    <>
+                      <img
+                        src={avatarPreview}
+                        alt="Avatar preview"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
                         }}
-                      >
-                        <CircularProgress size={40} sx={{ color: 'white' }} />
-                      </Box>
-                    )}
-                  </Box>
-                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                    <Button
-                      component="label"
-                      variant="outlined"
-                      startIcon={<CloudUploadIcon />}
-                      disabled={uploadingAvatar}
-                      sx={{
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Chọn ảnh khác
-                      <input
-                        id="avatar-file-input"
-                        type="file"
-                        accept="image/*"
-                        hidden
-                        onChange={handleAvatarChange}
-                        disabled={uploadingAvatar}
                       />
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      startIcon={<DeleteIcon />}
-                      onClick={handleRemoveAvatar}
-                      disabled={uploadingAvatar}
-                      sx={{
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Xóa ảnh
-                    </Button>
-                  </Box>
-                  {formErrors.avatar && (
-                    <Typography variant="caption" color="error" sx={{ textAlign: 'center' }}>
-                      {formErrors.avatar}
-                    </Typography>
+                      {uploadingAvatar && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <CircularProgress size={30} sx={{ color: 'white' }} />
+                        </Box>
+                      )}
+                      {!uploadingAvatar && (
+                        <Box
+                          className="delete-icon"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleRemoveAvatar();
+                          }}
+                          sx={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                            borderRadius: '50%',
+                            padding: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            opacity: 0,
+                            transition: 'opacity 0.2s ease',
+                            cursor: 'pointer',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            }
+                          }}
+                        >
+                          <ClearIcon sx={{ fontSize: 20, color: 'white' }} />
+                        </Box>
+                      )}
+                    </>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 0.5 }}>
+                      {uploadingAvatar ? (
+                        <CircularProgress size={30} />
+                      ) : (
+                        <CloudUploadIcon sx={{ fontSize: 32, color: 'text.secondary' }} />
+                      )}
+                    </Box>
                   )}
-                  {formData.avatar && !uploadingAvatar && (
-                    <Typography variant="caption" color="success.main" sx={{ textAlign: 'center' }}>
-                      ✓ Đã tải ảnh lên thành công
-                    </Typography>
-                  )}
-                </Box>
-              ) : (
-                <Box>
-                  <Button
-                    component="label"
-                    variant="outlined"
-                    fullWidth
-                    startIcon={uploadingAvatar ? <CircularProgress size={20} /> : <CloudUploadIcon />}
-                    disabled={uploadingAvatar}
-                    sx={{
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      py: 2,
-                      borderStyle: 'dashed',
-                      borderWidth: 2,
-                      borderColor: formErrors.avatar ? 'error.main' : 'divider',
-                      backgroundColor: 'action.hover',
-                      '&:hover': {
-                        borderColor: formErrors.avatar ? 'error.main' : 'primary.main',
-                        backgroundColor: 'action.selected',
-                        borderStyle: 'dashed',
-                        borderWidth: 2,
-                      },
-                    }}
-                  >
-                    {uploadingAvatar ? 'Đang tải lên...' : 'Chọn ảnh từ thiết bị'}
+                  {!avatarPreview && (
                     <input
                       id="avatar-file-input"
                       type="file"
@@ -1620,17 +1460,15 @@ export default function SelectWorkspacePage() {
                       onChange={handleAvatarChange}
                       disabled={uploadingAvatar}
                     />
-                  </Button>
-                  {formErrors.avatar && (
-                    <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                      {formErrors.avatar}
-                    </Typography>
                   )}
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    Chọn ảnh đại diện (JPG, PNG, tối đa 5MB)
-                  </Typography>
                 </Box>
-              )}
+                
+                {formErrors.avatar && (
+                  <Typography variant="caption" color="error">
+                    {formErrors.avatar}
+                  </Typography>
+                )}
+              </Box>
             </FormControl>
           </Box>
         </DialogContent>
@@ -1665,8 +1503,8 @@ export default function SelectWorkspacePage() {
               uploadingAvatar ||
               submitting
             }
-            startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
-            color={dialogType === 'supplier' ? 'primary' : 'secondary'}
+            startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : null}
+            color={'primary'}
             sx={{
               borderRadius: 2,
               textTransform: 'none',
@@ -1688,24 +1526,6 @@ export default function SelectWorkspacePage() {
           </Button>
         </DialogActions>
       </StyledDialog>
-      
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-          elevation={6}
-          variant="filled"
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </>
   );
 }

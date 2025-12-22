@@ -30,11 +30,19 @@ import {
   People as PeopleIcon,
   Description as DescriptionIcon,
   Category as CategoryIcon,
+  CloudUpload as CloudUploadIcon,
+  Delete as DeleteIcon,
+  OpenInNew as OpenInNewIcon,
+  Image as ImageIcon,
+  VideoLibrary as VideoIcon,
+  Description as FileIcon,
+  InsertDriveFile as GenericFileIcon,
 } from '@mui/icons-material';
 import { formatDateTimeLocal, parseDateTimeLocal } from '../../../shared/utils/dateFormatter';
 import { TASK_STATES } from '../../../shared/constants/taskStates';
 import projectApi from '../../project/api/project.api';
 import supplierApi from '../../supplier/api/supplier.api';
+import { uploadToCloudinary } from '../../../shared/utils/uploadToCloudinary';
 
 // Styled Components
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -99,6 +107,7 @@ export default function TaskCreateDialog({
     implementerIds: [],
     supporterIds: [],
     testerIds: [],
+    images: [],
   });
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
@@ -106,6 +115,7 @@ export default function TaskCreateDialog({
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   // Fetch users and suppliers when dialog opens
   useEffect(() => {
@@ -143,7 +153,6 @@ export default function TaskCreateDialog({
     }
   };
 
-  // Reset form when dialog opens/closes or task changes
   useEffect(() => {
     if (open) {
       if (task) {
@@ -163,6 +172,7 @@ export default function TaskCreateDialog({
           implementerIds: implementerIds,
           supporterIds: supporterIds,
           testerIds: testerIds,
+          images: task.images || [],
         });
       } else {
         // Create mode - reset form
@@ -177,6 +187,7 @@ export default function TaskCreateDialog({
           implementerIds: [],
           supporterIds: [],
           testerIds: [],
+          images: [],
         });
       }
       setError('');
@@ -233,6 +244,7 @@ export default function TaskCreateDialog({
         supporterIds: formData.supporterIds,
         testerIds: formData.testerIds,
         stageId: stageId,
+        images: formData.images || [],
       };
 
 
@@ -265,6 +277,58 @@ export default function TaskCreateDialog({
     }
   };
 
+  // Handle file upload
+  const handleFileUpload = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    setUploadingFiles(true);
+    try {
+      const uploadedUrls = [];
+      for (const file of files) {
+        const url = await uploadToCloudinary(file);
+        if (url) {
+          uploadedUrls.push(url);
+        }
+      }
+      setFormData((prev) => ({
+        ...prev,
+        images: [...(prev.images || []), ...uploadedUrls],
+      }));
+    } catch (err) {
+      console.error("Error uploading files:", err);
+      setError("Lỗi khi tải file lên");
+    } finally {
+      setUploadingFiles(false);
+    }
+  };
+
+  // Handle remove image
+  const handleRemoveImage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Get file extension from URL
+  const getFileExtension = (url) => {
+    return url.split('.').pop().split('?')[0].toLowerCase();
+  };
+
+  // Get icon based on file type
+  const getFileIcon = (url) => {
+    const ext = getFileExtension(url);
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    const videoExts = ['mp4', 'avi', 'mov', 'mkv', 'webm'];
+    const docExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+
+    if (imageExts.includes(ext)) return <ImageIcon />;
+    if (videoExts.includes(ext)) return <VideoIcon />;
+    if (docExts.includes(ext)) return <FileIcon />;
+    return <GenericFileIcon />;
+  };
+
   return (
     <Dialog 
       open={open} 
@@ -292,9 +356,6 @@ export default function TaskCreateDialog({
           <Typography variant="h6" fontWeight={700}>
             {isEditMode ? 'Chỉnh sửa công việc' : 'Tạo công việc mới'}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Giai đoạn: {stageName}
-          </Typography>
         </Box>
         <IconButton onClick={onClose} size="small">
           <CloseIcon />
@@ -302,19 +363,7 @@ export default function TaskCreateDialog({
       </DialogTitle>
 
       <DialogContent dividers sx={{ bgcolor: alpha(theme.palette.background.default, 0.3), py: 3 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setError('')}>
-            {error}
-          </Alert>
-        )}
-
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          {/* Basic Info Section */}
-          <StyledPaper elevation={0}>
-            <SectionTitle>
-              <DescriptionIcon fontSize="small" />
-              Thông tin cơ bản
-            </SectionTitle>
 
             {/* Task Name */}
             <TextField
@@ -330,138 +379,102 @@ export default function TaskCreateDialog({
               sx={{ mb: 2 }}
             />
 
-            {/* Description */}
             <TextField
-              label="Mô tả"
+              label="Giai đoạn"
               fullWidth
-              multiline
-              rows={3}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Nhập mô tả công việc..."
-              disabled={submitting}
+              required
+              value={stageName}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              disabled
+              sx={{ mb: 2 }}
             />
-          </StyledPaper>
 
-          {/* Type & Status Section */}
-          <StyledPaper elevation={0}>
-            <SectionTitle>
-              <CategoryIcon fontSize="small" />
-              Phân loại & Thời gian
-            </SectionTitle>
+            {/* Task Type */}
+            <FormControl fullWidth required error={!!validationErrors.taskTypeId}>
+              <InputLabel>Loại công việc</InputLabel>
+              <Select
+                value={formData.taskTypeId}
+                onChange={(e) => setFormData({ ...formData, taskTypeId: e.target.value })}
+                label="Loại công việc"
+                disabled={submitting}
+              >
+                {taskTypes.map((type) => (
+                  <MenuItem key={type.id} value={type.id}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          backgroundColor: type.color || '#757575',
+                        }}
+                      />
+                      {type.name}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+              {validationErrors.taskTypeId && (
+                <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                  {validationErrors.taskTypeId}
+                </Typography>
+              )}
+            </FormControl>
 
-            <Grid container spacing={2}>
-              {/* Task Type */}
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth required error={!!validationErrors.taskTypeId}>
-                  <InputLabel>Loại công việc</InputLabel>
-                  <Select
-                    value={formData.taskTypeId}
-                    onChange={(e) => setFormData({ ...formData, taskTypeId: e.target.value })}
-                    label="Loại công việc"
-                    disabled={submitting}
-                  >
-                    {taskTypes.map((type) => (
-                      <MenuItem key={type.id} value={type.id}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box
-                            sx={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: '50%',
-                              backgroundColor: type.color || '#757575',
-                            }}
-                          />
-                          {type.name}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {validationErrors.taskTypeId && (
-                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                      {validationErrors.taskTypeId}
-                    </Typography>
-                  )}
-                </FormControl>
-              </Grid>
+            {/* State */}
+            <FormControl fullWidth required>
+              <InputLabel>Trạng thái</InputLabel>
+              <Select
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                label="Trạng thái"
+                disabled={submitting}
+              >
+                {TASK_STATES.map((state) => (
+                  <MenuItem key={state.id} value={state.id}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          backgroundColor: state.color,
+                        }}
+                      />
+                      {state.name}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-              {/* State */}
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth required>
-                  <InputLabel>Trạng thái</InputLabel>
-                  <Select
-                    value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    label="Trạng thái"
-                    disabled={submitting}
-                  >
-                    {TASK_STATES.map((state) => (
-                      <MenuItem key={state.id} value={state.id}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box
-                            sx={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: '50%',
-                              backgroundColor: state.color,
-                            }}
-                          />
-                          {state.name}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+            {/* Start Date */}
+            <TextField
+              label="Thời gian bắt đầu"
+              type="datetime-local"
+              fullWidth
+              required
+              value={formData.startedAt}
+              onChange={(e) => setFormData({ ...formData, startedAt: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              disabled={submitting}
+              error={!!validationErrors.startedAt}
+              helperText={validationErrors.startedAt}
+            />
 
-              {/* Start Date */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Thời gian bắt đầu"
-                  type="datetime-local"
-                  fullWidth
-                  required
-                  value={formData.startedAt}
-                  onChange={(e) => setFormData({ ...formData, startedAt: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                  disabled={submitting}
-                  error={!!validationErrors.startedAt}
-                  helperText={validationErrors.startedAt}
-                />
-              </Grid>
-
-              {/* End Date */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Thời gian kết thúc"
-                  type="datetime-local"
-                  fullWidth
-                  required
-                  value={formData.endedAt}
-                  onChange={(e) => setFormData({ ...formData, endedAt: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                  disabled={submitting}
-                  error={!!validationErrors.endedAt}
-                  helperText={validationErrors.endedAt}
-                />
-              </Grid>
-
-             
-            </Grid>
-          </StyledPaper>
-
-          {/* Personnel Section */}
-          <StyledPaper elevation={0}>
-            <SectionTitle>
-              <PeopleIcon fontSize="small" />
-              Phân công nhân sự
-              <Chip 
-                label={formData.implementerIds.length + formData.supporterIds.length + formData.testerIds.length} 
-                size="small" 
-                color="primary"
-                sx={{ ml: 1, fontWeight: 700 }}
-              />
-            </SectionTitle>
+            {/* End Date */}
+            <TextField
+              label="Thời gian kết thúc"
+              type="datetime-local"
+              fullWidth
+              required
+              value={formData.endedAt}
+              onChange={(e) => setFormData({ ...formData, endedAt: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              disabled={submitting}
+              error={!!validationErrors.endedAt}
+              helperText={validationErrors.endedAt}
+            />
 
             {loadingUsers ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
@@ -473,48 +486,52 @@ export default function TaskCreateDialog({
                 <Autocomplete
                   multiple
                   fullWidth
-                  options={users}
-                  getOptionLabel={(option) => option.name || option.fullName || option.email || 'Unknown'}
+                  options={users || []}
+                  getOptionLabel={(option) => option?.name || option?.fullName || option?.email || 'Unknown'}
                   value={getSelectedUsers(formData.implementerIds)}
                   onChange={handleAutocompleteChange("implementerIds")}
-                  disabled={submitting || users.length === 0}
+                  disabled={submitting || !users || users.length === 0}
                   renderInput={(params) => (
                     <TextField
                       {...params}
                       label="Người thực hiện"
-                      placeholder="Chọn người thực hiện..."
+                      placeholder={formData.implementerIds.length === 0 ? "Chọn người thực hiện..." : ""}
                       required
                       error={!!validationErrors.implementerIds}
                       helperText={validationErrors.implementerIds}
                     />
                   )}
                   renderTags={(value, getTagProps) =>
-                    value.map((user, index) => (
-                      <Chip
-                        key={user.id}
-                        avatar={
-                          <Avatar src={user.avatar}>
-                            {(user.name || user.fullName || 'U')[0]}
-                          </Avatar>
-                        }
-                        label={user.name || user.fullName || user.email}
-                        {...getTagProps({ index })}
-                        size="small"
-                      />
+                    value && value.map((user, index) => (
+                      user && (
+                        <Chip
+                          key={user?.id}
+                          avatar={
+                            <Avatar src={user?.avatar}>
+                              {(user?.name || user?.fullName || 'U')[0]}
+                            </Avatar>
+                          }
+                          label={user?.name || user?.fullName || user?.email}
+                          {...getTagProps({ index })}
+                          size="small"
+                        />
+                      )
                     ))
                   }
                   renderOption={(props, option) => (
-                    <Box component="li" {...props} key={option.id} sx={{ display: 'flex', gap: 1, py: 1 }}>
-                      <Avatar src={option.avatar} sx={{ width: 32, height: 32 }}>
-                        {(option.name || option.fullName || 'U')[0]}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2">{option.name || option.fullName}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {option.email}
-                        </Typography>
+                    option && (
+                      <Box component="li" {...props} key={option?.id} sx={{ display: 'flex', gap: 1, py: 1 }}>
+                        <Avatar src={option?.avatar} sx={{ width: 32, height: 32 }}>
+                          {(option?.name || option?.fullName || 'U')[0]}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2">{option?.name || option?.fullName}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {option?.email}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
+                    )
                   )}
                   sx={{ mb: 2 }}
                 />
@@ -523,45 +540,49 @@ export default function TaskCreateDialog({
                 <Autocomplete
                   multiple
                   fullWidth
-                  options={users}
-                  getOptionLabel={(option) => option.name || option.fullName || option.email || 'Unknown'}
+                  options={users || []}
+                  getOptionLabel={(option) => option?.name || option?.fullName || option?.email || 'Unknown'}
                   value={getSelectedUsers(formData.supporterIds)}
                   onChange={handleAutocompleteChange("supporterIds")}
-                  disabled={submitting || users.length === 0}
+                  disabled={submitting || !users || users.length === 0}
                   renderInput={(params) => (
                     <TextField
                       {...params}
                       label="Người hỗ trợ"
-                      placeholder="Chọn người hỗ trợ..."
+                      placeholder={formData.supporterIds.length === 0 ? "Chọn người hỗ trợ..." : ""}
                     />
                   )}
                   renderTags={(value, getTagProps) =>
-                    value.map((user, index) => (
-                      <Chip
-                        key={user.id}
-                        avatar={
-                          <Avatar src={user.avatar}>
-                            {(user.name || user.fullName || 'U')[0]}
-                          </Avatar>
-                        }
-                        label={user.name || user.fullName || user.email}
-                        {...getTagProps({ index })}
-                        size="small"
-                      />
+                    value && value.map((user, index) => (
+                      user && (
+                        <Chip
+                          key={user?.id}
+                          avatar={
+                            <Avatar src={user?.avatar}>
+                              {(user?.name || user?.fullName || 'U')[0]}
+                            </Avatar>
+                          }
+                          label={user?.name || user?.fullName || user?.email}
+                          {...getTagProps({ index })}
+                          size="small"
+                        />
+                      )
                     ))
                   }
                   renderOption={(props, option) => (
-                    <Box component="li" {...props} key={option.id} sx={{ display: 'flex', gap: 1, py: 1 }}>
-                      <Avatar src={option.avatar} sx={{ width: 32, height: 32 }}>
-                        {(option.name || option.fullName || 'U')[0]}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2">{option.name || option.fullName}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {option.email}
-                        </Typography>
+                    option && (
+                      <Box component="li" {...props} key={option?.id} sx={{ display: 'flex', gap: 1, py: 1 }}>
+                        <Avatar src={option?.avatar} sx={{ width: 32, height: 32 }}>
+                          {(option?.name || option?.fullName || 'U')[0]}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2">{option?.name || option?.fullName}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {option?.email}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
+                    )
                   )}
                   sx={{ mb: 2 }}
                 />
@@ -570,61 +591,53 @@ export default function TaskCreateDialog({
                 <Autocomplete
                   multiple
                   fullWidth
-                  options={users}
-                  getOptionLabel={(option) => option.name || option.fullName || option.email || 'Unknown'}
+                  options={users || []}
+                  getOptionLabel={(option) => option?.name || option?.fullName || option?.email || 'Unknown'}
                   value={getSelectedUsers(formData.testerIds)}
                   onChange={handleAutocompleteChange("testerIds")}
-                  disabled={submitting || users.length === 0}
+                  disabled={submitting || !users || users.length === 0}
                   renderInput={(params) => (
                     <TextField
                       {...params}
                       label="Người kiểm tra"
-                      placeholder="Chọn người kiểm tra..."
+                      placeholder={formData.testerIds.length === 0 ? "Chọn người kiểm tra..." : ""}
                     />
                   )}
                   renderTags={(value, getTagProps) =>
-                    value.map((user, index) => (
-                      <Chip
-                        key={user.id}
-                        avatar={
-                          <Avatar src={user.avatar}>
-                            {(user.name || user.fullName || 'U')[0]}
-                          </Avatar>
-                        }
-                        label={user.name || user.fullName || user.email}
-                        {...getTagProps({ index })}
-                        size="small"
-                      />
+                    value && value.map((user, index) => (
+                      user && (
+                        <Chip
+                          key={user?.id}
+                          avatar={
+                            <Avatar src={user?.avatar}>
+                              {(user?.name || user?.fullName || 'U')[0]}
+                            </Avatar>
+                          }
+                          label={user?.name || user?.fullName || user?.email}
+                          {...getTagProps({ index })}
+                          size="small"
+                        />
+                      )
                     ))
                   }
                   renderOption={(props, option) => (
-                    <Box component="li" {...props} key={option.id} sx={{ display: 'flex', gap: 1, py: 1 }}>
-                      <Avatar src={option.avatar} sx={{ width: 32, height: 32 }}>
-                        {(option.name || option.fullName || 'U')[0]}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2">{option.name || option.fullName}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {option.email}
-                        </Typography>
+                    option && (
+                      <Box component="li" {...props} key={option?.id} sx={{ display: 'flex', gap: 1, py: 1 }}>
+                        <Avatar src={option?.avatar} sx={{ width: 32, height: 32 }}>
+                          {(option?.name || option?.fullName || 'U')[0]}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2">{option?.name || option?.fullName}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {option?.email}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
+                    )
                   )}
                 />
               </>
             )}
-          </StyledPaper>
-          <StyledPaper elevation={0}>
-            <SectionTitle>
-              <PeopleIcon fontSize="small" />
-              Hợp tác với nhà cung cấp
-               <Chip 
-                label={formData.implementerIds.length + formData.supporterIds.length + formData.testerIds.length} 
-                size="small" 
-                color="primary"
-                sx={{ ml: 1, fontWeight: 700 }}
-              />
-            </SectionTitle>
 
             {loadingUsers ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
@@ -633,29 +646,209 @@ export default function TaskCreateDialog({
             ) : (
               <>
                {/* Supplier */}
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Nhà cung cấp</InputLabel>
-                    <Select
-                      value={formData.supplierId}
-                      onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
-                      label="Nhà cung cấp"
-                      disabled={submitting || loadingSuppliers}
-                    >
-                      <MenuItem value="">
-                        <em>Cần ký hợp đồng với nhà cung cấp</em>
+                <FormControl fullWidth>
+                  <InputLabel>Nhà cung cấp</InputLabel>
+                  <Select
+                    value={formData.supplierId}
+                    onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
+                    label="Nhà cung cấp"
+                    disabled={submitting || loadingSuppliers}
+                  >
+                    <MenuItem value="">
+                      <em>{formData.supplierId ? "Cần ký hợp đồng với nhà cung cấp" : "Cần ký hợp đồng với nhà cung cấp"}</em>
+                    </MenuItem>
+                    {suppliers.map((supplier) => (
+                      <MenuItem key={supplier.id} value={supplier.id}>
+                        {supplier.name}
                       </MenuItem>
-                      {suppliers.map((supplier) => (
-                        <MenuItem key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
+                    ))}
+                  </Select>
+                </FormControl>
                 </>
             )}
-          </StyledPaper>
+
+            {/* Description */}
+            <TextField
+              label="Mô tả"
+              fullWidth
+              multiline
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Nhập mô tả công việc..."
+              disabled={submitting}
+            />
+
+                        {/* File Upload */}
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+              <Box sx={{ 
+                position: 'relative',
+                width: 80,
+                height: 80,
+                border: `2px dashed ${alpha(theme.palette.primary.main, 0.4)}`,
+                borderRadius: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: uploadingFiles ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s ease',
+                flexShrink: 0,
+                '&:hover': {
+                  borderColor: theme.palette.primary.main,
+                  bgcolor: alpha(theme.palette.primary.main, 0.05),
+                }
+              }}>
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileUpload}
+                  disabled={uploadingFiles || submitting}
+                  style={{ display: 'none' }}
+                  id="file-upload-input"
+                />
+                <label 
+                  htmlFor="file-upload-input" 
+                  style={{ 
+                    cursor: uploadingFiles ? 'not-allowed' : 'pointer', 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    height: '100%',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                    {uploadingFiles ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      <CloudUploadIcon sx={{ fontSize: 28, color: theme.palette.primary.main }} />
+                    )}
+                  </Box>
+                </label>
+              </Box>
+            </Box>
+
+            {/* Files Preview */}
+            {formData.images && formData.images.length > 0 && (
+              <Box sx={{ 
+                border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                borderRadius: 2,
+                p: 2,
+              }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Tệp đã tải lên ({formData.images.length})
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 1.5 }}>
+                  {formData.images.map((fileUrl, index) => {
+                    const ext = getFileExtension(fileUrl);
+                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext);
+                    
+                    return (
+                      <Box
+                        key={index}
+                        sx={{
+                          position: 'relative',
+                          width: '100%',
+                          paddingBottom: '100%',
+                          borderRadius: 1,
+                          overflow: 'hidden',
+                          bgcolor: alpha(theme.palette.background.default, 0.8),
+                          border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                          '&:hover .image-actions': {
+                            opacity: 1,
+                          }
+                        }}
+                      >
+                        {isImage ? (
+                          <img
+                            src={fileUrl}
+                            alt={`preview-${index}`}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                            }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 0.5,
+                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            }}
+                          >
+                            <Box sx={{ color: theme.palette.primary.main, display: 'flex', alignItems: 'center' }}>
+                              {getFileIcon(fileUrl)}
+                            </Box>
+                            <Typography variant="caption" sx={{ fontSize: '9px', textAlign: 'center', px: 0.5 }}>
+                              {ext.toUpperCase()}
+                            </Typography>
+                          </Box>
+                        )}
+                        <Box
+                          className="image-actions"
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 0.5,
+                            bgcolor: alpha(theme.palette.common.black, 0.5),
+                            opacity: 0,
+                            transition: 'opacity 0.3s ease',
+                          }}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => window.open(fileUrl, '_blank')}
+                            title="Xem"
+                            sx={{
+                              color: theme.palette.common.white,
+                              '&:hover': {
+                                bgcolor: alpha(theme.palette.common.white, 0.2),
+                              }
+                            }}
+                          >
+                            <OpenInNewIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveImage(index)}
+                            title="Xóa"
+                            sx={{
+                              color: theme.palette.error.light,
+                              '&:hover': {
+                                bgcolor: alpha(theme.palette.error.main, 0.2),
+                              }
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Box>
+            )}
 
         </Box>
         
@@ -673,7 +866,6 @@ export default function TaskCreateDialog({
         <Button 
           onClick={onClose} 
           disabled={submitting}
-          startIcon={<CloseIcon />}
           sx={{ borderRadius: 2, px: 3, textTransform: 'none', fontWeight: 600 }}
         >
           Hủy
@@ -682,16 +874,16 @@ export default function TaskCreateDialog({
           variant="contained"
           onClick={handleSubmit}
           disabled={submitting || loadingUsers}
-          startIcon={submitting ? <CircularProgress size={16} /> : <SaveIcon />}
+          startIcon={submitting ? <CircularProgress size={16} /> : null}
           sx={{
             borderRadius: 2,
             px: 3,
             textTransform: 'none',
             fontWeight: 600,
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            background: `${theme.palette.primary.main})`,
             boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
             '&:hover': {
-              background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
+              background: `${theme.palette.primary.dark}`,
             },
           }}
         >
