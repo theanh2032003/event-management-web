@@ -157,7 +157,7 @@ export default function Quotations() {
     const fetchDropdownData = async () => {
       try {
         const [projectRes, supplierRes] = await Promise.all([
-          projectApi.getProjects(projectKeyword ? { keyword: projectKeyword } : {}, 0, 100),
+          projectApi.getProjectsByEnterprise(projectKeyword ? { keyword: projectKeyword } : {}, 0, 100),
           supplierApi.getSuppliers(supplierKeyword || '', 0, 100),
         ]);
 

@@ -178,7 +178,8 @@ export default function LocationManagement({
       setLocations(response?.data || response || []);
       setTotalElements(response?.metadata?.total || 0);
     } catch (err) {
-      setError('Không thể tải danh sách địa điểm. Vui lòng thử lại.');
+      // setError('Không thể tải danh sách địa điểm. Vui lòng thử lại.');
+      showToast('Lỗi khi tải danh sách địa điểm!', 'error', 3000);
     } finally {
       setLoading(false);
     }

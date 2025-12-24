@@ -40,6 +40,7 @@ const LocationFormDialog = memo(({
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
           <OptimizedTextField 
             label="Tên địa điểm" 
+            required
             fullWidth 
             initialValue={formData.name} 
             onChange={onNameChange}
