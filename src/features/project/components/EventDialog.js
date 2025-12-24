@@ -495,6 +495,134 @@ const EventDialog = ({
             placeholder="Nhập tên sự kiện"
           />
 
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+              <FormControl fullWidth>
+                <InputLabel>Loại sự kiện</InputLabel>
+                <Select
+                  value={eventForm.category}
+                  label="Loại sự kiện"
+                  onChange={(e) => setEventForm({ ...eventForm, category: e.target.value })}
+                  disabled={submitting}
+                  required
+                >
+                  <MenuItem value="CONFERENCE">Hội nghị</MenuItem>
+                  <MenuItem value="SEMINAR">Hội thảo</MenuItem>
+                  <MenuItem value="WORKSHOP">Workshop</MenuItem>
+                  <MenuItem value="CONCERT">Hòa nhạc</MenuItem>
+                  <MenuItem value="EXHIBITION">Triển lãm</MenuItem>
+                  <MenuItem value="FESTIVAL">Lễ hội</MenuItem>
+                  <MenuItem value="SPORTS">Thể thao</MenuItem>
+                  <MenuItem value="CULTURAL">Văn hóa</MenuItem>
+                  <MenuItem value="BUSINESS">Kinh doanh</MenuItem>
+                  <MenuItem value="EDUCATION">Giáo dục</MenuItem>
+                  <MenuItem value="CHARITY">Từ thiện</MenuItem>
+                  <MenuItem value="NETWORKING">Giao lưu</MenuItem>
+                  <MenuItem value="ENTERTAINMENT">Giải trí</MenuItem>
+                  <MenuItem value="OTHER">Khác</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+              <FormControl fullWidth required>
+                <InputLabel>Nhóm loại công việc</InputLabel>
+                <Select
+                  value={eventForm.groupTaskTypeId}
+                  label="Nhóm loại công việc"
+                  onChange={(e) => setEventForm({ ...eventForm, groupTaskTypeId: e.target.value })}
+                  disabled={submitting || loadingDropdowns}
+                  required
+                >
+                  {groupTaskTypes.map((type) => (
+                    <MenuItem key={type.id} value={type.id}>
+                      {type.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {loadingDropdowns && (
+                  <FormHelperText>Đang tải dữ liệu...</FormHelperText>
+                )}
+                {!loadingDropdowns && groupTaskTypes.length === 0 && (
+                  <FormHelperText error>Không có dữ liệu</FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+          
+              <FormControl fullWidth required
+               sx={{ minWidth: 100 }} >
+                <InputLabel>Địa điểm</InputLabel>
+                <Select
+                  value={eventForm.locationId}
+                  label="Địa điểm"
+                  onChange={(e) => setEventForm({ ...eventForm, locationId: e.target.value })}
+                  disabled={submitting || loadingDropdowns}
+                  required
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 400,
+                        width: 'auto',
+                        // minWidth: '100px',
+                      },
+                    },
+                  }}
+                >
+                  {locations.map((loc) => (
+                    <MenuItem key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {loadingDropdowns && (
+                  <FormHelperText>Đang tải địa điểm...</FormHelperText>
+                )}
+                {!loadingDropdowns && locations.length === 0 && (
+                  <FormHelperText error>Không có địa điểm khả dụng</FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+          </Grid>
+
+            <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Thời gian bắt đầu"
+                  type="datetime-local"
+                  fullWidth
+                  required
+                  value={eventForm.startedAt || ""}
+                  onChange={(e) => setEventForm({ ...eventForm, startedAt: e.target.value })}
+                  disabled={submitting}
+                  InputLabelProps={{ shrink: true }}
+                />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Thời gian kết thúc"
+                type="datetime-local"
+                fullWidth
+                required
+                value={eventForm.endedAt || ""}
+                onChange={(e) => setEventForm({ ...eventForm, endedAt: e.target.value })}
+                disabled={submitting}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+
+
+          <StyledTextField
+            label="Mô tả"
+            fullWidth
+            multiline
+            rows={3}
+            value={eventForm.description}
+            onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+            disabled={submitting}
+            placeholder="Mô tả chi tiết về sự kiện"
+          />
           {/* Avatar Upload */}
           <Box>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
@@ -581,191 +709,6 @@ const EventDialog = ({
             </AvatarUploadBox>
           </Box>
 
-          <StyledTextField
-            label="Mô tả"
-            fullWidth
-            multiline
-            rows={3}
-            value={eventForm.description}
-            onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
-            disabled={submitting}
-            placeholder="Mô tả chi tiết về sự kiện"
-          />
-
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Loại sự kiện</InputLabel>
-                <Select
-                  value={eventForm.category}
-                  label="Loại sự kiện"
-                  onChange={(e) => setEventForm({ ...eventForm, category: e.target.value })}
-                  disabled={submitting}
-                  required
-                >
-                  <MenuItem value="CONFERENCE">Hội nghị</MenuItem>
-                  <MenuItem value="SEMINAR">Hội thảo</MenuItem>
-                  <MenuItem value="WORKSHOP">Workshop</MenuItem>
-                  <MenuItem value="CONCERT">Hòa nhạc</MenuItem>
-                  <MenuItem value="EXHIBITION">Triển lãm</MenuItem>
-                  <MenuItem value="FESTIVAL">Lễ hội</MenuItem>
-                  <MenuItem value="SPORTS">Thể thao</MenuItem>
-                  <MenuItem value="CULTURAL">Văn hóa</MenuItem>
-                  <MenuItem value="BUSINESS">Kinh doanh</MenuItem>
-                  <MenuItem value="EDUCATION">Giáo dục</MenuItem>
-                  <MenuItem value="CHARITY">Từ thiện</MenuItem>
-                  <MenuItem value="NETWORKING">Giao lưu</MenuItem>
-                  <MenuItem value="ENTERTAINMENT">Giải trí</MenuItem>
-                  <MenuItem value="OTHER">Khác</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Loại phí</InputLabel>
-                <Select
-                  value={eventForm.feeType}
-                  label="Loại phí"
-                  onChange={(e) => setEventForm({ ...eventForm, feeType: e.target.value })}
-                  disabled={submitting}
-                  required
-                >
-                  <MenuItem value="FREE">Miễn phí</MenuItem>
-                  <MenuItem value="PAID">Trả phí</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid> */}
-
-            {/* <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Quyền truy cập</InputLabel>
-                <Select
-                  value={eventForm.visibility}
-                  label="Quyền truy cập"
-                  onChange={(e) => setEventForm({ ...eventForm, visibility: e.target.value })}
-                  disabled={submitting}
-                  required
-                >
-                  <MenuItem value="PUBLIC">Công khai</MenuItem>
-                  <MenuItem value="PRIVATE">Riêng tư</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid> */}
-{/* 
-          <Grid item xs={12} sm={6}>
-            <FormControl
-              fullWidth
-              sx={{ minWidth: 100 }}   
-            >
-              <InputLabel id="access-type-label">Kiểu truy cập</InputLabel>
-              <Select
-                labelId="access-type-label"
-                value={eventForm.accessType}
-                label="Kiểu truy cập"
-                onChange={(e) =>
-                  setEventForm({ ...eventForm, accessType: e.target.value })
-                }
-                disabled={submitting}
-                required
-              >
-                <MenuItem value="OPEN">Mở</MenuItem>
-                <MenuItem value="INVITE_ONLY">Chỉ mời</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid> */}
-
-
-
-           
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required>
-                <InputLabel>Nhóm loại công việc</InputLabel>
-                <Select
-                  value={eventForm.groupTaskTypeId}
-                  label="Nhóm loại công việc"
-                  onChange={(e) => setEventForm({ ...eventForm, groupTaskTypeId: e.target.value })}
-                  disabled={submitting || loadingDropdowns}
-                  required
-                >
-                  {groupTaskTypes.map((type) => (
-                    <MenuItem key={type.id} value={type.id}>
-                      {type.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {loadingDropdowns && (
-                  <FormHelperText>Đang tải dữ liệu...</FormHelperText>
-                )}
-                {!loadingDropdowns && groupTaskTypes.length === 0 && (
-                  <FormHelperText error>Không có dữ liệu</FormHelperText>
-                )}
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-          
-              <FormControl fullWidth required
-               sx={{ minWidth: 100 }} >
-                <InputLabel>Địa điểm</InputLabel>
-                <Select
-                  value={eventForm.locationId}
-                  label="Địa điểm"
-                  onChange={(e) => setEventForm({ ...eventForm, locationId: e.target.value })}
-                  disabled={submitting || loadingDropdowns}
-                  required
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 400,
-                        width: 'auto',
-                        // minWidth: '100px',
-                      },
-                    },
-                  }}
-                >
-                  {locations.map((loc) => (
-                    <MenuItem key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {loadingDropdowns && (
-                  <FormHelperText>Đang tải địa điểm...</FormHelperText>
-                )}
-                {!loadingDropdowns && locations.length === 0 && (
-                  <FormHelperText error>Không có địa điểm khả dụng</FormHelperText>
-                )}
-              </FormControl>
-            </Grid>
-          </Grid>
-
- <Grid item xs={12} sm={6}>
-              <TextField
-                label="Thời gian bắt đầu"
-                type="datetime-local"
-                fullWidth
-                required
-                value={eventForm.startedAt || ""}
-                onChange={(e) => setEventForm({ ...eventForm, startedAt: e.target.value })}
-                disabled={submitting}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Thời gian kết thúc"
-                type="datetime-local"
-                fullWidth
-                required
-                value={eventForm.endedAt || ""}
-                onChange={(e) => setEventForm({ ...eventForm, endedAt: e.target.value })}
-                disabled={submitting}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
           {/* Multiple Images Upload */}
           <Box>
             <Typography variant="body2" sx={{ mb: 1.5, fontWeight: 500 }}>

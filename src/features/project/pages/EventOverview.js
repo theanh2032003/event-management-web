@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -178,6 +179,7 @@ export default function EventOverview({
   onRefresh,
   hasPermission = () => true
 }) {
+  const navigate = useNavigate();
   const toast = useToast();
   const [anchorEl, setAnchorEl] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -225,7 +227,6 @@ export default function EventOverview({
         setLocations(Array.isArray(locationsData) ? locationsData : []);
         
       } catch (error) {
-        console.error('Error fetching dropdown data:', error);
         toast.error('Không thể tải dữ liệu danh sách');
       } finally {
         setLoadingDropdowns(false);
@@ -364,9 +365,8 @@ export default function EventOverview({
       await projectApi.delete(eventData.id);
       toast.success('Sự kiện đã được xóa thành công');
       setDeleteDialogOpen(false);
-      if (onRefresh) {
-        onRefresh();
-      }
+      // Quay về trang danh sách sự kiện
+      navigate(`/enterprise/${eventData.enterpriseId}/event-management`);
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Không thể xóa sự kiện.');
     } finally {
