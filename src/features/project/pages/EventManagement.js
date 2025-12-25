@@ -210,9 +210,8 @@ const EventManagement = ({ hasPermission = true }) => {
     handleChangePage(null, newPage);
   };
 
-  const handleTableRowsPerPageChange = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleTableRowsPerPageChange = (newRowsPerPage) => {
+    handleChangeRowsPerPage(newRowsPerPage);
   };
 
   // Helper functions for labels
