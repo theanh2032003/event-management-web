@@ -109,8 +109,10 @@ export default function QuoteRequests() {
   };
 
   const userId = getUserId();
-  const { isOwner, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
-  const isUnauthorized = !permissionsLoading && !isOwner;
+  const { isOwner, permissions, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
+  const hasRfqManagePermission = permissions?.some(p => p.code === 'rfq_manage') || false;
+  // Allow access if user is owner OR has rfq_manage permission
+  const isUnauthorized = !permissionsLoading && !isOwner && !hasRfqManagePermission;
 
   const [quoteRequests, setQuoteRequests] = useState([]);
   const [loading, setLoading] = useState(true);

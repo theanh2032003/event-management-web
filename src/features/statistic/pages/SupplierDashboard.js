@@ -236,7 +236,7 @@ export default function SupplierDashboard() {
           <KpiCard
             sx={{ height: '100%' }}
             title="Tổng báo giá"
-            value={parseFloat((overviewData?.totalQuote || 0).toFixed(2))}
+            value={parseFloat((overviewData?.totalQuotes || 0).toFixed(2))}
             icon={ContractIcon}
             color="success"
             format="number"

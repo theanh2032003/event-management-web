@@ -42,8 +42,8 @@ import Notifications from './features/notification/pages/Notifications';
 // Supplier pages
 import SupplierDashboard from './features/statistic/pages/SupplierDashboard';
 import SupplierMarketplace from './features/product/pages/MarketplaceSupplier';
-import CreateProduct from './features/product/pages/CreateProduct';
-import EditProduct from './features/product/pages/EditProduct';
+// import CreateProduct from './features/product/pages/CreateProduct'; // Thay thế bằng dialog
+// import EditProduct from './features/product/pages/EditProduct'; // Thay thế bằng dialog
 import RFQ from './features/rfq/pages/RfqSupplier';
 import Quotations from './features/quote/pages/QuotationSuppliers';
 import Contracts from './features/contract/pages/ContractSuppliers';
@@ -115,8 +115,9 @@ function SupplierRoutes() {
         <Route path="quotations" element={<Quotations />} />
         <Route path="contracts" element={<Contracts />} />
         <Route path="marketplace" element={<SupplierMarketplace />} />
-        <Route path="create-product" element={<CreateProduct />} />
-        <Route path="edit-product/:productId" element={<EditProduct />} />
+        {/* create-product và edit-product được thay thế bằng dialog trong MarketplaceSupplier */}
+        {/* <Route path="create-product" element={<CreateProduct />} /> */}
+        {/* <Route path="edit-product/:productId" element={<EditProduct />} /> */}
         <Route path="locations" element={<LocationSupplier />} />
         <Route path="locations/:locationId" element={<LocationDetail />} />
         <Route path="profile" element={<EnterpriseProfile />} />

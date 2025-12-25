@@ -94,7 +94,7 @@ export default function SupplierStatistics() {
       const stats = statsRes || {};
 
       // Calculate KPI metrics
-      const totalQuotes = quotes.length;
+      const totalQuotes = stats.totalQuote || 0;
       const convertedToContract = quotes.filter((q) => q.status === 'APPROVED' || q.status === 'CONVERTED').length;
       const conversionRate = totalQuotes > 0 ? (convertedToContract / totalQuotes) * 100 : 0;
       const totalProducts = products.length;

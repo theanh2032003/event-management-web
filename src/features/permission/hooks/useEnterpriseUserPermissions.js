@@ -70,19 +70,19 @@ const useEnterpriseUserPermissions = (userId) => {
   const fetchUserPermissions = useCallback(async () => {
     // Check xem user có phải owner không (luôn check, dù có userId hay không)
     const ownerFlag = getIsOwner();
-    console.log('[ENTERPRISE] 👤 Checking owner flag:', ownerFlag);
+    // console.log('[ENTERPRISE] 👤 Checking owner flag:', ownerFlag);
     setIsOwner(ownerFlag);
     
     // Nếu là owner, không cần fetch quyền - cấp tất cả quyền
     if (ownerFlag) {
-      console.log('[ENTERPRISE] 👑 User is OWNER - All permissions granted!');
+      // console.log('[ENTERPRISE] 👑 User is OWNER - All permissions granted!');
       setPermissions(['all']); // Mark as owner
       setLoading(false);
       return;
     }
 
     if (!userId) {
-      console.log('[ENTERPRISE] ⚠️ No userId provided, and user is not owner');
+      // console.log('[ENTERPRISE] ⚠️ No userId provided, and user is not owner');
       setLoading(false);
       return;
     }
@@ -98,28 +98,28 @@ const useEnterpriseUserPermissions = (userId) => {
       
       if (Array.isArray(response)) {
         permissionList = response;
-        console.log('[ENTERPRISE] ✅ Response is direct array');
+        // console.log('[ENTERPRISE] ✅ Response is direct array');
       } else if (response?.permissions && Array.isArray(response.permissions)) {
         // API returns {permissions: Array, roles: Array}
         permissionList = response.permissions;
-        console.log('[ENTERPRISE] ✅ Response has .permissions property (array)');
+        // console.log('[ENTERPRISE] ✅ Response has .permissions property (array)');
       } else if (response?.data && Array.isArray(response.data)) {
         permissionList = response.data;
-        console.log('[ENTERPRISE] ✅ Response has .data property (array)');
+        // console.log('[ENTERPRISE] ✅ Response has .data property (array)');
       } else if (response?.result && Array.isArray(response.result)) {
         permissionList = response.result;
-        console.log('[ENTERPRISE] ✅ Response has .result property (array)');
+        // console.log('[ENTERPRISE] ✅ Response has .result property (array)');
       } else {
-        console.warn('[ENTERPRISE] ⚠️ Unknown response structure:', response);
+        // console.warn('[ENTERPRISE] ⚠️ Unknown response structure:', response);
         permissionList = [];
       }
       
-      console.log('[ENTERPRISE] ✅ User permissions processed:', permissionList);
-      console.log('[ENTERPRISE] 📋 Permission items:', permissionList.map(p => ({ code: p?.code, permissionCode: p?.permissionCode, id: p?.id })));
+      // console.log('[ENTERPRISE] ✅ User permissions processed:', permissionList);
+      // console.log('[ENTERPRISE] 📋 Permission items:', permissionList.map(p => ({ code: p?.code, permissionCode: p?.permissionCode, id: p?.id })));
       setPermissions(permissionList);
     } catch (err) {
-      console.error('[ENTERPRISE] ❌ Error fetching user permissions:', err);
-      console.error('[ENTERPRISE] ❌ Error details:', err.response?.data);
+      // console.error('[ENTERPRISE] ❌ Error fetching user permissions:', err);
+      // console.error('[ENTERPRISE] ❌ Error details:', err.response?.data);
       setError(err.message || 'Failed to fetch permissions');
       setPermissions([]);
     } finally {
@@ -141,18 +141,18 @@ const useEnterpriseUserPermissions = (userId) => {
   const hasPermission = useCallback((permissionCode) => {
     // 👑 OWNER BYPASS: Nếu là owner, cấp toàn bộ quyền
     if (isOwner) {
-      console.log(`[ENTERPRISE] ✅ Owner access granted for: ${permissionCode}`);
+      // console.log(`[ENTERPRISE] ✅ Owner access granted for: ${permissionCode}`);
       return true;
     }
     
     // 👤 Kiểm tra quyền thực tế nếu không phải owner
     if (!Array.isArray(permissions)) {
-      console.log(`[ENTERPRISE] ❌ Permissions is not an array:`, permissions, 'type:', typeof permissions);
+      // console.log(`[ENTERPRISE] ❌ Permissions is not an array:`, permissions, 'type:', typeof permissions);
       return false;
     }
     
     if (permissions.length === 0) {
-      console.log(`[ENTERPRISE] ⚠️ User has NO permissions (empty array)`);
+      // console.log(`[ENTERPRISE] ⚠️ User has NO permissions (empty array)`);
       return false;
     }
     
@@ -162,20 +162,20 @@ const useEnterpriseUserPermissions = (userId) => {
       const matches = pCode === permissionCode;
       
       if (matches) {
-        console.log(`[ENTERPRISE] ✅ Found matching permission:`, { requested: permissionCode, actual: pCode, fullObject: p });
+        // console.log(`[ENTERPRISE] ✅ Found matching permission:`, { requested: permissionCode, actual: pCode, fullObject: p });
       }
       
       return matches;
     });
     
     if (!hasIt) {
-      console.log(`[ENTERPRISE] ❌ Permission NOT found:`, permissionCode);
-      console.log(`[ENTERPRISE] 📋 Available permissions:`, permissions.map(p => ({
-        code: p?.code,
-        permissionCode: p?.permissionCode,
-        permission: p?.permission,
-        fullObject: p
-      })));
+      // console.log(`[ENTERPRISE] ❌ Permission NOT found:`, permissionCode);
+      // console.log(`[ENTERPRISE] 📋 Available permissions:`, permissions.map(p => ({
+        // code: p?.code,
+        // permissionCode: p?.permissionCode,
+        // permission: p?.permission,
+        // fullObject: p
+      // })));
     }
     
     return hasIt;
