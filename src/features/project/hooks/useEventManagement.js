@@ -427,8 +427,12 @@ export const useEventManagement = () => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+  const handleChangeRowsPerPage = (newRowsPerPage) => {
+    // Accept number directly (from CommonTable) or event object (legacy)
+    const value = typeof newRowsPerPage === 'number' 
+      ? newRowsPerPage 
+      : parseInt(newRowsPerPage?.target?.value, 10);
+    setRowsPerPage(value);
     setPage(0);
   };
 

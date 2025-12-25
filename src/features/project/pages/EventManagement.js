@@ -210,9 +210,8 @@ const EventManagement = ({ hasPermission = true }) => {
     handleChangePage(null, newPage);
   };
 
-  const handleTableRowsPerPageChange = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleTableRowsPerPageChange = (newRowsPerPage) => {
+    handleChangeRowsPerPage(newRowsPerPage);
   };
 
   // Helper functions for labels
@@ -449,77 +448,7 @@ const EventManagement = ({ hasPermission = true }) => {
               </TextField>
             </Box>
 
-            {/* Filter by Fee Type */}
-            <Box sx={{ width: "calc(20% - 6px)" }}>
-              <TextField
-                select
-                label="Hình thức"
-                value={filterFeeType}
-                onChange={(e) => setFilterFeeType(e.target.value)}
-                size="small"
-                fullWidth
-                disabled={loading || !hasPermission}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    backgroundColor: alpha(theme.palette.background.default, 0.6),
-                    transition: 'all 0.2s ease',
-                    fontSize: '0.875rem',
-                    '&:hover': {
-                      backgroundColor: alpha(theme.palette.background.default, 0.8),
-                    },
-                    '&.Mui-focused': {
-                      backgroundColor: theme.palette.background.paper,
-                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
-                    },
-                  },
-                }}
-                SelectProps={{
-                  native: true,
-                }}
-              >
-                <option value="ALL">Tất cả</option>
-                <option value="FREE">Miễn phí</option>
-                <option value="PAID">Trả phí</option>
-              </TextField>
-            </Box>
-
-            {/* Filter by State */}
-            <Box sx={{ width: "calc(20% - 6px)" }}>
-              <TextField
-                select
-                label="Trạng thái"
-                value={filterState}
-                onChange={(e) => setFilterState(e.target.value)}
-                size="small"
-                fullWidth
-                disabled={loading || !hasPermission}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    backgroundColor: alpha(theme.palette.background.default, 0.6),
-                    transition: 'all 0.2s ease',
-                    fontSize: '0.875rem',
-                    '&:hover': {
-                      backgroundColor: alpha(theme.palette.background.default, 0.8),
-                    },
-                    '&.Mui-focused': {
-                      backgroundColor: theme.palette.background.paper,
-                      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
-                    },
-                  },
-                }}
-                SelectProps={{
-                  native: true,
-                }}
-              >
-                <option value="ALL">Tất cả trạng thái</option>
-                <option value="DRAFT">Nháp</option>
-                <option value="ACTIVE">Đang hoạt động</option>
-                <option value="COMPLETED">Hoàn thành</option>
-                <option value="CANCELLED">Đã hủy</option>
-              </TextField>
-            </Box>
+         
 
             {/* Create Button */}
             <Box sx={{ width: "calc(20% - 6px)" }}>
