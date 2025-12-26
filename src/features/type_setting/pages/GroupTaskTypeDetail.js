@@ -126,7 +126,7 @@ export default function GroupTaskTypeDetail() {
   const fetchGroupAndTypes = async () => {
     try {
       setLoading(true);
-      setError("");
+      // setError("");
       
       // Fetch group từ danh sách
       const response = await axiosClient.get(`/group-task-type`, {
@@ -278,18 +278,18 @@ export default function GroupTaskTypeDetail() {
     );
   }
 
-  if (error || !group) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <IconButton onClick={handleBack} sx={{ mb: 2 }}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h6" color="error">
-          {error || "Không tìm thấy nhóm loại công việc."}
-        </Typography>
-      </Box>
-    );
-  }
+  // if (error || !group) {
+  //   return (
+  //     <Box sx={{ p: 3 }}>
+  //       <IconButton onClick={handleBack} sx={{ mb: 2 }}>
+  //         <ArrowBackIcon />
+  //       </IconButton>
+  //       <Typography variant="h6" color="error">
+  //         {error || "Không tìm thấy nhóm loại công việc."}
+  //       </Typography>
+  //     </Box>
+  //   );
+  // }
 
   return (
     <PermissionGate 
@@ -412,18 +412,18 @@ export default function GroupTaskTypeDetail() {
                           position: 'relative'
                         }}
                       >
-                        {/* Header */}
+                        {/* Color Bar Header */}
                         <Box
                           sx={{
+                            height: 12,
                             bgcolor: taskType.color,
-                            color: '#fff',
-                            p: 2,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between'
+                            width: '100%'
                           }}
-                        >
-                          <Typography variant="h6" fontWeight={700}>
+                        />
+
+                        {/* Content */}
+                        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Typography variant="h6" fontWeight={700} color="#000">
                             {taskType.name}
                           </Typography>
 
@@ -434,9 +434,9 @@ export default function GroupTaskTypeDetail() {
                               onClick={() => handleOpenTaskTypeDialog(taskType)}
                               sx={{ 
                                 p: 0.5,
-                                color: '#fff',
+                                color: '#333',
                                 '&:hover': { 
-                                  backgroundColor: 'rgba(255, 255, 255, 0.2)' 
+                                  backgroundColor: 'rgba(0, 0, 0, 0.08)' 
                                 }
                               }}
                             >
@@ -449,7 +449,7 @@ export default function GroupTaskTypeDetail() {
                                 p: 0.5,
                                 color: '#ff4444',
                                 '&:hover': { 
-                                  backgroundColor: 'rgba(255, 68, 68, 0.2)' 
+                                  backgroundColor: 'rgba(255, 68, 68, 0.1)' 
                                 }
                               }}
                             >
@@ -457,13 +457,6 @@ export default function GroupTaskTypeDetail() {
                             </IconButton>
                           </Box>
                         </Box>
-
-                        {/* Content */}
-                        {/* <Box sx={{ p: 2 }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            {taskType.description || "Không có mô tả"}
-                          </Typography>
-                        </Box> */}
                       </Box>
                     </Grid>
                   ))}
