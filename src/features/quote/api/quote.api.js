@@ -110,6 +110,16 @@ const quoteApi = {
     }
   },
 
+    getQuoteByIdEnterprise: async (id) => {
+    try {
+
+      const response = await axiosClient.get(`/quote/${id}/enterprise`);
+      return response?.data || response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   /**
    * 🔁 Supplier thay đổi trạng thái Quote
    * PATCH /quote/supplier/{id}/state

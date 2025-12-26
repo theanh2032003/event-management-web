@@ -2,29 +2,39 @@ import React from "react";
 import {
   Box,
   Typography,
-  Grid,
-  Divider,
+  Chip,
+  CircularProgress,
   alpha,
   useTheme,
+  Grid,  Divider,
 } from "@mui/material";
 import {
-  Receipt as ReceiptIcon,
-  LocalShipping as ShippingIcon,
-  AttachMoney as MoneyIcon,
-  Business as EnterpriseIcon,
   ArrowBack as BackIcon,
   Edit as EditIcon,
+  Business as EnterpriseIcon,
+  LocalShipping as ShippingIcon,
+  Receipt as ReceiptIcon,
+  MonetizationOn as MoneyIcon,
 } from "@mui/icons-material";
-import TemplateDetailLayout from "../../../components/common/TemplateDetailLayout";
+import TemplateDetailLayout from "../../../shared/components/TemplateDetailLayout";
 
 /**
  * SupplierQuotationDetail - Trang chi tiết báo giá (Supplier side)
  * @param {Object} quotation - Dữ liệu báo giá từ API
  * @param {Function} onBack - Callback khi quay lại danh sách
  * @param {Function} onEdit - Callback khi click nút sửa (optional)
+ * @param {Boolean} loading - Loading state khi fetch dữ liệu
  */
-const SupplierQuotationDetail = ({ quotation, onBack, onEdit }) => {
+const SupplierQuotationDetail = ({ quotation, onBack, onEdit, loading = false }) => {
   const theme = useTheme();
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress size={50} thickness={4} />
+      </Box>
+    );
+  }
 
   if (!quotation) {
     return (
@@ -125,25 +135,23 @@ const SupplierQuotationDetail = ({ quotation, onBack, onEdit }) => {
   ];
 
   // Add edit button if state is DRAFT and onEdit is provided
-  if (quotation.state === "DRAFT" && onEdit) {
-    actions.unshift({
-      label: "Sửa",
-      icon: <EditIcon />,
-      onClick: onEdit,
-      variant: "contained",
-      color: "primary",
-    });
-  }
+  // if (quotation.state === "DRAFT" && onEdit) {
+  //   actions.unshift({
+  //     label: "Sửa",
+  //     icon: <EditIcon />,
+  //     onClick: onEdit,
+  //     variant: "contained",
+  //     color: "primary",
+  //   });
+  // }
 
   // Prepare props cho TemplateDetailLayout
   const layoutProps = {
-    title: `Báo giá #${quotation.id} - ${quotation.name || "Không có tên"}`,
+    title: `Báo giá - ${quotation.name || "Không có tên"}`,
     status: {
       label: getStatusLabel(quotation.state),
       color: getStatusColor(quotation.state),
     },
-    createdBy: "Bạn (Nhà cung cấp)",
-    createdDate: quotation.createdAt || new Date(),
     actions,
     additionalInfo: {
       "Số lượng": quotation.quantity || 0,
@@ -155,396 +163,177 @@ const SupplierQuotationDetail = ({ quotation, onBack, onEdit }) => {
 
   return (
     <TemplateDetailLayout {...layoutProps}>
-      {/* Content Section */}
-      <Box>
-        <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
-          Thông tin chi tiết báo giá
-        </Typography>
-
-        <Grid container spacing={3}>
+      {/* Content Section - 2 Column Layout */}
+      <Box sx={{ display: 'flex', gap: 3 }}>
+        {/* Left Column */}
+        <Box sx={{ flex: 1 }}>
           {/* Enterprise Information */}
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 2.5,
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.secondary.main, 0.04),
-                border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <EnterpriseIcon sx={{ fontSize: 20, color: "secondary.main" }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Thông tin doanh nghiệp
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+              Thông tin doanh nghiệp
+            </Typography>
+
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Tên doanh nghiệp
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {getEnterpriseName()}
+              </Typography>
+            </Box>
+
+            {quotation.rfq && (
+              <Box>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                  Yêu cầu báo giá
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  {quotation.rfq.name || `RFQ #${quotation.rfq.id}`}
                 </Typography>
               </Box>
-              <Divider sx={{ mb: 2 }} />
-
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Tên doanh nghiệp
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {getEnterpriseName()}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                {quotation.rfq && (
-                  <Grid item xs={12}>
-                    <Box>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                      >
-                        Yêu cầu báo giá
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {quotation.rfq.name || `RFQ #${quotation.rfq.id}`}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-              </Grid>
-            </Box>
-          </Grid>
+            )}
+          </Box>
 
           {/* Pricing Information */}
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 2.5,
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <MoneyIcon sx={{ fontSize: 20, color: "primary.main" }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Thông tin giá
-                </Typography>
-              </Box>
-              <Divider sx={{ mb: 2 }} />
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+              Thông tin giá
+            </Typography>
 
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Số lượng
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {quotation.quantity || 0}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Đơn giá
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{ fontWeight: 600, color: "success.main" }}
-                    >
-                      {quotation.unitPrice
-                        ? quotation.unitPrice.toLocaleString("vi-VN")
-                        : 0}
-                      ₫
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Tổng giá (Quantity × Unit Price)
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {quotation.totalPrice
-                        ? quotation.totalPrice.toLocaleString("vi-VN")
-                        : 0}
-                      ₫
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Phụ phí
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {quotation.otherFee
-                        ? quotation.otherFee.toLocaleString("vi-VN") + "₫"
-                        : "0₫"}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Giảm giá
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {quotation.discount
-                        ? quotation.discount.toLocaleString("vi-VN") + "₫"
-                        : "Không"}
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Grid>
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Số lượng
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                {quotation.quantity || 0}
+              </Typography>
             </Box>
-          </Grid>
+
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Đơn giá
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                {quotation.unitPrice ? quotation.unitPrice.toLocaleString("vi-VN") : 0}₫
+              </Typography>
+            </Box>
+
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Tổng giá (Số lượng × Đơn giá)
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {quotation.totalPrice ? quotation.totalPrice.toLocaleString("vi-VN") : 0}₫
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Phụ phí
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {quotation.otherFee ? quotation.otherFee.toLocaleString("vi-VN") + "₫" : "0₫"}
+              </Typography>
+            </Box>
+          </Box>
 
           {/* Shipping & Other Fees */}
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 2.5,
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.info.main, 0.04),
-                border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <ShippingIcon sx={{ fontSize: 20, color: "info.main" }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Phí vận chuyển & Phụ phí
-                </Typography>
-              </Box>
-              <Divider sx={{ mb: 2 }} />
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+              Phí vận chuyển & Phụ phí
+            </Typography>
 
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Phí vận chuyển
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {quotation.shippingFee
-                        ? quotation.shippingFee.toLocaleString("vi-VN") + "₫"
-                        : "Không"}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Phí khác
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {quotation.otherFee
-                        ? quotation.otherFee.toLocaleString("vi-VN") + "₫"
-                        : "Không"}
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Grid>
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Phí vận chuyển
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {quotation.shippingFee ? quotation.shippingFee.toLocaleString("vi-VN") + "₫" : "Không"}
+              </Typography>
             </Box>
-          </Grid>
 
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Giảm giá
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {quotation.discount ? quotation.discount.toLocaleString("vi-VN") + "₫" : "Không"}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Right Column */}
+        <Box sx={{ flex: 1 }}>
           {/* Final Price */}
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 3,
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.success.main, 0.08),
-                border: `2px solid ${alpha(theme.palette.success.main, 0.3)}`,
-                textAlign: "center",
-              }}
-            >
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ fontWeight: 600, display: "block", mb: 1 }}
-              >
-                Tổng tiền cuối cùng
-              </Typography>
-              <Typography
-                variant="h4"
-                sx={{ fontWeight: 700, color: "success.main" }}
-              >
-                {quotation.finalPrice
-                  ? quotation.finalPrice.toLocaleString("vi-VN")
-                  : 0}
-                ₫
-              </Typography>
-            </Box>
-          </Grid>
+          <Box sx={{ mb: 3, p: 2, borderRadius: 2, backgroundColor: alpha(theme.palette.success.main, 0.08), border: `2px solid ${alpha(theme.palette.success.main, 0.3)}`, textAlign: "center" }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 1 }}>
+              Tổng tiền cuối cùng
+            </Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "success.main" }}>
+              {quotation.finalPrice ? quotation.finalPrice.toLocaleString("vi-VN") : 0}₫
+            </Typography>
+          </Box>
 
           {/* Payment Information */}
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 2.5,
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.secondary.main, 0.04),
-                border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <ReceiptIcon sx={{ fontSize: 20, color: "secondary.main" }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Thông tin thanh toán và điều khoản
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+              Thông tin thanh toán
+            </Typography>
+
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Phương thức thanh toán
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {getPaymentMethodLabel(quotation.paymentMethod)}
+              </Typography>
+            </Box>
+
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Hạn báo giá
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {formatDateTime(quotation.expiredAt)}
+              </Typography>
+            </Box>
+
+            {quotation.paymentTerms && (
+              <Box sx={{ mb: 1.5 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                  Điều khoản thanh toán
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, whiteSpace: "pre-wrap", lineHeight: 1.6, color: "text.secondary" }}>
+                  {quotation.paymentTerms}
                 </Typography>
               </Box>
-              <Divider sx={{ mb: 2 }} />
+            )}
 
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Phương thức thanh toán
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {getPaymentMethodLabel(quotation.paymentMethod)}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Hạn báo giá
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {formatDateTime(quotation.expiredAt)}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                {quotation.paymentTerms && (
-                  <Grid item xs={12}>
-                    <Box>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                      >
-                        Điều khoản thanh toán
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontWeight: 500,
-                          whiteSpace: "pre-wrap",
-                          lineHeight: 1.8,
-                        }}
-                      >
-                        {quotation.paymentTerms}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-
-                {quotation.guarantee && (
-                  <Grid item xs={12}>
-                    <Box>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                      >
-                        Bảo hành
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontWeight: 500,
-                          whiteSpace: "pre-wrap",
-                          lineHeight: 1.8,
-                        }}
-                      >
-                        {quotation.guarantee}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-              </Grid>
-            </Box>
-          </Grid>
+            {quotation.guarantee && (
+              <Box>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                  Bảo hành
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, whiteSpace: "pre-wrap", lineHeight: 1.6, color: "text.secondary" }}>
+                  {quotation.guarantee}
+                </Typography>
+              </Box>
+            )}
+          </Box>
 
           {/* Notes */}
           {quotation.note && (
-            <Grid item xs={12}>
-              <Box
-                sx={{
-                  p: 2.5,
-                  borderRadius: 2,
-                  backgroundColor: alpha(theme.palette.warning.main, 0.04),
-                  border: `1px solid ${alpha(theme.palette.warning.main, 0.1)}`,
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                  <ReceiptIcon sx={{ fontSize: 20, color: "warning.main" }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                    Ghi chú
-                  </Typography>
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontWeight: 500,
-                    whiteSpace: "pre-wrap",
-                    lineHeight: 1.8,
-                    color: "text.secondary",
-                  }}
-                >
-                  {quotation.note}
-                </Typography>
-              </Box>
-            </Grid>
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+                Ghi chú
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, whiteSpace: "pre-wrap", lineHeight: 1.6, color: "text.secondary" }}>
+                {quotation.note}
+              </Typography>
+            </Box>
           )}
-        </Grid>
+        </Box>
       </Box>
     </TemplateDetailLayout>
   );

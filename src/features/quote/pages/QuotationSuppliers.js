@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -55,6 +55,7 @@ import {
 import quoteApi from "../api/quote.api";
 import { CommonTable } from "../../../shared/components/CommonTable";
 import { CommonDialog } from "../../../shared/components/CommonDialog";
+import QuotationDetailSupplier from "./QuotationDetailSupplier";
 
 // Styled Components - Matching EventManagement style
 const HeaderBox = styled(Box)(({ theme }) => ({
@@ -279,7 +280,8 @@ const StyledButton = styled(Button)(({ theme }) => ({
 }));
 
 export default function Quotations() {
-  const { id: supplierId } = useParams();
+  const { id: supplierId, quotationId } = useParams();
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -287,6 +289,9 @@ export default function Quotations() {
   // Data states
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [viewMode, setViewMode] = useState("list"); // "list" or "detail"
+  const [detailLoading, setDetailLoading] = useState(false);
 
   // Filter states
   const [filterState, setFilterState] = useState("");
@@ -375,26 +380,32 @@ export default function Quotations() {
     fetchQuotes();
   }, [page, rowsPerPage, filterState, filterKeyword, showToast]);
 
+  // Auto-load detail when quotationId changes
+  useEffect(() => {
+    if (quotationId && !isNaN(parseInt(quotationId))) {
+      setDetailLoading(true);
+      quoteApi.getQuoteById(parseInt(quotationId))
+        .then((detailedQuote) => {
+          setSelectedQuote(detailedQuote);
+          setViewMode("detail");
+          setDetailLoading(false);
+        })
+        .catch((error) => {
+          console.error("[QUOTATION_DETAIL] Error fetching quote detail:", error);
+          showToast("Lỗi khi tải chi tiết báo giá", "error");
+          setDetailLoading(false);
+        });
+    }
+  }, [quotationId]);
+
   const handleOpenDetail = (quote) => {
-    setIsViewMode(true);
-    setEditingQuote(quote);
-    setEditFormData({
-      name: quote.name || "",
-      expiredAt: quote.expiredAt ? new Date(quote.expiredAt).toISOString().slice(0, 16) : "",
-      quantity: quote.quantity?.toString() || "",
-      unitPrice: quote.unitPrice?.toString() || "",
-      totalPrice: quote.totalPrice?.toString() || "",
-      tax: quote.tax?.toString() || "",
-      discount: quote.discount?.toString() || "",
-      shippingFee: quote.shippingFee?.toString() || "",
-      otherFee: quote.otherFee?.toString() || "",
-      finalPrice: quote.finalPrice?.toString() || "",
-      paymentMethod: quote.paymentMethod || "VNPAY",
-      paymentTerms: quote.paymentTerms || "",
-      guarantee: quote.guarantee || "",
-      files: quote.files || [],
-    });
-    setEditOpen(true);
+    navigate(`/supplier/${supplierId}/quotations/${quote.id}`);
+  };
+
+  const handleCloseDetail = () => {
+    navigate(`/supplier/${supplierId}/quotations`);
+    setViewMode("list");
+    setSelectedQuote(null);
   };
 
   const handleOpenEdit = (quote) => {
@@ -709,6 +720,21 @@ export default function Quotations() {
 
   return (
     <Box>
+      {/* Show detail view if viewMode is "detail" */}
+      {viewMode === "detail" && selectedQuote && (
+        <QuotationDetailSupplier
+          quotation={selectedQuote}
+          onBack={handleCloseDetail}
+          onEdit={() => {
+            // Handle edit if needed
+          }}
+          loading={detailLoading}
+        />
+      )}
+
+      {/* Show list view if viewMode is "list" */}
+      {viewMode === "list" && (
+      <Box>
 
       {/* Filters */}
       <FilterCard>
@@ -992,7 +1018,6 @@ export default function Quotations() {
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
         }}>
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <QuoteReceiptIcon sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
             <Box>
               <Typography
                 variant="h5"
@@ -1002,13 +1027,10 @@ export default function Quotations() {
                   background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  // WebkitTextFillColor: 'transparent',
                 }}
               >
                 {isViewMode ? 'Chi tiết báo giá' : 'Chỉnh sửa báo giá'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {isViewMode ? 'Xem thông tin chi tiết báo giá' : 'Cập nhật thông tin và điều chỉnh chi phí nhanh chóng'}
               </Typography>
             </Box>
           </Box>
@@ -1282,6 +1304,8 @@ export default function Quotations() {
           Bạn có chắc chắn muốn xóa báo giá này không? Hành động này không thể hoàn tác.
         </Typography>
       </CommonDialog>
+      </Box>
+      )}
     </Box>
   );
 }

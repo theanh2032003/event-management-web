@@ -77,7 +77,10 @@ function EnterpriseRoutes() {
         {/* Quote Requests */}
         <Route path="quote-requests" element={<EnterpriseQuoteRequests />} />
         <Route path="quote-requests/:rfqId" element={<EnterpriseQuoteRequests />} />
+        
+        {/* Quotations */}
         <Route path="quotations" element={<EnterpriseQuotations />} />
+        <Route path="quotations/:quotationId" element={<EnterpriseQuotations />} />
 
         {/* Contracts */}
         <Route path="contracts" element={<EnterpriseContracts />} />
@@ -115,6 +118,7 @@ function SupplierRoutes() {
         <Route path="rfq" element={<RFQ />} />
         <Route path="rfq/:rfqId" element={<RFQ />} />
         <Route path="quotations" element={<Quotations />} />
+        <Route path="quotations/:quotationId" element={<Quotations />} />
         <Route path="contracts" element={<Contracts />} />
         <Route path="marketplace" element={<SupplierMarketplace />} />
         {/* create-product và edit-product được thay thế bằng dialog trong MarketplaceSupplier */}

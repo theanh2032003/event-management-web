@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -113,7 +113,8 @@ const ActionButton = styled(IconButton)(({ theme }) => ({
 }));
 
 export default function Quotations() {
-  const { id: enterpriseId } = useParams();
+  const { id: enterpriseId, quotationId } = useParams();
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -132,6 +133,7 @@ export default function Quotations() {
   const [loading, setLoading] = useState(true);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [viewMode, setViewMode] = useState("list"); // "list" or "detail"
+  const [detailLoading, setDetailLoading] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -224,12 +226,30 @@ export default function Quotations() {
     }
   }, [enterpriseId, permissionsLoading, canManageQuotes, showToast, filters]);
 
+  // Auto-load detail when quotationId changes
+  useEffect(() => {
+    if (quotationId && !isNaN(parseInt(quotationId))) {
+      setDetailLoading(true);
+      quoteApi.getQuoteByIdEnterprise(parseInt(quotationId))
+        .then((detailedQuote) => {
+          setSelectedQuote(detailedQuote);
+          setViewMode("detail");
+          setDetailLoading(false);
+        })
+        .catch((error) => {
+          console.error("[QUOTATION_DETAIL] Error fetching quote detail:", error);
+          showToast("Lỗi khi tải chi tiết báo giá", "error");
+          setDetailLoading(false);
+        });
+    }
+  }, [quotationId]);
+
   const handleOpenDetail = (quote) => {
-    setSelectedQuote(quote);
-    setViewMode("detail");
+    navigate(`/enterprise/${enterpriseId}/quotations/${quote.id}`);
   };
 
   const handleCloseDetail = () => {
+    navigate(`/enterprise/${enterpriseId}/quotations`);
     setViewMode("list");
     setSelectedQuote(null);
   };
@@ -451,7 +471,7 @@ export default function Quotations() {
 
   // Show detail view if viewMode is "detail"
   if (viewMode === "detail" && selectedQuote) {
-    return <QuotationDetail quotation={selectedQuote} onBack={handleCloseDetail} />;
+    return <QuotationDetail quotation={selectedQuote} onBack={handleCloseDetail} loading={detailLoading} />;
   }
 
   return (
