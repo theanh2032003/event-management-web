@@ -96,7 +96,7 @@ const ActionButton = styled(IconButton)(({ theme }) => ({
 }));
 
 export default function QuoteRequests() {
-  const { id: enterpriseId } = useParams();
+  const { id: enterpriseId, rfqId } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const theme = useTheme();
@@ -149,6 +149,7 @@ export default function QuoteRequests() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletingRfqId, setDeletingRfqId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   // Fetch quote requests
   useEffect(() => {
@@ -201,19 +202,37 @@ export default function QuoteRequests() {
     }
   }, [enterpriseId, permissionsLoading, isUnauthorized, showToast, page, rowsPerPage, filters]);
 
-  const handleOpenDetail = (rfq) => {
-    setSelectedRfq(rfq);
-    setViewMode("detail");
-  };
+  // Auto-load detail view if rfqId is in URL params
+  useEffect(() => {
+    if (rfqId && !isNaN(parseInt(rfqId)) && !permissionsLoading && !isUnauthorized) {
+      setDetailLoading(true);
+      rfqApi.getRfqById(parseInt(rfqId))
+        .then((detailedRfq) => {
+          setSelectedRfq(detailedRfq);
+          setViewMode("detail");
+          setDetailLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching RFQ detail:", error);
+          setViewMode("list");
+          setDetailLoading(false);
+        });
+    }
+  }, [rfqId, permissionsLoading, isUnauthorized]);
 
   const handleEditClick = (rfq) => {
     setSelectedRfq(rfq);
     setEditModalOpen(true);
   };
 
+  const handleOpenDetail = (rfq) => {
+    navigate(`/enterprise/${enterpriseId}/quote-requests/${rfq.id}`);
+  };
+
   const handleCloseDetail = () => {
     setViewMode("list");
     setSelectedRfq(null);
+    navigate(`/enterprise/${enterpriseId}/quote-requests`);
   };
 
   const handleEditFromDetail = () => {
@@ -586,6 +605,7 @@ export default function QuoteRequests() {
         rfq={selectedRfq}
         onBack={handleCloseDetail}
         onEdit={selectedRfq.state === "DRAFT" ? handleEditFromDetail : undefined}
+        loading={detailLoading}
       />
     );
   }

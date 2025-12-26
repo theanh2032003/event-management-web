@@ -7,6 +7,7 @@ import {
   Divider,
   alpha,
   useTheme,
+  CircularProgress,
 } from "@mui/material";
 import {
   RequestQuote as RequestQuoteIcon,
@@ -24,9 +25,18 @@ import TemplateDetailLayout from "../../../shared/components/TemplateDetailLayou
  * @param {Object} rfq - Dữ liệu yêu cầu báo giá từ API
  * @param {Function} onBack - Callback khi quay lại danh sách
  * @param {Function} onEdit - Callback khi click nút sửa (optional)
+ * @param {Boolean} loading - Loading state (optional)
  */
-const QuoteRequestDetail = ({ rfq, onBack, onEdit }) => {
+const QuoteRequestDetail = ({ rfq, onBack, onEdit, loading = false }) => {
   const theme = useTheme();
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   if (!rfq) {
     return (
@@ -88,16 +98,14 @@ const QuoteRequestDetail = ({ rfq, onBack, onEdit }) => {
 
   // Prepare props cho TemplateDetailLayout
   const layoutProps = {
-    title: `Yêu cầu báo giá #${rfq.id} - ${rfq.name || "Không có tên"}`,
+    title: `Yêu cầu báo giá - ${rfq.name || "Không có tên"}`,
     status: {
       label: getStateLabel(rfq.state),
       color: getStateColor(rfq.state),
     },
-    createdBy: rfq.creator?.name || rfq.creatorName || "N/A",
-    createdDate: rfq.createdAt || new Date(),
     actions,
     additionalInfo: {
-      "Sản phẩm": rfq.product?.name || rfq.productName || "N/A",
+      "Sản phẩm": rfq.productSnapshot?.name || rfq.productName || "N/A",
       "Số lượng": `${rfq.quantity || 0} ${rfq.product?.unit || ""}`,
       "Dự án": rfq.project?.name || rfq.projectName || "—",
       "Hạn gửi": rfq.expiredAt
@@ -114,371 +122,210 @@ const QuoteRequestDetail = ({ rfq, onBack, onEdit }) => {
 
   return (
     <TemplateDetailLayout {...layoutProps}>
-      {/* Content Section */}
-      <Box>
-        <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
-          Thông tin chi tiết yêu cầu
-        </Typography>
+      {/* Content Section - 2 Column Layout */}
+      <Box sx={{ display: 'flex', gap: 3 }}>
+        {/* Left Column */}
+        <Box sx={{ flex: 1 }}>
+          {/* Creator Information */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+              Thông tin người tạo
+            </Typography>
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Người tạo
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {rfq.createdUser?.name || rfq.creatorName || "N/A"}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Ngày tạo
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {rfq.createdAt
+                  ? new Date(rfq.createdAt).toLocaleDateString("vi-VN", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "—"}
+              </Typography>
+            </Box>
+          </Box>
 
-        <Grid container spacing={3}>
           {/* Product Information */}
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 2.5,
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <ProductIcon sx={{ fontSize: 20, color: "primary.main" }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Thông tin sản phẩm
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Thông tin sản phẩm
+              </Typography>
+            </Box>
+
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Tên sản phẩm
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {rfq?.productSnapshot?.name || rfq.productName || "N/A"}
+              </Typography>
+            </Box>
+
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Số lượng
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500}}>
+                {rfq.quantity || 0} {rfq.product?.unit || ""}
+              </Typography>
+            </Box>
+
+            {rfq.product?.description && (
+              <Box>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                  Mô tả sản phẩm
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, whiteSpace: "pre-wrap", color: "text.secondary" }}>
+                  {rfq?.productSnapshot?.description}
                 </Typography>
               </Box>
-              <Divider sx={{ mb: 2 }} />
-
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Tên sản phẩm
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {rfq.product?.name || rfq.productName || "N/A"}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Số lượng
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{ fontWeight: 600, color: "success.main" }}
-                    >
-                      {rfq.quantity || 0} {rfq.product?.unit || ""}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                {rfq.product?.description && (
-                  <Grid item xs={12}>
-                    <Box>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                      >
-                        Mô tả sản phẩm
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 500,
-                          whiteSpace: "pre-wrap",
-                          lineHeight: 1.8,
-                          color: "text.secondary",
-                        }}
-                      >
-                        {rfq.product.description}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-              </Grid>
-            </Box>
-          </Grid>
+            )}
+          </Box>
 
           {/* Project Information */}
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 2.5,
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.info.main, 0.04),
-                border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <ProjectIcon sx={{ fontSize: 20, color: "info.main" }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Thông tin dự án
+          <Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Thông tin dự án
+              </Typography>
+            </Box>
+
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Tên dự án
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {rfq.project?.name || rfq.projectName || "—"}
+              </Typography>
+            </Box>
+
+            {rfq.project?.description && (
+              <Box>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                  Mô tả dự án
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, whiteSpace: "pre-wrap", color: "text.secondary" }}>
+                  {rfq.project.description}
                 </Typography>
               </Box>
-              <Divider sx={{ mb: 2 }} />
+            )}
+          </Box>
+        </Box>
 
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Tên dự án
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {rfq.project?.name || rfq.projectName || "—"}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                {rfq.project?.description && (
-                  <Grid item xs={12}>
-                    <Box>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                      >
-                        Mô tả dự án
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 500,
-                          whiteSpace: "pre-wrap",
-                          lineHeight: 1.8,
-                          color: "text.secondary",
-                        }}
-                      >
-                        {rfq.project.description}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-              </Grid>
-            </Box>
-          </Grid>
-
+        {/* Right Column */}
+        <Box sx={{ flex: 1 }}>
           {/* Request Information */}
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 2.5,
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.secondary.main, 0.04),
-                border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <CalendarIcon sx={{ fontSize: 20, color: "secondary.main" }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Thông tin yêu cầu
-                </Typography>
-              </Box>
-              <Divider sx={{ mb: 2 }} />
-
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Hạn gửi
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {rfq.expiredAt
-                        ? new Date(rfq.expiredAt).toLocaleDateString("vi-VN", {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "—"}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Ngày tạo
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {rfq.createdAt
-                        ? new Date(rfq.createdAt).toLocaleDateString("vi-VN", {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "—"}
-                    </Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                    >
-                      Trạng thái hiện tại
-                    </Typography>
-                    <Box sx={{ mt: 0.5 }}>
-                      <Chip
-                        label={getStateLabel(rfq.state)}
-                        color={getStateColor(rfq.state)}
-                        variant="outlined"
-                        sx={{ fontWeight: 600 }}
-                      />
-                    </Box>
-                  </Box>
-                </Grid>
-              </Grid>
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Thông tin yêu cầu
+              </Typography>
             </Box>
-          </Grid>
 
-          {/* Notes */}
-          {rfq.note && (
-            <Grid item xs={12}>
-              <Box
-                sx={{
-                  p: 2.5,
-                  borderRadius: 2,
-                  backgroundColor: alpha(theme.palette.warning.main, 0.04),
-                  border: `1px solid ${alpha(theme.palette.warning.main, 0.1)}`,
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                  <DescriptionIcon
-                    sx={{ fontSize: 20, color: "warning.main" }}
-                  />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                    Ghi chú
-                  </Typography>
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontWeight: 500,
-                    whiteSpace: "pre-wrap",
-                    lineHeight: 1.8,
-                    color: "text.secondary",
-                  }}
-                >
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Hạn gửi
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {rfq.expiredAt
+                  ? new Date(rfq.expiredAt).toLocaleDateString("vi-VN", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "—"}
+              </Typography>
+            </Box>
+
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Trạng thái
+              </Typography>
+              <Box sx={{ mt: 0.5 }}>
+                <Chip
+                  label={getStateLabel(rfq.state)}
+                  color={getStateColor(rfq.state)}
+                  variant="outlined"
+                  size="small"
+                  sx={{ fontWeight: 600 }}
+                />
+              </Box>
+            </Box>
+
+            {rfq.note && (
+              <Box>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                  Ghi chú
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500, whiteSpace: "pre-wrap", color: "text.secondary" }}>
                   {rfq.note}
                 </Typography>
               </Box>
-            </Grid>
-          )}
+            )}
+          </Box>
 
-          {/* Additional Info Section */}
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 2.5,
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.success.main, 0.04),
-                border: `1px solid ${alpha(theme.palette.success.main, 0.1)}`,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <QuantityIcon sx={{ fontSize: 20, color: "success.main" }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Tóm tắt yêu cầu
+          {/* Summary Section */}
+          <Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Tóm tắt yêu cầu
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 600, minWidth: "120px" }}>
+                  Sản phẩm:
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  {rfq.product?.name || rfq.productName || "N/A"}
                 </Typography>
               </Box>
-              <Divider sx={{ mb: 2 }} />
 
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1.5,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    Sản phẩm yêu cầu:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {rfq.product?.name || rfq.productName || "N/A"}
-                  </Typography>
-                </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 600, minWidth: "120px" }}>
+                  Số lượng:
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  {rfq.quantity || 0} {rfq.product?.unit || ""}
+                </Typography>
+              </Box>
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    Số lượng cần báo giá:
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 600, color: "success.main" }}
-                  >
-                    {rfq.quantity || 0} {rfq.product?.unit || ""}
-                  </Typography>
-                </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 600, minWidth: "120px" }}>
+                  Dự án:
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  {rfq.project?.name || rfq.projectName || "—"}
+                </Typography>
+              </Box>
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    Thuộc dự án:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {rfq.project?.name || rfq.projectName || "—"}
-                  </Typography>
-                </Box>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    Hạn nhận báo giá:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {rfq.expiredAt
-                      ? new Date(rfq.expiredAt).toLocaleDateString("vi-VN")
-                      : "—"}
-                  </Typography>
-                </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 600, minWidth: "120px" }}>
+                  Hạn báo giá:
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  {rfq.expiredAt ? new Date(rfq.expiredAt).toLocaleDateString("vi-VN") : "—"}
+                </Typography>
               </Box>
             </Box>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Box>
     </TemplateDetailLayout>
   );

@@ -76,6 +76,7 @@ function EnterpriseRoutes() {
 
         {/* Quote Requests */}
         <Route path="quote-requests" element={<EnterpriseQuoteRequests />} />
+        <Route path="quote-requests/:rfqId" element={<EnterpriseQuoteRequests />} />
         <Route path="quotations" element={<EnterpriseQuotations />} />
 
         {/* Contracts */}
@@ -112,6 +113,7 @@ function SupplierRoutes() {
       <Routes>
         <Route path="dashboard" element={<SupplierDashboard />} />
         <Route path="rfq" element={<RFQ />} />
+        <Route path="rfq/:rfqId" element={<RFQ />} />
         <Route path="quotations" element={<Quotations />} />
         <Route path="contracts" element={<Contracts />} />
         <Route path="marketplace" element={<SupplierMarketplace />} />

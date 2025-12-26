@@ -90,47 +90,16 @@ const rfqApi = {
    */
   getRfqById: async (id) => {
     try {
-      const getUserId = () => {
-        const raw = localStorage.getItem('user');
-        const user = raw ? JSON.parse(raw) : {};
-        return user?.id || user?._id || user?.userId || localStorage.getItem('userId');
-      };
+      const response = await axiosClient.get(`/rfq/${id}`);
+      return response?.data || response;
+    } catch (error) {
+      throw error;
+    }
+  },
 
-      const getEnterpriseId = () => {
-        return localStorage.getItem('enterpriseId');
-      };
-
-      const getSupplierId = () => {
-        const currentWorkspace = localStorage.getItem('currentWorkspace');
-        if (currentWorkspace) {
-          try {
-            const workspace = JSON.parse(currentWorkspace);
-            if (workspace.type === 'supplier' && workspace.id) {
-              return workspace.id.toString();
-            }
-          } catch (e) {
-            console.error('Error parsing currentWorkspace:', e);
-          }
-        }
-        return null;
-      };
-
-      const userId = getUserId();
-      const enterpriseId = getEnterpriseId();
-      const supplierId = getSupplierId();
-
-      const headers = {};
-      if (enterpriseId) {
-        headers['enterprise-id'] = enterpriseId;
-      }
-      if (supplierId) {
-        headers['supplier-id'] = supplierId;
-      }
-      if (userId) {
-        headers['user-id'] = userId;
-      }
-
-      const response = await axiosClient.get(`/rfq/${id}`, { headers });
+    getRfqByIdSupplier: async (id) => {
+    try {
+      const response = await axiosClient.get(`/rfq/${id}/supplier`);
       return response?.data || response;
     } catch (error) {
       throw error;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -54,6 +54,7 @@ import {
 import rfqApi from "../api/rfq.api";
 import quoteApi from "../../quote/api/quote.api";
 import { CommonTable } from "../../../shared/components/CommonTable";
+import SupplierRFQDetail from "./RfqSupplierDetail";
 
 // Styled Components - Matching EventManagement style
 const HeaderBox = styled(Box)(({ theme }) => ({
@@ -228,7 +229,8 @@ const bigInputSx = {
 
 
 export default function RFQ() {
-  const { id: supplierId } = useParams();
+  const { id: supplierId, rfqId } = useParams();
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -246,9 +248,12 @@ export default function RFQ() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   
-  // Modal states
-  const [detailOpen, setDetailOpen] = useState(false);
+  // View mode states
+  const [viewMode, setViewMode] = useState("list"); // "list" or "detail"
   const [selectedRfq, setSelectedRfq] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  
+  // Create quote modal states
   const [createQuoteOpen, setCreateQuoteOpen] = useState(false);
   const [createQuoteSubmitting, setCreateQuoteSubmitting] = useState(false);
   
@@ -323,14 +328,37 @@ export default function RFQ() {
     fetchRfqs();
   }, [page, rowsPerPage, filterKeyword, filterProjectId, showToast]);
 
+  // Auto-load detail view if rfqId is in URL params
+  useEffect(() => {
+    if (rfqId && !isNaN(parseInt(rfqId))) {
+      setDetailLoading(true);
+      rfqApi.getRfqByIdSupplier(parseInt(rfqId))
+        .then((detailedRfq) => {
+          setSelectedRfq(detailedRfq);
+          setViewMode("detail");
+          setDetailLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching RFQ detail:", error);
+          showToast(
+            error?.response?.data?.message || "Lỗi khi tải chi tiết yêu cầu báo giá",
+            "error",
+            3000
+          );
+          setViewMode("list");
+          setDetailLoading(false);
+        });
+    }
+  }, [rfqId]);
+
   const handleOpenDetail = (rfq) => {
-    setSelectedRfq(rfq);
-    setDetailOpen(true);
+    navigate(`/supplier/${supplierId}/rfq/${rfq.id}`);
   };
 
   const handleCloseDetail = () => {
-    setDetailOpen(false);
+    setViewMode("list");
     setSelectedRfq(null);
+    navigate(`/supplier/${supplierId}/rfq`);
   };
 
   const handleOpenCreateQuote = (rfq) => {
@@ -572,6 +600,19 @@ export default function RFQ() {
 
   return (
     <Box>
+      {/* Show detail view if viewMode is "detail" */}
+      {viewMode === "detail" && selectedRfq && (
+        <SupplierRFQDetail
+          rfq={selectedRfq}
+          onBack={handleCloseDetail}
+          onCreateQuote={() => handleOpenCreateQuote(selectedRfq)}
+          loading={detailLoading}
+        />
+      )}
+
+      {/* Show list view if viewMode is "list" */}
+      {viewMode === "list" && (
+      <Box>
 
       {/* Filters */}
       <FilterCard>
@@ -761,562 +802,8 @@ export default function RFQ() {
           emptyMessage="Không có yêu cầu báo giá"
         />
       )}
-
-      {/* Detail Dialog */}
-      <Dialog 
-        open={detailOpen} 
-        onClose={handleCloseDetail} 
-        maxWidth="md" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: theme.spacing(3),
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          pr: 2,
-          pt: 3,
-          pb: 2,
-          gap: 2,
-          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
-          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}>
-          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <RequestQuoteIcon sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
-            <Box>
-              <Typography 
-                variant="h5" 
-                sx={{ 
-                  fontWeight: 700,
-                  mb: 0.5,
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Chi tiết yêu cầu báo giá
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Thông tin chi tiết về yêu cầu báo giá từ doanh nghiệp
-              </Typography>
-            </Box>
-          </Box>
-          <IconButton 
-            onClick={handleCloseDetail}
-            size="small"
-            sx={{
-              color: 'text.secondary',
-              '&:hover': {
-                backgroundColor: alpha(theme.palette.error.main, 0.1),
-                color: theme.palette.error.main,
-              },
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-
-        <DialogContent sx={{ pt: 3, pb: 2 }}>
-          {selectedRfq && (
-            <Stack spacing={3}>
-              {/* Thông tin yêu cầu */}
-              <SectionCard elevation={0}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <RequestQuoteIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                    Thông tin yêu cầu
-                  </Typography>
-                </Box>
-
-                <Grid container spacing={2.5}>
-                  {/* Tên yêu cầu */}
-                  <Grid item xs={12}>
-                    <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-                      Tên yêu cầu
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 700, mt: 0.5 }}>
-                      {selectedRfq.name || "N/A"}
-                    </Typography>
-                  </Grid>
-
-                  {/* Doanh nghiệp & Trạng thái */}
-                  {selectedRfq.enterprise && (
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-                        Doanh nghiệp
-                      </Typography>
-                      <Box sx={{ mt: 0.75 }}>
-                        <Chip
-                          label={selectedRfq.enterprise.name || "N/A"}
-                          sx={{
-                            backgroundColor: alpha(theme.palette.secondary.main, 0.15),
-                            color: theme.palette.secondary.main,
-                            fontWeight: 600,
-                            fontSize: '0.875rem',
-                            height: 32,
-                            border: `1px solid ${alpha(theme.palette.secondary.main, 0.3)}`,
-                          }}
-                        />
-                      </Box>
-                    </Grid>
-                  )}
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-                      Trạng thái
-                    </Typography>
-                    <Box sx={{ mt: 0.75 }}>
-                      <Chip
-                        label={getStateLabel(selectedRfq.state)}
-                        color={getStateColor(selectedRfq.state)}
-                        size="medium"
-                        variant="outlined"
-                        sx={{ fontWeight: 600 }}
-                      />
-                    </Box>
-                  </Grid>
-
-                  {/* Số lượng & Ngày tạo */}
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-                      Số lượng
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 700, mt: 0.5, color: theme.palette.primary.main }}>
-                      {selectedRfq.quantity?.toLocaleString("vi-VN") || "N/A"}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-                      Ngày tạo
-                    </Typography>
-                    <Typography variant="body1" sx={{ mt: 0.5 }}>
-                      {formatDateTime(selectedRfq.createdAt)}
-                    </Typography>
-                  </Grid>
-
-                  {/* Ngày hết hạn */}
-                  <Grid item xs={12}>
-                    <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-                      Ngày hết hạn
-                    </Typography>
-                    <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: 700,
-                          color:
-                            new Date(selectedRfq.expiredAt) < new Date()
-                              ? theme.palette.error.main
-                              : theme.palette.text.primary,
-                        }}
-                      >
-                        {formatDateTime(selectedRfq.expiredAt)}
-                      </Typography>
-                      {new Date(selectedRfq.expiredAt) < new Date() && (
-                        <Chip
-                          label="Hết hạn"
-                          size="small"
-                          color="error"
-                          icon={<CheckCircleIcon />}
-                          sx={{ height: 24, fontSize: '0.7rem', fontWeight: 600 }}
-                        />
-                      )}
-                    </Box>
-                  </Grid>
-
-                  {/* Ghi chú */}
-                  {selectedRfq.note && (
-                    <Grid item xs={12}>
-                      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-                        Ghi chú / Yêu cầu đặc biệt
-                      </Typography>
-                      <Typography variant="body2" sx={{ mt: 0.75, lineHeight: 1.7 }}>
-                        {selectedRfq.note}
-                      </Typography>
-                    </Grid>
-                  )}
-                </Grid>
-              </SectionCard>
-
-              {/* Sản phẩm/Dịch vụ */}
-              {selectedRfq.product && (
-                <SectionCard elevation={0}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <InventoryIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      Sản phẩm/Dịch vụ
-                    </Typography>
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-                    {selectedRfq.product.name || "N/A"}
-                  </Typography>
-                  {selectedRfq.product.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                      {selectedRfq.product.description}
-                    </Typography>
-                  )}
-                </SectionCard>
-              )}
-            </Stack>
-          )}
-        </DialogContent>
-
-        <DialogActions sx={{ 
-          p: 3, 
-          pt: 2,
-          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          gap: 2,
-          background: alpha(theme.palette.background.default, 0.5),
-        }}>
-          <Button 
-            onClick={handleCloseDetail}
-            variant="outlined"
-            sx={{ 
-              borderRadius: theme.spacing(1.5), 
-              textTransform: 'none', 
-              fontWeight: 600,
-              px: 3,
-              borderColor: alpha(theme.palette.divider, 0.3),
-              color: 'text.primary',
-              '&:hover': {
-                borderColor: theme.palette.error.main,
-                color: theme.palette.error.main,
-                backgroundColor: alpha(theme.palette.error.main, 0.05),
-              },
-            }}
-          >
-            Đóng
-          </Button>
-          {selectedRfq && (
-            <Button 
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                handleCloseDetail();
-                handleOpenCreateQuote(selectedRfq);
-              }}
-              sx={{ 
-                borderRadius: theme.spacing(1.5), 
-                textTransform: 'none', 
-                fontWeight: 600,
-                px: 3,
-                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-                '&:hover': {
-                  boxShadow: `0 6px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              Tạo báo giá
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
-
-      {/* Create Quote Dialog */}
-      <Dialog 
-        open={createQuoteOpen} 
-        onClose={handleCloseCreateQuote} 
-        maxWidth="md" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: theme.spacing(3),
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          pr: 2,
-          pt: 3,
-          pb: 2,
-          gap: 2,
-          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
-          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}>
-          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box>
-              <Typography 
-                variant="h5" 
-                sx={{ 
-                  fontWeight: 700,
-                  mb: 0.5,
-                  background: theme.palette.primary.main,
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Tạo báo giá
-              </Typography>
-            </Box>
-          </Box>
-        </DialogTitle>
-
-        <DialogContent sx={{ pt: 3, pb: 2 }}>
-          <Grid container spacing={4} sx={{ mt: 3, width: '100%' }}>
-
-            {/* Tên báo giá */}
-            <Grid item xs={12} sx={{ width: '100%' }}>
-              <StyledTextField
-                label="Tên báo giá *"
-                name="name"
-                value={createQuoteFormData.name}
-                onChange={handleCreateQuoteInputChange}
-                required
-                fullWidth
-                placeholder="VD: Báo giá Đèn Follow Spot 2500W - Tháng 11/2025"
-                sx={bigInputSx}
-              />
-            </Grid>
-
-            {/* Ngày hết hạn */}
-            <Grid item xs={12} md={4} sx={{width: '100%'}}>
-              <StyledTextField
-                label="Ngày hết hạn *"
-                name="expiredAt"
-                type="datetime-local"
-                value={createQuoteFormData.expiredAt}
-                onChange={handleCreateQuoteInputChange}
-                required
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                sx={bigInputSx}
-              />
-            </Grid>
-
-            {/* Số lượng */}
-            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
-              <StyledTextField
-                label="Số lượng"
-                name="quantity"
-                type="number"
-                value={createQuoteFormData.quantity}
-                onChange={handleCreateQuoteInputChange}
-                required
-                fullWidth
-                sx={bigInputSx}
-              />
-            </Grid>
-
-            {/* Đơn giá */}
-            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
-              <StyledTextField
-                label="Đơn giá"
-                name="unitPrice"
-                value={formatCurrency(createQuoteFormData.unitPrice)}
-                onChange={handleCreateQuoteInputChange}
-                required
-                fullWidth
-                sx={{
-                  ...bigInputSx
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Typography fontWeight={600}>₫</Typography>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Tổng giá */}
-            <Grid item xs={12} sx={{width: '100%'}}>
-              <StyledTextField
-                label="Tổng giá"
-                value={formatCurrency(createQuoteFormData.totalPrice)}
-                fullWidth
-                sx={{
-                  ...bigInputSx
-                }}
-                InputProps={{
-                  readOnly: true,
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Typography fontWeight={600}>₫</Typography>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Thuế */}
-            {/* <Grid item xs={12} sm={6}  sx={{width: '100%'}}>
-              <StyledTextField
-                label="Thuế"
-                name="tax"
-                value={formatCurrency(createQuoteFormData.tax)}
-                onChange={handleCreateQuoteInputChange}
-                fullWidth
-                sx={bigInputSx}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Typography>₫</Typography>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid> */}
-            {/* Phí khác */}
-            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
-              <StyledTextField
-                label="Phụ phí"
-                name="otherFee"
-                value={formatCurrency(createQuoteFormData.otherFee)}
-                onChange={handleCreateQuoteInputChange}
-                fullWidth
-                sx={bigInputSx}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Typography>₫</Typography>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Giảm giá */}
-            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
-              <StyledTextField
-                label="Giảm giá"
-                name="discount"
-                value={formatCurrency(createQuoteFormData.discount)}
-                onChange={handleCreateQuoteInputChange}
-                fullWidth
-                sx={bigInputSx}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Typography>₫</Typography>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Giá cuối cùng */}
-            <Grid item xs={12}  sx={{width: '100%'}}>
-              <StyledTextField
-                label="Giá cuối cùng"
-                value={formatCurrency(createQuoteFormData.finalPrice)}
-                fullWidth
-                sx={{
-                  ...bigInputSx
-                }}
-                InputProps={{
-                  readOnly: true,
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Typography>
-                        ₫
-                      </Typography>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Phương thức thanh toán */}
-            <Grid item xs={12} sm={6}  sx={{width: '100%'}}>
-              <StyledFormControl fullWidth sx={{ minHeight: 52 }}>
-                <InputLabel>Phương thức thanh toán</InputLabel>
-                <Select
-                  name="paymentMethod"
-                  value={createQuoteFormData.paymentMethod}
-                  onChange={handleCreateQuoteInputChange}
-                  label="Phương thức thanh toán"
-                >
-                  <MenuItem value="VNPAY">VNPAY</MenuItem>
-                  <MenuItem value="BANK_TRANSFER">Chuyển khoản</MenuItem>
-                  <MenuItem value="CASH">Tiền mặt</MenuItem>
-                  <MenuItem value="MOMO">Ví MOMO</MenuItem>
-                  <MenuItem value="CREDIT_CARD">Thẻ tín dụng</MenuItem>
-                </Select>
-              </StyledFormControl>
-            </Grid>
-
-            {/* Điều khoản */}
-            <Grid item xs={12} sx={{width: '100%'}}>
-              <StyledTextField
-                label="Điều khoản thanh toán"
-                name="paymentTerms"
-                value={createQuoteFormData.paymentTerms}
-                onChange={handleCreateQuoteInputChange}
-                multiline
-                rows={2}
-                fullWidth
-                sx={bigInputSx}
-              />
-            </Grid>
-
-            {/* Bảo hành */}
-            <Grid item xs={12}  sx={{width: '100%'}}>
-              <StyledTextField
-                label="Bảo hành"
-                name="guarantee"
-                value={createQuoteFormData.guarantee}
-                onChange={handleCreateQuoteInputChange}
-                multiline
-                rows={2}
-                fullWidth
-                sx={bigInputSx}
-              />
-            </Grid>
-
-          </Grid>
-        </DialogContent>
-
-
-        <DialogActions sx={{ 
-          p: 3, 
-          pt: 2,
-          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          gap: 2,
-          background: alpha(theme.palette.background.default, 0.5),
-        }}>
-          <StyledButton
-            onClick={handleCloseCreateQuote}
-            disabled={createQuoteSubmitting}
-            variant="outlined"
-            sx={{
-              borderColor: alpha(theme.palette.divider, 0.3),
-              color: 'text.primary',
-              '&:hover': {
-                borderColor: theme.palette.error.main,
-                color: theme.palette.error.main,
-                backgroundColor: alpha(theme.palette.error.main, 0.05),
-              },
-            }}
-          >
-            Hủy
-          </StyledButton>
-          <StyledButton
-            variant="contained"
-            onClick={handleCreateQuoteSubmit}
-            disabled={createQuoteSubmitting}
-            startIcon={createQuoteSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
-            sx={{
-              boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-              '&:hover': {
-                boxShadow: `0 6px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
-              },
-            }}
-          >
-            {createQuoteSubmitting ? "Đang tạo..." : "Tạo"}
-          </StyledButton>
-        </DialogActions>
-      </Dialog>
+      </Box>
+      )}
     </Box>
   );
 }
