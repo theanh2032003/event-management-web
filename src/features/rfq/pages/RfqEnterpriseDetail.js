@@ -86,15 +86,15 @@ const QuoteRequestDetail = ({ rfq, onBack, onEdit, loading = false }) => {
   ];
 
   // Add edit button if state is DRAFT and onEdit is provided
-  if (rfq.state === "DRAFT" && onEdit) {
-    actions.unshift({
-      label: "Sửa",
-      icon: <EditIcon />,
-      onClick: onEdit,
-      variant: "contained",
-      color: "primary",
-    });
-  }
+  // if (rfq.state === "DRAFT" && onEdit) {
+  //   actions.unshift({
+  //     label: "Sửa",
+  //     icon: <EditIcon />,
+  //     onClick: onEdit,
+  //     variant: "contained",
+  //     color: "primary",
+  //   });
+  // }
 
   // Prepare props cho TemplateDetailLayout
   const layoutProps = {

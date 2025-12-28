@@ -236,31 +236,6 @@ const SupplierQuotationDetail = ({ quotation, onBack, onEdit, loading = false })
               </Typography>
             </Box>
           </Box>
-
-          {/* Shipping & Other Fees */}
-          <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
-              Phí vận chuyển & Phụ phí
-            </Typography>
-
-            <Box sx={{ mb: 1.5 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                Phí vận chuyển
-              </Typography>
-              <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {quotation.shippingFee ? quotation.shippingFee.toLocaleString("vi-VN") + "₫" : "Không"}
-              </Typography>
-            </Box>
-
-            <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
-                Giảm giá
-              </Typography>
-              <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {quotation.discount ? quotation.discount.toLocaleString("vi-VN") + "₫" : "Không"}
-              </Typography>
-            </Box>
-          </Box>
         </Box>
 
         {/* Right Column */}

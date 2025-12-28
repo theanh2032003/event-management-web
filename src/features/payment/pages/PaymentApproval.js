@@ -1048,15 +1048,10 @@ export default function PaymentApproval() {
                     </ActionButton>
                   </Tooltip>
 
-                  {/* Icon Duyệt - Người tạo sự kiện duyệt cấp 1 (PENDING), chủ doanh nghiệp duyệt cấp 2 (APPROVED_LV1) */}
+                  {/* Icon Duyệt - Hiển thị nếu có quyền duyệt và chưa duyệt xong */}
                   {payment.state !== "DRAFT" &&
                     !["APPROVED_ALL", "REJECTED_LV2", "REJECTED_LV1"].includes(payment.state) &&
-                    (
-                      // Người tạo sự kiện có thể duyệt cấp 1 khi payment ở trạng thái PENDING
-                      (payment.canApproveLv1 && payment.state === "PENDING" && isProjectCreator(payment)) ||
-                      // Chủ doanh nghiệp có thể duyệt cấp 2 khi payment ở trạng thái APPROVED_LV1
-                      (payment.canApproveLv2 && payment.state === "APPROVED_LV1" && isOwner)
-                    ) && (
+                    (payment.canApproveLv1 || payment.canApproveLv2) && (
                       <Tooltip title="Duyệt" arrow>
                         <ActionButton
                           size="small"
