@@ -310,7 +310,7 @@ const QuoteRequestDetail = ({ rfq, onBack, onEdit, loading = false }) => {
           </Box>
 
           {/* Summary Section */}
-          <Box>
+          {/* <Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 Tóm tắt yêu cầu
@@ -354,7 +354,7 @@ const QuoteRequestDetail = ({ rfq, onBack, onEdit, loading = false }) => {
                 </Typography>
               </Box>
             </Box>
-          </Box>
+          </Box> */}
         </Box>
       </Box>
     </TemplateDetailLayout>
