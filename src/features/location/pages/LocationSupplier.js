@@ -35,11 +35,13 @@ import {
   Search as SearchIcon,
   Clear as ClearIcon,
   CloudUpload as CloudUploadIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import { CommonTable } from '../../../shared/components/CommonTable';
 import locationApi from '../api/location.api';
 import { useToast } from '../../../app/providers/ToastContext';
+import { Drawer } from '@mui/material';
 
 // Styled Components
 const HeaderBox = styled(Box)(({ theme }) => ({
@@ -137,7 +139,8 @@ export default function LocationManagement() {
   const theme = useTheme();
   const toast = useToast();
   const { id: supplierId } = useParams();
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [locations, setLocations] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
@@ -145,6 +148,10 @@ export default function LocationManagement() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
+  
+  // Drawer state for location detail
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -164,14 +171,39 @@ export default function LocationManagement() {
     imagePreview: null,
   });
 
+  // Debounced search term
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Debounce effect for search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPage(0); // Reset to first page when search changes
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Fetch locations when debounced search or filters change
   useEffect(() => {
     fetchLocations();
-  }, [supplierId, page, rowsPerPage]);
+  }, [supplierId, page, rowsPerPage, debouncedSearchTerm, filterStatus]);
+
+  // Initial load effect
+  useEffect(() => {
+    if (initialLoading) {
+      fetchLocations().finally(() => setInitialLoading(false));
+    }
+  }, []);
 
   const fetchLocations = async () => {
     try {
-      setLoading(true);
-      const response = await locationApi.getLocations(null, page, rowsPerPage);
+      setTableLoading(true);
+      // Prepare API parameters
+      const available = filterStatus === 'ALL' ? null : (filterStatus === 'active' ? true : false);
+      const keyword = debouncedSearchTerm.trim() || undefined;
+      
+      const response = await locationApi.getLocations(available, page, rowsPerPage, keyword);
       const data = Array.isArray(response) ? response : response.data || [];
       setLocations(data);
       setTotalCount(response?.metadata?.total || data.length);
@@ -179,22 +211,17 @@ export default function LocationManagement() {
       console.error('Error fetching locations:', error);
       toast.error('Không thể tải danh sách địa điểm');
     } finally {
-      setLoading(false);
+      setTableLoading(false);
     }
   };
 
-  // Filter locations
-  const filteredLocations = locations.filter(location => {
-    const matchesSearch = !searchTerm || 
-      location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      location.address.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'ALL' || location.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  // Use locations directly from API (no client-side filtering needed)
+  const filteredLocations = locations;
 
   const handleClearFilters = () => {
     setSearchTerm('');
     setFilterStatus('ALL');
+    setPage(0);
   };
 
   const hasActiveFilters = searchTerm || filterStatus !== 'ALL';
@@ -371,7 +398,18 @@ export default function LocationManagement() {
     setPage(0);
   };
 
-  if (loading) {
+  // Drawer handlers
+  const handleViewDetail = (location) => {
+    setSelectedLocation(location);
+    setDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false);
+    setSelectedLocation(null);
+  };
+
+  if (initialLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress size={50} thickness={4} />
@@ -390,7 +428,7 @@ export default function LocationManagement() {
             size="medium"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            disabled={loading}
+            disabled={tableLoading}
             fullWidth
             InputProps={{
               startAdornment: (
@@ -412,7 +450,7 @@ export default function LocationManagement() {
                 value={filterStatus}
                 label="Trạng thái"
                 onChange={(e) => setFilterStatus(e.target.value)}
-                disabled={loading}
+                disabled={tableLoading}
               >
                 <MenuItem value="ALL">Tất cả trạng thái</MenuItem>
                 <MenuItem value="active">Hoạt động</MenuItem>
@@ -427,7 +465,7 @@ export default function LocationManagement() {
             color="primary"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
-            disabled={loading}
+            disabled={tableLoading}
             sx={{ whiteSpace: 'nowrap' }}
           >
             Thêm địa điểm
@@ -512,21 +550,21 @@ export default function LocationManagement() {
             {
               field: 'address',
               headerName: 'Địa chỉ',
-              flex: 1.5,
+              flex: 1,
               minWidth: 250,
               render: (value) => (
-                <Typography variant="body2" color="text.primary">
-                  {value}
+                <Typography variant="body2" color="text.secondary">
+                  {value || 'N/A'}
                 </Typography>
               ),
             },
             {
-              field: 'description',
-              headerName: 'Mô tả',
-              flex: 1,
-              minWidth: 180,
+              field: 'capacity',
+              headerName: 'Sức chứa',
+              width: 120,
+              align: 'center',
               render: (value) => (
-                <Typography variant="body2" color="text.primary">
+                <Typography variant="body2" color="text.secondary">
                   {value || '-'}
                 </Typography>
               ),
@@ -536,7 +574,7 @@ export default function LocationManagement() {
               headerName: 'Trạng thái',
               width: 140,
               render: (value, location) => (
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box display="flex" alignItems="center" gap={1} onClick={(e) => e.stopPropagation()}>
                   <Switch
                     checked={value === true}
                     onChange={() => handleStatusChange(location)}
@@ -551,7 +589,7 @@ export default function LocationManagement() {
               headerName: 'Hành động',
               width: 100,
               render: (_, location) => (
-                <Box display="flex" gap={0.5}>
+                <Box display="flex" gap={0.5} onClick={(e) => e.stopPropagation()}>
                   <IconButton
                     size="small"
                     onClick={() => handleOpenDialog(location)}
@@ -573,12 +611,13 @@ export default function LocationManagement() {
             },
           ]}
           data={filteredLocations}
-          loading={loading}
+          loading={tableLoading}
           rowsPerPage={rowsPerPage}
           page={page}
           totalCount={totalCount}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          onRowClick={(row) => handleViewDetail(row)}
           emptyMessage="Không có địa điểm"
           minHeight={600}
           maxHeight={600}
@@ -760,6 +799,106 @@ export default function LocationManagement() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Location Detail Drawer */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={handleCloseDrawer}
+        PaperProps={{
+          sx: {
+            width: { xs: '100%', sm: 450 },
+            maxWidth: '100%',
+          },
+        }}
+      >
+        <Box sx={{ p: 3, height: '100%', overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+          {/* Header */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>Chi tiết địa điểm</Typography>
+          </Box>
+
+          {selectedLocation && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
+              {/* Location Image */}
+              {selectedLocation.image && (
+                <Box
+                  component="img"
+                  src={selectedLocation.image}
+                  alt={selectedLocation.name}
+                  sx={{
+                    width: '100%',
+                    height: 250,
+                    objectFit: 'cover',
+                    borderRadius: 2,
+                    mb: 2,
+                  }}
+                />
+              )}
+
+              {/* Name */}
+              <Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 500 }}>
+                  Tên địa điểm
+                </Typography>
+                <Typography variant="h6" fontWeight={500}>
+                  {selectedLocation.name}
+                </Typography>
+              </Box>
+
+              {/* Address */}
+              <Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 500 }}>
+                  Địa chỉ
+                </Typography>
+                <Typography variant="body2">
+                  {selectedLocation.address || '-'}
+                </Typography>
+              </Box>
+
+              {/* Capacity */}
+              {selectedLocation.capacity && (
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 500 }}>
+                    Sức chứa
+                  </Typography>
+                  <Typography variant="body2">
+                    {selectedLocation.capacity} người
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Price */}
+              {selectedLocation.pricePerHour && (
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 500 }}>
+                    Giá/giờ
+                  </Typography>
+                  <Typography variant="body2">
+                    {new Intl.NumberFormat('vi-VN', {
+                      style: 'currency',
+                      currency: 'VND',
+                    }).format(selectedLocation.pricePerHour)}
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Status */}
+              <Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 500 }}>
+                  Trạng thái
+                </Typography>
+                <Chip
+                  label={selectedLocation.available === true ? 'Hoạt động' : 'Tạm dừng'}
+                  color={selectedLocation.available === true ? 'success' : 'default'}
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+            </Box>
+          )}
+        </Box>
+      </Drawer>
     </Box>
   );
 }

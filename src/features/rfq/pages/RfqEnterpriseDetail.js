@@ -227,6 +227,36 @@ const QuoteRequestDetail = ({ rfq, onBack, onEdit, loading = false }) => {
 
         {/* Right Column */}
         <Box sx={{ flex: 1 }}>
+
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+              Thông tin nhà cung cấp
+            </Typography>
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Tên nhà cung cấp
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {rfq.supplier?.name || "N/A"}
+              </Typography>
+            </Box>
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Email
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {rfq.supplier?.email || "N/A"}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Số điện thoại
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {rfq.supplier?.phone || "N/A"}
+              </Typography>
+            </Box>
+          </Box>
           {/* Request Information */}
           <Box sx={{ mb: 3 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>

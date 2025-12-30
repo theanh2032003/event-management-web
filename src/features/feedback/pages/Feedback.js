@@ -159,11 +159,11 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
   // Transform statistics data for chart (rating distribution)
   const ratingDistribution = statistics
     ? [
-        { rating: '5 sao', count: statistics.fiveStar || 0 },
-        { rating: '4 sao', count: statistics.fourStar || 0 },
-        { rating: '3 sao', count: statistics.threeStar || 0 },
-        { rating: '2 sao', count: statistics.twoStar || 0 },
-        { rating: '1 sao', count: statistics.oneStar || 0 },
+        { rating: '5 sao', count: statistics.totalFiveStar || 0 },
+        { rating: '4 sao', count: statistics.totalFourStar || 0 },
+        { rating: '3 sao', count: statistics.totalThreeStar || 0 },
+        { rating: '2 sao', count: statistics.totalTwoStar || 0 },
+        { rating: '1 sao', count: statistics.totalOneStar || 0 },
       ]
     : [];
 
@@ -202,7 +202,7 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
                       Đánh giá TB
                     </Typography>
                     <Typography variant="h5" sx={{ fontWeight: 700, fontSize: '1.75rem' }}>
-                      {parseFloat((statistics.averageRating || 0).toFixed(2))}/5
+                      {parseFloat((statistics.avgStar || 0).toFixed(2))}/5
                     </Typography>
                   </Box>
                   <StarIcon sx={{ fontSize: 24, color: '#999' }} />
@@ -220,7 +220,7 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
                       Tổng feedback
                     </Typography>
                     <Typography variant="h5" sx={{ fontWeight: 700, fontSize: '1.75rem' }}>
-                      {statistics.totalFeedback || 0}
+                      {statistics.totalFeedbacks || 0}
                     </Typography>
                   </Box>
                   <ThumbUpIcon sx={{ fontSize: 24, color: '#999' }} />
@@ -238,7 +238,7 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
                       5 sao
                     </Typography>
                     <Typography variant="h5" sx={{ fontWeight: 700, fontSize: '1.75rem' }}>
-                      {statistics.fiveStar || 0}
+                      {statistics.totalFiveStar || 0}
                     </Typography>
                   </Box>
                   <StarIcon sx={{ fontSize: 20, color: '#FFC107' }} />
@@ -256,7 +256,7 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
                       1 sao
                     </Typography>
                     <Typography variant="h5" sx={{ fontWeight: 700, fontSize: '1.75rem' }}>
-                      {statistics.oneStar || 0}
+                      {statistics.totalOneStar || 0}
                     </Typography>
                   </Box>
                   <StarIcon sx={{ fontSize: 20, color: '#F44336' }} />

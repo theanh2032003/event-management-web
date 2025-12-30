@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   Typography,
+  Chip,
   Paper,
   Button,
   IconButton,
@@ -606,18 +607,41 @@ export default function LocationManagement({
                   </Typography>
                 </Box>
 
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sx={{width: '100%'}}>
+                <Box>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
                       Sức chứa
                     </Typography>
                     <Typography variant="body2">
                       {selectedLocation.capacity || '-'}
                     </Typography>
-                  </Grid>
                   
-                </Grid>
+                </Box>
+              {selectedLocation.pricePerHour && (
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 500 }}>
+                    Giá/giờ
+                  </Typography>
+                  <Typography variant="body2">
+                    {new Intl.NumberFormat('vi-VN', {
+                      style: 'currency',
+                      currency: 'VND',
+                    }).format(selectedLocation.pricePerHour)}
+                  </Typography>
+                </Box>
+              )}
 
+              {/* Status */}
+              <Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 500 }}>
+                  Trạng thái
+                </Typography>
+                <Chip
+                  label={selectedLocation.available === true ? 'Hoạt động' : 'Tạm dừng'}
+                  color={selectedLocation.available === true ? 'success' : 'default'}
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
               </Box>
             )}
           </Box>
