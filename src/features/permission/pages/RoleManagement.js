@@ -92,6 +92,11 @@ export default function RoleManagement({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  
   // Form state
   const [roleForm, setRoleForm] = useState({
     name: "",
@@ -114,7 +119,7 @@ export default function RoleManagement({
     if (hasAccessPermission) {
       fetchRoles();
     }
-  }, [enterpriseId, hasAccessPermission]);
+  }, [enterpriseId, hasAccessPermission, page, rowsPerPage]);
 
   const fetchRoles = async () => {
     try {
@@ -125,16 +130,25 @@ export default function RoleManagement({
       const response = await axiosClient.get("/role", {
         headers: {
           "enterprise-id": enterpriseId
+        },
+        params: {
+          page: page,
+          size: rowsPerPage
         }
       });
       
       
       const data = response.data || response;
       setRoles(Array.isArray(data) ? data : []);
+      
+      // Lấy total từ response.metadata.total
+      const total = response?.metadata?.total || data.length || 0;
+      setTotalCount(total);
     } catch (err) {
       const message = "Không thể tải danh sách quyền. " + (err?.response?.data?.message || err.message || "");
       showToast(`${message}`, 'error', 3000);
       setRoles([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
@@ -277,7 +291,12 @@ export default function RoleManagement({
       
       handleCloseDialog();
       showToast(`${editingRole ? 'Cập nhật vai trò thành công!' : 'Tạo vai trò mới thành công!'}`, 'success', 3000);
-      await fetchRoles();
+      // Reset về trang đầu khi tạo mới hoặc giữ trang hiện tại khi update
+      if (editingRole) {
+        await fetchRoles();
+      } else {
+        setPage(0);
+      }
     } catch (err) {
       let errorMessage = "Không thể lưu quyền.";
       if (err.response?.data) {
@@ -304,6 +323,17 @@ export default function RoleManagement({
     const role = roles.find(r => r.id === roleId);
     setItemToDelete(role);
     setDeleteDialogOpen(true);
+  };
+
+  // ====== PAGINATION HANDLERS ======
+  const handleChangePage = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    const value = event?.target?.value || event;
+    setRowsPerPage(parseInt(value, 10));
+    setPage(0);
   };
 
   // ====== HELPER FUNCTIONS ======
@@ -547,9 +577,11 @@ export default function RoleManagement({
             ]}
             data={roles}
             loading={loading}
-            page={0}
-            pageSize={10}
-            totalCount={roles.length}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            totalCount={totalCount}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
             onRowClick={(row) => handleOpenDialog(row)}
             emptyMessage="Không có vai trò nào"
             minHeight={550}
@@ -769,7 +801,7 @@ export default function RoleManagement({
               }
             });
             showToast(`Xóa vai trò thành công!`, 'success', 3000);
-            await fetchRoles();
+            setPage(0); // Reset về trang đầu sau khi xóa
             setDeleteDialogOpen(false);
             setItemToDelete(null);
           } catch (err) {

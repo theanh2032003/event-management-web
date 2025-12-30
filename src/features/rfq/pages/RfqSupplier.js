@@ -539,12 +539,13 @@ export default function RFQ() {
     }
   };
 
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (newPage) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    const value = event?.target?.value || event;
+    setRowsPerPage(parseInt(value, 10));
     setPage(0);
   };
 
@@ -675,6 +676,13 @@ export default function RFQ() {
       ) : (
         <CommonTable
           columns={[
+            {
+                field: 'id',
+                headerName: 'STT',
+                width: 70,
+                align: 'center',
+                render:(value, row, rowIndex) => rowIndex + 1,
+            },
             {
               field: 'name',
               headerName: 'Tên yêu cầu',

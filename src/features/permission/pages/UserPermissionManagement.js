@@ -82,6 +82,11 @@ export default function UserPermissionManagement({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  
   // States for add user
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [emailInput, setEmailInput] = useState("");
@@ -122,14 +127,14 @@ export default function UserPermissionManagement({
     if (hasAccessPermission) {
       fetchUsers();
     }
-  }, [enterpriseId, hasAccessPermission]);
+  }, [enterpriseId, hasAccessPermission, page, rowsPerPage]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       setError("");
       
-      const response = await userApi.getUsers();      
+      const response = await userApi.getUsers(page, rowsPerPage);      
       
       const data = response.data || response;
       const usersList = Array.isArray(data) ? data : [];
@@ -146,9 +151,14 @@ export default function UserPermissionManagement({
       );
       
       setUsers(usersWithRoles);
+      
+      // Set total count from response
+      const total = response?.metadata?.total || usersList.length || 0;
+      setTotalCount(total);
     } catch (err) {
       setError("Không thể tải danh sách người dùng. " + (err?.response?.data?.message || err.message || ""));
       setUsers([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
@@ -217,7 +227,7 @@ export default function UserPermissionManagement({
       
       showToast('Đã thêm người dùng vào doanh nghiệp.', 'success', 3000);
       handleCloseAddUserDialog();
-      await fetchUsers();
+      setPage(0); // Reset về trang đầu
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Không thể thêm người dùng";
       setEmailError(errorMessage);
@@ -339,7 +349,7 @@ export default function UserPermissionManagement({
       
       showToast('Cập nhật vai trò thành công!', 'success', 3000);
       handleCloseAssignDialog();
-      // Refresh users list to update roles
+      // Refresh users list to update roles - giữ nguyên trang hiện tại
       await fetchUsers();
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Không thể cập nhật vai trò";
@@ -347,6 +357,17 @@ export default function UserPermissionManagement({
     } finally {
       setSubmittingAssign(false);
     }
+  };
+
+  // ====== PAGINATION HANDLERS ======
+  const handleChangePage = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    const value = event?.target?.value || event;
+    setRowsPerPage(parseInt(value, 10));
+    setPage(0);
   };
 
   return (
@@ -591,9 +612,11 @@ export default function UserPermissionManagement({
           data={users}
           loading={loading}
           emptyMessage="Chưa có người dùng nào"
-          rowsPerPage={10}
-          page={0}
-          totalCount={users.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          totalCount={totalCount}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
           maxHeight={550}
           minHeight={550}
         />

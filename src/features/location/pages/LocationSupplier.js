@@ -142,6 +142,9 @@ export default function LocationManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
   
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -163,14 +166,15 @@ export default function LocationManagement() {
 
   useEffect(() => {
     fetchLocations();
-  }, [supplierId]);
+  }, [supplierId, page, rowsPerPage]);
 
   const fetchLocations = async () => {
     try {
       setLoading(true);
-      const response = await locationApi.getLocations();
+      const response = await locationApi.getLocations(null, page, rowsPerPage);
       const data = Array.isArray(response) ? response : response.data || [];
       setLocations(data);
+      setTotalCount(response?.metadata?.total || data.length);
     } catch (error) {
       console.error('Error fetching locations:', error);
       toast.error('Không thể tải danh sách địa điểm');
@@ -290,17 +294,16 @@ export default function LocationManagement() {
 
       if (editingLocation) {
         await locationApi.updateLocationSupplier(editingLocation.id, data);
-        setLocations(locations.map(l =>
-          l.id === editingLocation.id ? { ...l, ...data } : l
-        ));
         toast.success('Cập nhật địa điểm thành công');
+        // Giữ nguyên trang hiện tại khi update
+        await fetchLocations();
       } else {
-        const response = await locationApi.createLocationSupplier(data);
-        setLocations([...locations, response]);
+        await locationApi.createLocationSupplier(data);
         toast.success('Tạo địa điểm thành công');
+        // Reset về trang đầu khi tạo mới
+        setPage(0);
       }
       handleCloseDialog();
-      fetchLocations();
     } catch (error) {
       console.error('Error saving location:', error);
       toast.error('Không thể lưu địa điểm');
@@ -321,12 +324,11 @@ export default function LocationManagement() {
     try {
       await locationApi.deleteLocationSupplier(deletingLocationId);
       
-      // Fetch lại data để render lại
-      await fetchLocations();
-      
       toast.success('Địa điểm đã được xóa');
       setDeleteConfirmOpen(false);
       setDeletingLocationId(null);
+      // Reset về trang đầu sau khi xóa
+      setPage(0);
     } catch (error) {
       console.error('Error deleting location:', error);
       toast.error('Không thể xóa địa điểm');
@@ -357,6 +359,16 @@ export default function LocationManagement() {
     } finally {
       setUpdatingStatusId(null);
     }
+  };
+
+  const handleChangePage = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    const value = event?.target?.value || event;
+    setRowsPerPage(parseInt(value, 10));
+    setPage(0);
   };
 
   if (loading) {
@@ -562,7 +574,11 @@ export default function LocationManagement() {
           ]}
           data={filteredLocations}
           loading={loading}
-          totalCount={filteredLocations.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          totalCount={totalCount}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
           emptyMessage="Không có địa điểm"
           minHeight={600}
           maxHeight={600}

@@ -9,9 +9,13 @@ const userApi = {
    * @param {string} enterpriseId - ID của doanh nghiệp
    * @returns {Promise} Danh sách người dùng
    */
-  getUsers: async () => {
+  getUsers: async ( page, size) => {
     try {
-      const response = await axiosClient.get(`/enterprise/user`);
+      const response = await axiosClient.get(`/enterprise/user`, {
+        params: {
+          page, size
+        }
+      });
       return response;
     } catch (error) {
       throw error;

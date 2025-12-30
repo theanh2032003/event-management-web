@@ -143,7 +143,7 @@ export default function LocationManagement({
   const [editingLocation, setEditingLocation] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalElements, setTotalElements] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [capacity, setCapacity] = useState('');
@@ -176,7 +176,7 @@ export default function LocationManagement({
       setError(null);
       const response = await locationApi.getLocations(null , page, rowsPerPage);
       setLocations(response?.data || response || []);
-      setTotalElements(response?.metadata?.total || 0);
+      setTotalCount(response?.metadata?.total || 0);
     } catch (err) {
       // setError('Không thể tải danh sách địa điểm. Vui lòng thử lại.');
       showToast('Lỗi khi tải danh sách địa điểm!', 'error', 3000);
@@ -243,12 +243,15 @@ export default function LocationManagement({
       if (editingLocation) {
         await locationApi.updateLocation(editingLocation.id, locationData);
         showToast('Cập nhật địa điểm thành công!', 'success', 3000);
+        // Giữ nguyên trang hiện tại khi update
+        await fetchLocations();
       } else {
         await locationApi.createLocation(locationData);
         showToast('Tạo địa điểm thành công!', 'success', 3000);
+        // Reset về trang đầu khi tạo mới
+        setPage(0);
       }
       
-      await fetchLocations();
       handleCloseDialog();
     } catch (err) {
       showToast('Có lỗi xảy ra khi lưu địa điểm!', 'error', 3000);
@@ -270,7 +273,8 @@ export default function LocationManagement({
       setDeleteLocationDialogOpen(false);
       setLocationToDelete(null);
       showToast('Xóa địa điểm thành công!', 'success', 3000);
-      await fetchLocations();
+      // Reset về trang đầu sau khi xóa
+      setPage(0);
     } catch (err) {
       showToast('Lỗi khi xóa địa điểm. Vui lòng thử lại.', 'error', 3000);
     } finally {
@@ -294,12 +298,13 @@ export default function LocationManagement({
     }
   };
 
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (newPage) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    const value = event?.target?.value || event;
+    setRowsPerPage(parseInt(value, 10));
     setPage(0);
   };
 
@@ -501,7 +506,7 @@ export default function LocationManagement({
             data={locations}
             rowsPerPage={rowsPerPage}
             page={page}
-            totalCount={totalElements}
+            totalCount={totalCount}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             onRowClick={(row) => handleViewDetail(row)}

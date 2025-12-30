@@ -134,6 +134,9 @@ export default function Quotations() {
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [viewMode, setViewMode] = useState("list"); // "list" or "detail"
   const [detailLoading, setDetailLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -209,9 +212,10 @@ export default function Quotations() {
           ...(filters.projectIds && { projectIds: filters.projectIds }),
           ...(filters.supplierIds && { supplierIds: filters.supplierIds }),
         };
-        const response = await quoteApi.getQuotes(filterParams, 0, 50);
+        const response = await quoteApi.getQuotes(filterParams, page, rowsPerPage);
         const data = response?.data || response || [];
         setQuotations(Array.isArray(data) ? data : []);
+        setTotalCount(response?.metadata?.total || data.length);
       } catch (error) {
         const errorMessage = error?.response?.data?.message || error.message || "Lỗi khi tải danh sách báo giá";
         showToast(`Lỗi khi tải danh sách báo giá`, 'error', 3000);
@@ -224,7 +228,7 @@ export default function Quotations() {
     if (!permissionsLoading && canManageQuotes) {
       fetchQuotations();
     }
-  }, [enterpriseId, permissionsLoading, canManageQuotes, showToast, filters]);
+  }, [enterpriseId, permissionsLoading, canManageQuotes, showToast, filters, page, rowsPerPage]);
 
   // Auto-load detail when quotationId changes
   useEffect(() => {
@@ -259,6 +263,17 @@ export default function Quotations() {
       ...prev,
       [field]: value,
     }));
+    setPage(0);
+  };
+
+  const handleChangePage = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    const value = event?.target?.value || event;
+    setRowsPerPage(parseInt(value, 10));
+    setPage(0);
   };
 
   const renderAutocompleteFilter = (field, label, options, keywordState, setKeywordState, searchHandler, openHandler, multiple = false) => {
@@ -620,6 +635,11 @@ export default function Quotations() {
           ]}
           data={quotations}
           loading={loading}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
           emptyMessage="Chưa có báo giá nào"
           maxHeight="calc(100vh - 380px)"
           minHeight="calc(100vh - 380px)"

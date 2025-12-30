@@ -47,6 +47,7 @@ import {
   SectionHeader,
   EmptyStateBox,
 } from "../../../shared/layouts/sharedStyles";
+import { set } from "react-hook-form";
 
 /**
  * TaskCategoryManagement - Quản lý nhóm phân loại công việc (Group Task Type)
@@ -200,8 +201,8 @@ export default function TaskCategoryManagement({
         );
         
         showToast("Cập nhật nhóm phân loại thành công", "success", 3000);
-        // Reload danh sách
-        await fetchTaskCategories();
+        // Reload danh sách với page hiện tại
+        await fetchTaskCategories(page, rowsPerPage);
       } else {
         // Tạo nhóm mới
         const response = await axiosClient.post("/group-task-type", {
@@ -214,8 +215,8 @@ export default function TaskCategoryManagement({
         });
         
         showToast("Tạo nhóm phân loại thành công", "success", 3000);
-        // Reload danh sách
-        await fetchTaskCategories();
+        // Reload danh sách từ trang đầu
+        setPage(0);
       }
       
       handleCloseDialog();
@@ -578,7 +579,7 @@ export default function TaskCategoryManagement({
             data={taskCategories}
             loading={loading}
             page={page}
-            pageSize={rowsPerPage}
+            rowsPerPage={rowsPerPage}
             totalCount={totalCount}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
@@ -1040,7 +1041,8 @@ export default function TaskCategoryManagement({
                   "enterprise-id": enterpriseId 
                 }
               });
-              await fetchTaskCategories();
+              // Reload danh sách, reset về trang đầu nếu cần
+              setPage(0);
             } else if (deleteTarget === 'taskType') {
               await axiosClient.delete(
                 `/group-task-type/${selectedGroup.id}/task-type/${itemToDelete.id}`,
