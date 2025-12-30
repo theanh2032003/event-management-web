@@ -178,6 +178,10 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
                 <TableCell>Phiếu duyệt chi {getTypeLabel(payment.type)}</TableCell>
               </TableRow>
               <TableRow>
+                <TableCell sx={{ width: '200px', fontWeight: 600, color: 'text.secondary' }}>Sự kiện</TableCell>
+                <TableCell>{payment?.projectName || "—"}</TableCell>
+              </TableRow>
+              <TableRow>
                 <TableCell sx={{ width: '200px', fontWeight: 600, color: 'text.secondary' }}>Người tạo</TableCell>
                 <TableCell>{payment.createdUser.name || "—"}</TableCell>
               </TableRow>
@@ -341,11 +345,11 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
                 </Box>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>Duyệt cấp 1</Typography>
-                  {payment.approvedLv1At && (
-                    <>
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                         {payment?.projectOwnerName || payment?.userLv1.name}
                       </Typography>
+                  {payment.approvedLv1At && (
+                    <>
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                         {formatDate(payment.approvedLv1At)}
                       </Typography>
@@ -379,11 +383,11 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
                 </Box>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>Duyệt cấp 2</Typography>
-                  {payment.approvedLv2At && (
-                    <>
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                         {payment?.enterpriseOwnerName || "—"}
                       </Typography>  
+                  {payment.approvedLv2At && (
+                    <> 
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                         {formatDate(payment.approvedLv2At)}
                       </Typography>

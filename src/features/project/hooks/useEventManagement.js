@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axiosClient from "../../../app/axios/axiosClient";
 import locationApi from "../../location/api/location.api";
+import { useToast } from "../../../app/providers/ToastContext";
 
 /**
  * Custom hook để quản lý logic của Event Management
@@ -32,6 +33,7 @@ export const useEventManagement = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
+  const { showToast } = useToast();
 
   // ====== HELPER FUNCTIONS ======
   const getCurrentUserId = () => {
@@ -76,7 +78,7 @@ export const useEventManagement = () => {
       setLoadingDropdowns(true);
       const token = localStorage.getItem("token");
       if (!token) {
-        console.error("🔴 No access token found for dropdown fetch");
+        showToast("error", "Token không tồn tại. Vui lòng đăng nhập lại.");
         setDropdownsLoaded(true);
         return;
       }
@@ -111,7 +113,8 @@ export const useEventManagement = () => {
 
       setDropdownsLoaded(true);
     } catch (err) {
-      console.error("❌ Error fetching dropdowns:", err);
+      // console.error("❌ Error fetching dropdowns:", err);
+      showToast("error", "Không thể tải dữ liệu cho các menu thả xuống.");
       setDropdownsLoaded(true);
     } finally {
       setLoadingDropdowns(false);
@@ -127,7 +130,6 @@ export const useEventManagement = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         setError("Token không tồn tại. Vui lòng đăng nhập lại.");
-        console.error("🔴 No access token found in localStorage");
         setLoading(false);
         return;
       }
@@ -213,11 +215,12 @@ export const useEventManagement = () => {
       setFilteredEvents(eventsData);
       setTotalCount(total);
     } catch (err) {
-      console.error("❌ Error fetching events:", err);
-      setError(
-        "Không thể tải danh sách sự kiện. " +
-          (err?.response?.data?.message || err.message || "")
-      );
+      // console.error("❌ Error fetching events:", err);
+      // setError(
+      //   "Không thể tải danh sách sự kiện. " +
+      //     (err?.response?.data?.message || err.message || "")
+      // );
+      showToast("Không thể tải danh sách sự kiện.", "error");
       setEvents([]);
       setFilteredEvents([]);
       setTotalCount(0);
@@ -237,8 +240,9 @@ export const useEventManagement = () => {
 
       await fetchEvents();
     } catch (err) {
-      console.error("❌ Error updating event state:", err);
-      alert(err.response?.data?.message || "Không thể cập nhật trạng thái");
+      // console.error("❌ Error updating event state:", err);
+      // alert(err.response?.data?.message || "Không thể cập nhật trạng thái");
+      showToast( "Đã có lỗi xảy ra, vui lòng thử lại sau.", "error");
     }
   };
 

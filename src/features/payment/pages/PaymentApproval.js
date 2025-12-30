@@ -275,7 +275,8 @@ export default function PaymentApproval() {
       } else if (response?.data) {
         if (Array.isArray(response.data)) {
           data = response.data;
-          total = response.totalElements || response.total || response.data.length;
+          total = response?.metadata?.total || data.length;
+          console.log('Total from data array response:', total);
         } else if (response.data.content) {
           data = response.data.content;
           total = response.data.totalElements || response.data.total || 0;
@@ -950,6 +951,11 @@ export default function PaymentApproval() {
       ) : payments.length > 0 ? (
         <CommonTable
           columns={[
+            {
+              field: "STT",
+              headerName: "STT",
+              render: (value, row, index) => index + 1
+            },
             {
               field: "name",
               headerName: "Tên Phê Duyệt",

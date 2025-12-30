@@ -77,6 +77,9 @@ export default function TaskCategoryManagement({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryForm, setCategoryForm] = useState({ 
@@ -107,11 +110,11 @@ export default function TaskCategoryManagement({
   useEffect(() => {
     // Chỉ fetch nếu user có quyền
     if (hasAccessPermission) {
-      fetchTaskCategories();
+      fetchTaskCategories(page, rowsPerPage);
     }
-  }, [enterpriseId, hasAccessPermission]);
+  }, [enterpriseId, hasAccessPermission, page, rowsPerPage]);
 
-  const fetchTaskCategories = async () => {
+  const fetchTaskCategories = async (pageNum = 0, pageSize = 10) => {
     try {
       setLoading(true);
       setError("");
@@ -119,6 +122,10 @@ export default function TaskCategoryManagement({
       const response = await axiosClient.get("/group-task-type", {
         headers: {
           "enterprise-id": enterpriseId
+        },
+        params: {
+          page: pageNum,
+          size: pageSize
         }
       });
       
@@ -126,9 +133,14 @@ export default function TaskCategoryManagement({
       const data = response?.data || response || [];
       setTaskCategories(Array.isArray(data) ? data : []);
       
+      // Lấy total từ response.metadata.total
+      const total = response?.metadata?.total || response?.data?.metadata?.total || data.length || 0;
+      setTotalCount(total);
+      
     } catch (err) {
       showToast("Không thể tải danh sách nhóm phân loại công việc. " + (err?.response?.data?.message || err.message || ""), "error");
       setTaskCategories([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
@@ -234,6 +246,15 @@ export default function TaskCategoryManagement({
     setItemToDelete(category);
     setDeleteTarget('category');
     setDeleteDialogOpen(true);
+  };
+
+  const handleChangePage = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (newRowsPerPage) => {
+    setRowsPerPage(newRowsPerPage);
+    setPage(0); // Reset về trang đầu khi đổi page size
   };
 
   // ====== TASK TYPES FUNCTIONS ======
@@ -556,9 +577,11 @@ export default function TaskCategoryManagement({
             ]}
             data={taskCategories}
             loading={loading}
-            page={0}
-            pageSize={10}
-            totalCount={taskCategories.length}
+            page={page}
+            pageSize={rowsPerPage}
+            totalCount={totalCount}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
             onRowClick={(row) => handleOpenTaskTypesDetail(row)}
             emptyMessage="Không có nhóm phân loại nào"
             minHeight={550} 

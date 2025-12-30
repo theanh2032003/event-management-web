@@ -16,7 +16,7 @@ const rfqApi = {
       };
 
       const response = await axiosClient.get('/rfq', { params });
-      return response?.data || response;
+      return response;
     } catch (error) {
       throw error;
     }

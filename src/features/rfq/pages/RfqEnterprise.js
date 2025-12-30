@@ -178,7 +178,7 @@ export default function QuoteRequests() {
         } else if (response?.data) {
           if (Array.isArray(response.data)) {
             data = response.data;
-            total = response.totalElements || response.total || response.data.length;
+            total = response?.metadata?.total || data.length;
           } else if (response.data.content) {
             data = response.data.content;
             total = response.data.totalElements || response.data.total || 0;
@@ -266,7 +266,7 @@ export default function QuoteRequests() {
         total = response.length;
       } else if (response?.data) {
         data = Array.isArray(response.data) ? response.data : response.data.content || [];
-        total = response.data.totalElements || response.data.total || data.length;
+        total = response?.metadata?.total || data.length;
       }
 
       setQuoteRequests(Array.isArray(data) ? data : []);
@@ -306,7 +306,7 @@ export default function QuoteRequests() {
       } else if (response?.data) {
         if (Array.isArray(response.data)) {
           data = response.data;
-          total = response.totalElements || response.total || response.data.length;
+          total = response?.metadata?.total || response.data.length;
         } else if (response.data.content) {
           data = response.data.content;
           total = response.data.totalElements || response.data.total || 0;
@@ -347,7 +347,7 @@ export default function QuoteRequests() {
       } else if (response?.data) {
         if (Array.isArray(response.data)) {
           data = response.data;
-          total = response.totalElements || response.total || response.data.length;
+          total = response?.metadata?.total || response.data.length;
         } else if (response.data.content) {
           data = response.data.content;
           total = response.data.totalElements || response.data.total || 0;
@@ -701,6 +701,11 @@ export default function QuoteRequests() {
         <CommonTable
           columns={[
             {
+              field: "STT",
+              headerName: "STT",
+              render: (value, row, index) => index + 1
+            },
+            {
               field: 'productName',
               headerName: 'Sản phẩm',
               render: (value, row) => row.product?.name || row.productName,
@@ -823,7 +828,8 @@ export default function QuoteRequests() {
           totalCount={totalCount}
           onPageChange={(newPage) => setPage(newPage)}
           onRowsPerPageChange={(event) => {
-            setRowsPerPage(parseInt(event.target.value, 10));
+            const value = event?.target?.value || event;
+            setRowsPerPage(parseInt(value, 10));
             setPage(0);
           }}
           emptyMessage="Chưa có yêu cầu báo giá nào"

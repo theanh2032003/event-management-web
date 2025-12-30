@@ -235,6 +235,14 @@ const QuotationDetail = ({ quotation, onBack, loading = false }) => {
                 {quotation.unitPrice ? quotation.unitPrice.toLocaleString("vi-VN") : 0}₫
               </Typography>
             </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: "block", mb: 0.5 }}>
+                Giảm giá
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {quotation.discount ? quotation.discount.toLocaleString("vi-VN") + "₫" : "Không"}
+              </Typography>
+            </Box>
           </Box>
         </Box>
 

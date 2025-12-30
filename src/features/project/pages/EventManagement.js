@@ -33,6 +33,8 @@ import {
   Search as SearchIcon,
 } from "@mui/icons-material";
 
+import { useToast } from "../../../app/providers/ToastContext";
+
 // Custom hook
 import { useEventManagement } from "../hooks/useEventManagement";
 
@@ -97,6 +99,7 @@ const EventManagement = ({ hasPermission = true }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
+  const showToast = useToast();
 
   // State cho dialog
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -307,38 +310,6 @@ const EventManagement = ({ hasPermission = true }) => {
       cellSx: { fontSize: '0.9rem', textAlign: 'center', height: '80px' },
       render: (value) => value ? formatDate(value) : '-',
     },
-    
-    // {
-    //   field: 'actions',
-    //   headerName: 'Hành động',
-    //   width: 150,
-    //   align: 'center',
-    //   headerCellSx: { fontSize: '0.9rem', fontWeight: 500, textAlign: 'center' },
-    //   cellSx: { fontSize: '0.9rem', textAlign: 'center', overflow: 'visible' },
-    //   sortable: false,
-    //   render: (value, row) => (
-    //     <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
-    //       <Tooltip title="Sửa">
-    //         <IconButton
-    //           size="small"
-    //           color="primary"
-    //           onClick={() => handleOpenDialog(row)}
-    //         >
-    //           <EditIcon sx={{ fontSize: 18 }} />
-    //         </IconButton>
-    //       </Tooltip>
-    //       <Tooltip title="Xóa">
-    //         <IconButton
-    //           size="small"
-    //           color="error"
-    //           onClick={() => handleDeleteClick(row.id)}
-    //         >
-    //           <DeleteIcon sx={{ fontSize: 18 }} />
-    //         </IconButton>
-    //       </Tooltip>
-    //     </Box>
-    //   ),
-    // },
   ];
 
   return (
@@ -356,11 +327,11 @@ const EventManagement = ({ hasPermission = true }) => {
       )}
 
       {/* Error Alert */}
-      {error && (
+      {/* {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
           {error}
         </Alert>
-      )}
+      )} */}
 
       {/* Filter Bar */}
       <FilterCard>

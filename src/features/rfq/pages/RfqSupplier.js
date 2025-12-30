@@ -956,7 +956,7 @@ export default function RFQ() {
             </Grid>
 
             {/* Giảm giá */}
-            {/* <Grid item xs={12} sm={6} sx={{width: '100%'}}>
+            <Grid item xs={12} sm={6} sx={{width: '100%'}}>
               <StyledTextField
                 label="Giảm giá"
                 name="discount"
@@ -972,7 +972,7 @@ export default function RFQ() {
                   ),
                 }}
               />
-            </Grid> */}
+            </Grid>
 
             {/* Giá cuối cùng */}
             <Grid item xs={12}  sx={{width: '100%'}}>
