@@ -361,17 +361,19 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
 
   return (
     <Box>
-      <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end", alignItems: "center", m: 2}}>
-        <StyledButton
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          disabled={loading}
-        >
-          Tạo vai trò mới
-        </StyledButton>
-      </Box>
+      {(hasPermission('project_role_manage') || isOwner || eventData?.createdUserId === userId) && (
+        <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end", alignItems: "center", m: 2}}>
+          <StyledButton
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+            disabled={loading}
+          >
+            Tạo vai trò mới
+          </StyledButton>
+        </Box>
+      )}
 
       {/* Permission Denied Alert */}
       {!hasPermission('project_role_manage') && !isOwner && eventData?.createdUserId !== userId && (

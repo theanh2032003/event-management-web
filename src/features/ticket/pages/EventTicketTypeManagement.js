@@ -153,8 +153,11 @@ export default function EventTicketTypeManagement({ enterpriseId, eventId, event
 
   // ====== FETCH TICKET TYPES ======
   useEffect(() => {
-    if (hasPermission('project_role_manage') || isOwner || eventData?.createdUserId === userId) {
+    const canAccess = hasPermission('ticket_manage') || isOwner || eventData?.createdUserId === userId;
+    if (canAccess && eventId) {
       fetchTicketTypes();
+    } else {
+      setLoading(false);
     }
   }, [eventId, hasPermission, isOwner, eventData?.createdUserId, userId]);
 
@@ -365,7 +368,6 @@ export default function EventTicketTypeManagement({ enterpriseId, eventId, event
       setDeletingTicketId(null);
       await fetchTicketTypes();
     } catch (err) {
-      console.error("❌ Error deleting ticket type:", err);
       const message = err.response?.data?.message || "Không thể xóa loại vé";
       toast.error(message);
     }
@@ -432,27 +434,29 @@ export default function EventTicketTypeManagement({ enterpriseId, eventId, event
 
   return (
     <Box>
-      <Box sx={{display: 'flex', justifyContent: 'flex-end', m: 2}}>
-        <StyledButton
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          disabled={loading}
-        >
-          Tạo loại vé mới
-        </StyledButton>
-      </Box>
+      {(hasPermission('ticket_manage') || isOwner || eventData?.createdUserId === userId) && (
+        <Box sx={{display: 'flex', justifyContent: 'flex-end', m: 2}}>
+          <StyledButton
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+            disabled={loading}
+          >
+            Tạo loại vé mới
+          </StyledButton>
+        </Box>
+      )}
 
       {/* Permission Denied Alert */}
-      {!hasPermission('project_role_manage') && !isOwner && eventData?.createdUserId !== userId && (
+      {!hasPermission('ticket_manage') && !isOwner && eventData?.createdUserId !== userId && (
         <Alert severity="warning" icon={<LockIcon />} sx={{ mb: 2, borderRadius: 2 }}>
           Bạn không có quyền truy cập loại vé sự kiện này
         </Alert>
       )}
 
       {/* Content - Only show if has permission */}
-      {(hasPermission('project_role_manage') || isOwner || eventData?.createdUserId === userId) ? (
+      {(hasPermission('ticket_manage') || isOwner || eventData?.createdUserId === userId) && (
         <>
           {loading ? (
             <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", py: 8, gap: 2 }}>
@@ -856,7 +860,7 @@ export default function EventTicketTypeManagement({ enterpriseId, eventId, event
             </DialogActions>
           </Dialog>
         </>
-      ) : null}
+      )}
     </Box>
   );
 }

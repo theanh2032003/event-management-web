@@ -389,17 +389,19 @@ export default function EventSchedule({ eventData, onRefresh }) {
   // ====== RENDER ======
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '100%' }}>
-      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", p: 2 }}>
-        <StyledButton
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          disabled={loading}
-        >
-          {isMobile ? "Thêm" : "Thêm lịch trình"}
-        </StyledButton>
-      </Box>
+      {(hasPermission('project_schedule_manage') || isOwner || eventData?.createdUserId === userId) && (
+        <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", p: 2 }}>
+          <StyledButton
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+            disabled={loading}
+          >
+            {isMobile ? "Thêm" : "Thêm lịch trình"}
+          </StyledButton>
+        </Box>
+      )}
 
       {/* Permission Denied Alert */}
       {!hasPermission('project_schedule_manage') && !isOwner && eventData?.createdUserId !== userId && (

@@ -42,12 +42,14 @@ import {
   Delete as DeleteIcon,
   People as PeopleIcon,
   Inbox as InboxIcon,
+  Lock as LockIcon,
 } from "@mui/icons-material";
 import { useToast } from "../../../app/providers/ToastContext";
 import axiosClient from "../../../app/axios/axiosClient";
 import projectUserApi from "../../user/api/projectUser.api";
 import roleApi from "../api/role.api";
 import userApi from "../../user/api/user.api";
+import useProjectUserPermissions from "../../permission/hooks/useProjectUserPermissions";
 import { CommonTable } from "../../../shared/components/CommonTable";
 
 // Styled Components
@@ -114,6 +116,10 @@ export default function EventUserPermission({ eventData, enterpriseId, eventId }
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const toast = useToast();
 
+  // Permission checking
+  const [userId, setUserId] = useState(null);
+  const { hasPermission, isOwner } = useProjectUserPermissions(eventId, userId);
+
   // States for users
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -150,7 +156,20 @@ export default function EventUserPermission({ eventData, enterpriseId, eventId }
   const [rolesTotalData, setRolesTotalData] = useState(0);
 
 
-  // Get current user ID
+  // Get current user ID from localStorage
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        setUserId(userData.id);
+      } catch (e) {
+        console.error('Error parsing user:', e);
+      }
+    }
+  }, []);
+
+  // Get current user ID (for comparison)
   const getCurrentUserId = () => {
     const user = localStorage.getItem('user');
     if (user) {
@@ -166,9 +185,14 @@ export default function EventUserPermission({ eventData, enterpriseId, eventId }
 
   // ====== FETCH USERS ======
   useEffect(() => {
-    console.log("🔍 EventUserPermission mounted with eventId:", eventId, "enterpriseId:", enterpriseId);
-    fetchUsers(0, usersPageSize);
-  }, [eventId, enterpriseId]);
+    const canAccess = hasPermission('project_user_manage') || isOwner || eventData?.createdUserId === userId;
+    if (canAccess && eventId) {
+      console.log("🔍 EventUserPermission mounted with eventId:", eventId, "enterpriseId:", enterpriseId);
+      fetchUsers(0, usersPageSize);
+    } else {
+      setLoading(false);
+    }
+  }, [eventId, enterpriseId, hasPermission, isOwner, eventData?.createdUserId, userId]);
 
   const fetchUsers = async (page = 0, size = 5) => {
     try {
@@ -474,21 +498,33 @@ export default function EventUserPermission({ eventData, enterpriseId, eventId }
 
   return (
     <Box>
-      <Box sx={{display: 'flex', justifyContent: 'flex-end', m: 2}}>
-        <StyledButton
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleOpenAddUserDialog}
-        >
-          Thêm thành viên
-        </StyledButton>
-      </Box>
+      {(hasPermission('project_user_manage') || isOwner || eventData?.createdUserId === userId) && (
+        <Box sx={{display: 'flex', justifyContent: 'flex-end', m: 2}}>
+          <StyledButton
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenAddUserDialog}
+          >
+            Thêm thành viên
+          </StyledButton>
+        </Box>
+      )}
 
-      {/* Users Table with CommonTable */}
-      <CommonTable
-        columns={[
-          {
+      {/* Permission Denied Alert */}
+      {!hasPermission('project_user_manage') && !isOwner && eventData?.createdUserId !== userId && (
+        <Alert severity="warning" icon={<LockIcon />} sx={{ mb: 2, borderRadius: 2 }}>
+          Bạn không có quyền quản lý thành viên sự kiện này
+        </Alert>
+      )}
+
+      {/* Content - Only show if has permission */}
+      {(hasPermission('project_user_manage') || isOwner || eventData?.createdUserId === userId) && (
+        <>
+          {/* Users Table with CommonTable */}
+          <CommonTable
+            columns={[
+              {
             field: 'name',
             headerName: 'Tên',
             width: '25%',
@@ -834,6 +870,8 @@ export default function EventUserPermission({ eventData, enterpriseId, eventId }
           </StyledButton>
         </DialogActions>
       </Dialog>
+        </>
+      )}
     </Box>
   );
 }

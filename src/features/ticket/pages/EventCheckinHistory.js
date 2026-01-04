@@ -16,17 +16,20 @@ import {
   Grid,
   styled,
   alpha,
+  Alert,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   CheckCircle as CheckCircleIcon,
   ConfirmationNumber as TicketIcon,
   EventAvailable as EventAvailableIcon,
+  Lock as LockIcon,
 } from '@mui/icons-material';
 import checkinApi from '../api/checkin.api';
 import ticketApi from '../api/ticket.api';
 import { formatDateTime } from '../../../shared/utils/dateFormatter';
 import { CommonTable } from '../../../shared/components/CommonTable';
+import useProjectUserPermissions from '../../permission/hooks/useProjectUserPermissions';
 
 // Styled Components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -58,6 +61,10 @@ const StatContent = styled(Box)(() => ({
 }));
 
 export default function EventCheckinHistory({ eventId, enterpriseId, eventData }) {
+  // Permission checking
+  const [userId, setUserId] = useState(null);
+  const { hasPermission, isOwner } = useProjectUserPermissions(eventId, userId);
+
   const [checkinList, setCheckinList] = useState([]);
   const [ticketTypes, setTicketTypes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -72,10 +79,33 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
   const [totalCheckedIn, setTotalCheckedIn] = useState(0);
   const [totalIssued, setTotalIssued] = useState(0);
 
+  // Get current user ID from localStorage
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        setUserId(userData.id);
+      } catch (e) {
+        // Ignore parse error
+      }
+    }
+  }, []);
+
   // Fetch ticket types and total sold tickets
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Check permission before fetching
+        const canAccess = hasPermission('checkin_manage') || isOwner || eventData?.createdUserId === userId;
+        
+        if (!canAccess) {
+          setTicketTypes([]);
+          setTotalIssued(0);
+          setTotalSold(0);
+          return;
+        }
+
         // Fetch ticket types
         const typesResponse = await ticketApi.getTicketTypes(eventId);
         const types = typesResponse.data || typesResponse || [];
@@ -95,21 +125,32 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
       }
     };
 
-    if (eventId) {
+    if (eventId && userId) {
       fetchData();
     }
-  }, [eventId]);
+  }, [eventId, userId, hasPermission, isOwner, eventData?.createdUserId]);
 
   // Fetch check-in list
   useEffect(() => {
     fetchCheckinList();
-  }, [eventId, page, rowsPerPage, searchKeyword, selectedTicketType]);
+  }, [eventId, page, rowsPerPage, searchKeyword, selectedTicketType, userId, hasPermission, isOwner, eventData?.createdUserId]);
 
   const fetchCheckinList = async () => {
     if (!eventId) return;
 
     setLoading(true);
     try {
+      // Check permission before fetching
+      const canAccess = hasPermission('checkin_manage') || isOwner || eventData?.createdUserId === userId;
+      
+      if (!canAccess) {
+        setCheckinList([]);
+        setTotalElements(0);
+        setTotalCheckedIn(0);
+        setLoading(false);
+        return;
+      }
+
       const params = {
         page: page,
         size: rowsPerPage,
@@ -232,10 +273,18 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
 
   return (
     <Box sx={{ p: 3 }}>
-     
+      {/* Permission Denied Alert */}
+      {!hasPermission('checkin_manage') && !isOwner && eventData?.createdUserId !== userId && (
+        <Alert severity="warning" icon={<LockIcon />} sx={{ mb: 2, borderRadius: 2 }}>
+          Bạn không có quyền truy cập lịch sử check-in của sự kiện này
+        </Alert>
+      )}
 
-      {/* Statistics Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      {/* Content - Only show if has permission */}
+      {(hasPermission('checkin_manage') || isOwner || eventData?.createdUserId === userId) && (
+        <>
+          {/* Statistics Cards */}
+          <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StyledCard>
             <CardContent sx={{ p: 2 }}>
@@ -339,19 +388,21 @@ export default function EventCheckinHistory({ eventId, enterpriseId, eventData }
         </Grid>
       </Paper> */}
 
-      {/* Table */}
-      <CommonTable
-        columns={columns}
-        data={checkinList}
-        loading={loading}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        totalCount={totalElements}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        emptyMessage="Chưa có dữ liệu check-in"
-        maxHeight="600px"
-      />
+          {/* Table */}
+          <CommonTable
+            columns={columns}
+            data={checkinList}
+            loading={loading}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            totalCount={totalElements}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            emptyMessage="Chưa có dữ liệu check-in"
+            maxHeight="600px"
+          />
+        </>
+      )}
     </Box>
   );
 }
