@@ -13,6 +13,11 @@ const projectApi = {
     return axiosClient.get(url);
   },
 
+  changeState: (projectId, newState) => {
+    const url = `/project/${projectId}`;
+    return axiosClient.patch(url, { state: newState });
+  },
+
   create: (projectData) => {
     const url = `/project`;
     return axiosClient.post(url, projectData);

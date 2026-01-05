@@ -217,6 +217,55 @@ const EventManagement = ({ hasPermission = true }) => {
     handleChangeRowsPerPage(newRowsPerPage);
   };
 
+  // Get current user
+  const getCurrentUserId = () => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        return userData.id || null;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  // Check if current user is enterprise owner from token
+  const isEnterpriseOwner = () => {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+    
+    try {
+      // JWT token format: header.payload.signature
+      // Decode payload (second part)
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const decoded = JSON.parse(jsonPayload);
+      return decoded.owner === true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // Check if current user is owner of event or owner of enterprise
+  const isEventOwner = (event) => {
+    const currentUserId = getCurrentUserId();
+    const isOwner = isEnterpriseOwner();
+    
+    // Check if user is event creator OR enterprise owner
+    return currentUserId && event && (
+      event.createdUserId === currentUserId || 
+      isOwner
+    );
+  };
+
   // Helper functions for labels
   const getCategoryLabel = (category) => {
     const labels = {
@@ -236,6 +285,21 @@ const EventManagement = ({ hasPermission = true }) => {
       OTHER: "Khác",
     };
     return labels[category] || category;
+  };
+
+  const getStateLabel = (state) => {
+    const labels = {
+      NOT_STARTED: "Sắp diễn ra",
+      IN_PROGRESS: "Đang diễn ra",
+      COMPLETED: "Đã kết thúc",
+      CANCELED: "Đã hủy",
+    };
+    return labels[state] || state;
+  };
+
+  // Handle state change
+  const handleStateChange = (eventId, newState) => {
+    handleUpdateEventState(eventId, newState);
   };
 
   const getFeeTypeLabel = (feeType) => {
@@ -291,6 +355,56 @@ const EventManagement = ({ hasPermission = true }) => {
       headerCellSx: { fontSize: '0.9rem', fontWeight: 500, textAlign: 'center' },
       cellSx: { fontSize: '0.85rem', textAlign: 'center', height: '80px' },
       render: (value) => getCategoryLabel(value),
+    },
+    {
+      field: 'state',
+      headerName: 'Trạng thái',
+      width: 180,
+      align: 'center',
+      headerCellSx: { fontSize: '0.9rem', fontWeight: 500, textAlign: 'center' },
+      cellSx: { fontSize: '0.85rem', textAlign: 'center', height: '80px', padding: 0 },
+      render: (value, row) => {
+        const isOwner = isEventOwner(row);
+        
+        if (!isOwner) {
+          // Only show text if not owner
+          return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+              <Typography variant="body2" sx={{ fontSize: '0.85rem', fontWeight: 500 }}>
+                {getStateLabel(value)}
+              </Typography>
+            </Box>
+          );
+        }
+
+        // Show dropdown if owner
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%' }} onClick={(e) => e.stopPropagation()}>
+            <TextField
+              select
+              value={value || ''}
+              onChange={(e) => handleStateChange(row.id, e.target.value)}
+              size="small"
+              disabled={loading || !hasPermission}
+              sx={{
+                minWidth: 100,
+                '& .MuiOutlinedInput-root': {
+                  fontSize: '0.85rem',
+                  borderRadius: 1,
+                },
+              }}
+              SelectProps={{
+                native: true,
+              }}
+            >
+              <option value="NOT_STARTED">Sắp diễn ra</option>
+              <option value="IN_PROGRESS">Đang diễn ra</option>
+              <option value="COMPLETED">Đã kết thúc</option>
+              <option value="CANCELED">Đã hủy</option>
+            </TextField>
+          </Box>
+        );
+      },
     },
     {
       field: 'startedAt',
