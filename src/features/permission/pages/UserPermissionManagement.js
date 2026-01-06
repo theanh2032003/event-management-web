@@ -228,6 +228,7 @@ export default function UserPermissionManagement({
       showToast('Đã thêm người dùng vào doanh nghiệp.', 'success', 3000);
       handleCloseAddUserDialog();
       setPage(0); // Reset về trang đầu
+      fetchUsers();
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Không thể thêm người dùng";
       setEmailError(errorMessage);
