@@ -85,7 +85,7 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
 
   useEffect(() => {
     fetchFeedbackData();
-  }, [eventId, selectedRating, page]);
+  }, [eventId, selectedRating, page, userId]);
 
   const fetchFeedbackData = async () => {
     try {
@@ -94,6 +94,7 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
       // Check permission before fetching
       const canAccess = hasPermission('project_feedback_view') || isOwner || eventData?.createdUserId === userId;
       
+      console.log('Can access feedback:', canAccess);
       if (!canAccess) {
         setStatistics(null);
         setFeedbacks([]);
@@ -366,19 +367,25 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
                         sx={{
                           p: 2,
                           borderRadius: 2,
+                          overflow: "visible",
                         }}
                       >
-                        <Box sx={{ display: "flex", gap: 2 }}>
-                          <Avatar sx={{ bgcolor: "#667eea" }}>
-                            {fb.client?.name?.charAt(0)?.toUpperCase() || "U"}
+                        <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
+                          <Avatar 
+                            src={fb.client?.avatar} 
+                            sx={{ bgcolor: "#667eea", flexShrink: 0 }}
+                          >
+                            {!fb.client?.avatar && (fb.client?.name?.charAt(0)?.toUpperCase() || "U")}
                           </Avatar>
 
-                          <Box sx={{ flexGrow: 1 }}>
+                          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                             {/* Name + Rating */}
                             <Box
                               sx={{
                                 display: "flex",
                                 justifyContent: "space-between",
+                                alignItems: "center",
+                                gap: 1,
                                 mb: 1,
                               }}
                             >
@@ -388,7 +395,7 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
                               <Rating value={fb.rating || 0} readOnly size="small" />
                             </Box>
 
-                            <Typography variant="body1" sx={{ mb: 1, fontSize: "0.95rem" }}>
+                            <Typography variant="body2" sx={{ mb: 1.5, fontSize: "0.95rem", lineHeight: 1.5 }}>
                               {fb.content || "Không có nhận xét"}
                             </Typography>
 
@@ -399,7 +406,7 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
                                   display: "flex",
                                   flexWrap: "wrap",
                                   gap: 1,
-                                  mt: 1,
+                                  mb: 1.5,
                                 }}
                               >
                                 {fb.images.map((img, idx) => (
@@ -409,8 +416,8 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
                                     alt=""
                                     onClick={() => openPreview(fb.images, idx)}
                                     style={{
-                                      width: "100px",
-                                      height: "100px",
+                                      width: "90px",
+                                      height: "90px",
                                       objectFit: "cover",
                                       borderRadius: 8,
                                       border: "1px solid #ddd",
@@ -423,7 +430,7 @@ const EventFeedback = ({ eventData, enterpriseId, eventId }) => {
 
                             <Typography
                               variant="caption"
-                              sx={{ mt: 1, color: "text.secondary", display: "block" }}
+                              sx={{ color: "text.secondary", display: "block", fontSize: "0.8rem" }}
                             >
                               {new Date(fb.createdAt).toLocaleDateString("vi-VN")}
                             </Typography>
