@@ -146,6 +146,12 @@ export default function Quotations() {
     supplierIds: [],
   });
 
+  // Search timers for debouncing
+  const [keywordSearchTimer, setKeywordSearchTimer] = useState(null);
+  const [projectSearchTimer, setProjectSearchTimer] = useState(null);
+  const [supplierSearchTimer, setSupplierSearchTimer] = useState(null);
+  const [statesSearchTimer, setStatesSearchTimer] = useState(null);
+
   // Data for dropdowns
   const [projects, setProjects] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -153,9 +159,6 @@ export default function Quotations() {
   const [projectKeyword, setProjectKeyword] = useState('');
   const [supplierKeyword, setSupplierKeyword] = useState('');
   const [statesKeyword, setStatesKeyword] = useState('');
-  const [projectSearchTimer, setProjectSearchTimer] = useState(null);
-  const [supplierSearchTimer, setSupplierSearchTimer] = useState(null);
-  const [statesSearchTimer, setStatesSearchTimer] = useState(null);
 
   // Fetch projects and suppliers
   useEffect(() => {
@@ -264,6 +267,17 @@ export default function Quotations() {
       [field]: value,
     }));
     setPage(0);
+  };
+
+  // Debounced keyword search handler
+  const handleKeywordSearchChange = (keyword) => {
+    if (keywordSearchTimer) clearTimeout(keywordSearchTimer);
+
+    const timer = setTimeout(() => {
+      handleFilterChange('keyword', keyword);
+    }, 300);
+
+    setKeywordSearchTimer(timer);
   };
 
   const handleChangePage = (newPage) => {
@@ -501,8 +515,8 @@ export default function Quotations() {
                 placeholder="Tìm kiếm báo giá..."
                 size="small"
                 fullWidth
-                value={filters.keyword}
-                onChange={(e) => handleFilterChange('keyword', e.target.value)}
+                defaultValue=""
+                onChange={(e) => handleKeywordSearchChange(e.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">

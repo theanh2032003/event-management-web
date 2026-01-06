@@ -346,7 +346,7 @@ const PaymentApprovalDetail = ({ payment, onBack, onEdit }) => {
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>Duyệt cấp 1</Typography>
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                        {payment?.projectOwnerName || payment?.userLv1.name}
+                        {payment?.projectOwnerName || "—"}
                       </Typography>
                   {payment.approvedLv1At && (
                     <>
