@@ -29,6 +29,7 @@ import {
   Delete as DeleteIcon,
   CloudUpload as CloudUploadIcon,
   Close as CloseIcon,
+  LocationOn as LocationIcon,
 } from "@mui/icons-material";
 import locationApi from "../api/location.api";
 import { uploadToCloudinary } from "../../../shared/utils/uploadToCloudinary";
@@ -38,6 +39,7 @@ import PermissionGate from "../../../shared/components/PermissionGate";
 import { CommonTable } from "../../../shared/components/CommonTable";
 import CommonDialog from "../../../shared/components/CommonDialog";
 import { PERMISSION_CODES } from "../../../shared/constants/permissions";
+import { alpha, styled } from "@mui/material/styles";
 
 // Memoized ImageUpload component to prevent unnecessary re-renders
 // Styles for reusable components
@@ -77,6 +79,17 @@ const imageUploadStyles = {
     },
   }
 };
+
+const EmptyStateBox = styled(Box)(({ theme }) => ({
+  textAlign: 'center',
+  padding: theme.spacing(6, 3),
+  borderRadius: theme.spacing(2),
+  background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)} 0%, ${alpha(theme.palette.action.hover, 0.4)} 100%)`,
+  border: `2px dashed ${alpha(theme.palette.divider, 0.3)}`,
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(4, 2),
+  },
+}));
 
 const ImageUpload = memo(({ imagePreview, handleRemoveImage, handleLocationImageUpload, uploadingImages }) => {
   const handleRemove = useCallback((e) => {
@@ -251,6 +264,7 @@ export default function LocationManagement({
         showToast('Tạo địa điểm thành công!', 'success', 3000);
         // Reset về trang đầu khi tạo mới
         setPage(0);
+        await fetchLocations();
       }
       
       handleCloseDialog();
@@ -276,6 +290,7 @@ export default function LocationManagement({
       showToast('Xóa địa điểm thành công!', 'success', 3000);
       // Reset về trang đầu sau khi xóa
       setPage(0);
+      await fetchLocations();
     } catch (err) {
       showToast('Lỗi khi xóa địa điểm. Vui lòng thử lại.', 'error', 3000);
     } finally {
@@ -378,9 +393,12 @@ export default function LocationManagement({
             </Button>
           </Alert>
         ) : locations.length === 0 ? (
-          <Alert severity="info">
-            Chưa có địa điểm nào. Nhấn "Thêm địa điểm" để tạo mới.
-          </Alert>
+          <EmptyStateBox>
+            <LocationIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
+            <Typography variant="h6" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
+              Chưa có địa điểm nào
+            </Typography>
+          </EmptyStateBox>
         ) : isMobile ? (
           <Grid container spacing={2}>
             {locations.map((location) => (

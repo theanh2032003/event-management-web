@@ -331,8 +331,6 @@ export default function EventTicketTypeManagement({ enterpriseId, eventId, event
       handleCloseDialog();
       await fetchTicketTypes();
     } catch (err) {
-      console.error("❌ Error saving ticket type:", err);
-      console.error("❌ Error response:", err?.response?.data);
 
       let errorMessage = "Không thể lưu loại vé.";
       if (err.response?.data) {
@@ -471,17 +469,6 @@ export default function EventTicketTypeManagement({ enterpriseId, eventId, event
               <Typography variant="h6" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
                 Chưa có loại vé nào cho sự kiện này
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Hãy tạo mới!
-              </Typography>
-              <StyledButton
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={() => handleOpenDialog()}
-              >
-                Tạo loại vé mới
-              </StyledButton>
             </EmptyStateBox>
           ) : isMobile ? (
             // Mobile view: Cards

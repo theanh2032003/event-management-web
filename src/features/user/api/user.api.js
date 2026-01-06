@@ -30,7 +30,7 @@ const userApi = {
    */
   createUser: async (userData) => {
     try {
-      const response = await axiosClient.post(`/api/enterprise/user`, userData);
+      const response = await axiosClient.post(`/enterprise/user`, userData);
       return response;
     } catch (error) {
       throw error;

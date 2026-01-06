@@ -48,6 +48,7 @@ import roleApi from "../api/role.api";
 import { useToast } from "../../../app/providers/ToastContext";
 import useProjectUserPermissions from "../hooks/useProjectUserPermissions";
 import { CommonTable } from "../../../shared/components/CommonTable";
+import CommonDialog from "../../../shared/components/CommonDialog";
 
 const StyledButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
@@ -123,6 +124,10 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
   // Permissions States
   const [permissions, setPermissions] = useState([]);
   const [loadingPermissions, setLoadingPermissions] = useState(false);
+
+  // Delete confirmation state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState(null);
 
   // Get current user ID from localStorage
   useEffect(() => {
@@ -331,17 +336,26 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
   };
 
   // ====== DELETE ROLE ======
-  const handleDeleteRole = async (roleId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa vai trò này?")) {
-      return;
-    }
+  const handleOpenDeleteConfirm = (roleId) => {
+    setRoleToDelete(roleId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    setDeleteConfirmOpen(false);
+    setRoleToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!roleToDelete) return;
 
     try {
       // Delete role using roleApi
-      await roleApi.deleteRole(eventId, roleId);
+      await roleApi.deleteRole(eventId, roleToDelete);
       setTimeout(() => {
         showToast('Xóa vai trò thành công!', 'success', 3000);
       }, 300);
+      handleCloseDeleteConfirm();
       await fetchRoles(0, rolesPageSize);
     } catch (err) {
       const message = err.response?.data?.message || "Không thể xóa vai trò";
@@ -438,7 +452,7 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
                       <IconButton size="small" onClick={() => handleOpenDialog(role)}>
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      <IconButton size="small" onClick={() => handleDeleteRole(role.id)} color="error">
+                      <IconButton size="small" onClick={() => handleOpenDeleteConfirm(role.id)} color="error">
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Box>
@@ -520,7 +534,7 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
                   </IconButton>
                   <IconButton
                     size="small"
-                    onClick={() => handleDeleteRole(role.id)}
+                    onClick={() => handleOpenDeleteConfirm(role.id)}
                     color="error"
                   >
                     <DeleteIcon fontSize="small" />
@@ -652,7 +666,21 @@ export default function EventRoleManagement({ enterpriseId, eventId, eventData }
           </Button>
         </DialogActions>
       </Dialog>
-        </>
+      {/* Delete Confirmation Dialog */}
+      <CommonDialog
+        open={deleteConfirmOpen}
+        title="Xác nhận xóa vai trò"
+        onClose={handleCloseDeleteConfirm}
+        onSubmit={handleConfirmDelete}
+        submitLabel="Xóa"
+        cancelLabel="Hủy"
+        submitColor="error"
+        centerButtons
+      >
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+          Bạn có chắc chắn muốn xóa vai trò này? Hành động này không thể hoàn tác.
+        </Typography>
+      </CommonDialog>        </>
       ) : null}
     </Box>
   );

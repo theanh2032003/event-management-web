@@ -521,8 +521,8 @@ export default function EnterpriseInfo() {
             <FullWidthField>
               <FormLabel>Địa chỉ</FormLabel>
               <TextField
-                name="address"
-                value={isEditing ? formData.address : enterpriseData.address}
+                name="description"
+                value={isEditing ? formData.description : enterpriseData.description}
                 onChange={handleInputChange}
                 disabled={!isEditing}
                 fullWidth
@@ -532,7 +532,7 @@ export default function EnterpriseInfo() {
               />
             </FullWidthField>
 
-            {/* Description Field */}
+            {/* Description Field
             <FullWidthField>
               <FormLabel>Mô tả</FormLabel>
               <TextField
@@ -546,7 +546,7 @@ export default function EnterpriseInfo() {
                 variant={isEditing ? 'outlined' : 'standard'}
                 placeholder="Nhập mô tả doanh nghiệp..."
               />
-            </FullWidthField>
+            </FullWidthField> */}
 
             {/* Fanpage Field */}
             <FormField>

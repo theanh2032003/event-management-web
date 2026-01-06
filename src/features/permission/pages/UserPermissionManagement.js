@@ -650,25 +650,25 @@ export default function UserPermissionManagement({
             pb: 2,
           }}
         >
-          Thêm người dùng vào doanh nghiệp
+          Thêm nhân sự
         </DialogTitle>
         <DialogContent sx={{ mt: 3 }}>
           <TextField
-            label="Email người dùng *"
+            label="Email nhân sự"
             type="email"
             fullWidth
             required
             value={emailInput}
             onChange={handleEmailChange}
             error={!!emailError}
-            helperText={emailError || "Nhập email của người dùng cần thêm"}
+            helperText={emailError || "Nhập email của nhân sự"}
             disabled={submittingAddUser}
             placeholder="user@example.com"
             autoFocus
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
-              }
+              }, mt: 1
             }}
           />
         </DialogContent>
@@ -691,7 +691,7 @@ export default function UserPermissionManagement({
           <StyledButton
             onClick={handleAddUser} 
             variant="contained"
-            disabled={submittingAddUser || !emailInput.trim() || !!emailError}
+            // disabled={submittingAddUser || !emailInput.trim() || !!emailError}
             startIcon={submittingAddUser ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
           >
             {submittingAddUser ? "Đang thêm..." : "Thêm nhân sự"}

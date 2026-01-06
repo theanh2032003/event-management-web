@@ -264,13 +264,7 @@ export default function RoleManagement({
         
         await axiosClient.put(
           `/role/${editingRole.id}`, 
-          requestBody,
-          {
-            headers: {
-              "enterprise-id": enterpriseId,
-              "Content-Type": "application/json"
-            }
-          }
+          requestBody
         );
         
       } else {
@@ -278,13 +272,7 @@ export default function RoleManagement({
         
         await axiosClient.post(
           "/role",
-          requestBody,
-          {
-            headers: {
-              "enterprise-id": enterpriseId,
-              "Content-Type": "application/json"
-            }
-          }
+          requestBody
         );
         
       }
@@ -296,6 +284,7 @@ export default function RoleManagement({
         await fetchRoles();
       } else {
         setPage(0);
+        await fetchRoles();
       }
     } catch (err) {
       let errorMessage = "Không thể lưu quyền.";
@@ -379,13 +368,6 @@ export default function RoleManagement({
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Hãy tạo vai trò đầu tiên để bắt đầu quản lý quyền hạn!
           </Typography>
-          <StyledButton
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
-            Tạo vai trò mới
-          </StyledButton>
         </EmptyStateBox>
       ) : isMobile ? (
           // Mobile view: Cards
@@ -795,15 +777,12 @@ export default function RoleManagement({
         onSubmit={async () => {
           try {
             setIsDeleting(true);
-            await axiosClient.delete(`/role/${itemToDelete.id}`, {
-              headers: { 
-                "enterprise-id": enterpriseId
-              }
-            });
+            await axiosClient.delete(`/role/${itemToDelete.id}`);
             showToast(`Xóa vai trò thành công!`, 'success', 3000);
             setPage(0); // Reset về trang đầu sau khi xóa
             setDeleteDialogOpen(false);
             setItemToDelete(null);
+            await fetchRoles();
           } catch (err) {
             const message = err.response?.data?.message || "Không thể xóa. Vui lòng thử lại!";
             showToast(`${message}`, 'error', 3000);

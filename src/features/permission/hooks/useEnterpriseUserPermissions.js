@@ -14,19 +14,13 @@ const getIsOwner = () => {
     const parts = token.split('.');
     if (parts.length !== 3) return false;
     
-    // Decode payload - add base64 padding if needed
+    // Convert base64url to base64
     let payload = parts[1];
-    switch (payload.length % 4) {
-      case 0:
-        break;
-      case 2:
-        payload += '==';
-        break;
-      case 3:
-        payload += '=';
-        break;
-      default:
-        throw new Error('Invalid token');
+    payload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    // Add padding
+    const padding = 4 - (payload.length % 4);
+    if (padding !== 4) {
+      payload += '='.repeat(padding);
     }
     
     const decoded = JSON.parse(atob(payload));

@@ -148,10 +148,10 @@ const StageDialog = ({
       return;
     }
 
-    if (!stageForm.description.trim()) {
-      setError("Mô tả là bắt buộc");
-      return;
-    }
+    // if (!stageForm.description.trim()) {
+    //   setError("Mô tả là bắt buộc");
+    //   return;
+    // }
 
     if (!stageForm.startedAt) {
       setError("Thời gian bắt đầu là bắt buộc");
@@ -406,7 +406,7 @@ const StageDialog = ({
             <TextField
               label="Mô tả"
               fullWidth
-              required
+              // required
               multiline
               rows={3}
               value={stageForm.description}

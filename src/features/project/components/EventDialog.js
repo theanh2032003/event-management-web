@@ -206,7 +206,7 @@ const EventDialog = ({
 
   // Load event data khi edit
   useEffect(() => {
-    if (event) {
+    if (event?.id) {
       setEventForm({
         name: event.name || "",
         avatar: event.avatar || "",
@@ -224,8 +224,12 @@ const EventDialog = ({
       setAvatarPreview(event.avatar || null);
       // Use images array directly as previews (they are URLs from server)
       setImagePreviews(event.images || []);
-    } else {
-      // Reset form khi create mới
+    }
+  }, [event?.id]);
+
+  // Reset form khi create mới hoặc dialog mở
+  useEffect(() => {
+    if (open && !event?.id) {
       // Cleanup old blob URLs before reset
       setImagePreviews(prev => {
         prev.forEach(preview => {
@@ -235,7 +239,12 @@ const EventDialog = ({
         });
         return [];
       });
-      setEventForm({
+      setEventForm(prev => ({
+        ...prev,
+        startedAt: getCurrentDateTimeLocal(),
+        endedAt: getCurrentDateTimeLocal(),
+        groupTaskTypeId: groupTaskTypes.length > 0 ? groupTaskTypes[0].id : prev.groupTaskTypeId,
+        locationId: "",
         name: "",
         avatar: "",
         description: "",
@@ -243,16 +252,12 @@ const EventDialog = ({
         feeType: "FREE",
         visibility: "PUBLIC",
         accessType: "OPEN",
-        startedAt: getCurrentDateTimeLocal(),
-        endedAt: getCurrentDateTimeLocal(),
-        groupTaskTypeId: groupTaskTypes.length > 0 ? groupTaskTypes[0].id : "",
-        locationId: "",
         images: [],
-      });
+      }));
       setAvatarPreview(null);
       setError("");
     }
-  }, [event, open, groupTaskTypes, formatDateTimeLocal, getCurrentDateTimeLocal]);
+  }, [open, !event?.id, groupTaskTypes]);
 
   // Avatar upload handler
   const handleAvatarUpload = async (event) => {

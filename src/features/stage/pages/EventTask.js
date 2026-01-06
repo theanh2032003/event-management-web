@@ -361,7 +361,6 @@ export default function EventTask({ projectId: propProjectId, enterpriseId: prop
     console.log("🔄 handleChangeTaskStatus called with:", { task, newStatus, taskId: task?.id });
     
     if (!task || !task.id) {
-      console.error("❌ Task or task.id is undefined:", task);
       showToast("Lỗi: Không xác định được công việc", "error");
       return;
     }

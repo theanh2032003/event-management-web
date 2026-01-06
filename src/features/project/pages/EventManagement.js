@@ -580,14 +580,6 @@ const EventManagement = ({ hasPermission = true }) => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Hãy tạo sự kiện đầu tiên để bắt đầu quản lý!
           </Typography>
-          <StyledButton
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
-            Tạo sự kiện mới
-          </StyledButton>
         </EmptyStateBox>
       ) : filteredEvents.length === 0 ? (
         <EmptyStateBox>

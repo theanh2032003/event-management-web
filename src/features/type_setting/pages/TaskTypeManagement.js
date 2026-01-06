@@ -191,13 +191,7 @@ export default function TaskCategoryManagement({
         
         const responseData = await axiosClient.put(
           `/group-task-type/${editingCategory.id}`, 
-          requestBody,
-          {
-            headers: {
-              "enterprise-id": enterpriseId,
-              "Content-Type": "application/json"
-            }
-          }
+          requestBody
         );
         
         showToast("Cập nhật nhóm phân loại thành công", "success", 3000);
@@ -208,13 +202,11 @@ export default function TaskCategoryManagement({
         const response = await axiosClient.post("/group-task-type", {
           name: categoryForm.name,
           description: categoryForm.description || ""
-        }, {
-          headers: {
-            "enterprise-id": enterpriseId
-          }
         });
         
         showToast("Tạo nhóm phân loại thành công", "success", 3000);
+        await fetchTaskCategories(page, rowsPerPage);
+
         // Reload danh sách từ trang đầu
         setPage(0);
       }
@@ -1036,21 +1028,13 @@ export default function TaskCategoryManagement({
           try {
             setIsDeleting(true);
             if (deleteTarget === 'category') {
-              await axiosClient.delete(`/group-task-type/${itemToDelete.id}`, {
-                headers: { 
-                  "enterprise-id": enterpriseId 
-                }
-              });
+              await axiosClient.delete(`/group-task-type/${itemToDelete.id}`);
               // Reload danh sách, reset về trang đầu nếu cần
               setPage(0);
+              await fetchTaskCategories(page, rowsPerPage);
             } else if (deleteTarget === 'taskType') {
               await axiosClient.delete(
-                `/group-task-type/${selectedGroup.id}/task-type/${itemToDelete.id}`,
-                {
-                  headers: {
-                    "enterprise-id": enterpriseId
-                  }
-                }
+                `/group-task-type/${selectedGroup.id}/task-type/${itemToDelete.id}`
               );
               await fetchTaskTypes(selectedGroup.id);
             }

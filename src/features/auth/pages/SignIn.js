@@ -157,8 +157,7 @@ export default function SignIn(props) {
     
     try {
       const response = await authApi.login(loginData);
-      
-
+      console.log('🔐 [SignIn] Login response:', response);
       
       // Save tokens to localStorage
       if (response.accessToken) {
@@ -166,9 +165,20 @@ export default function SignIn(props) {
         try {
           // Decode JWT token (base64 decode the payload) with UTF-8 support
           const tokenParts = response.accessToken.split('.');
+          console.log('🔐 [SignIn] Token parts length:', tokenParts.length);
+          
           if (tokenParts.length === 3) {
-            // Fix UTF-8 encoding for Vietnamese characters
-            const binaryString = atob(tokenParts[1]);
+            // JWT uses base64url encoding, convert to standard base64
+            let base64Url = tokenParts[1];
+            // Replace base64url characters with standard base64
+            base64Url = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            // Add padding
+            const padding = 4 - (base64Url.length % 4);
+            if (padding !== 4) {
+              base64Url += '='.repeat(padding);
+            }
+            
+            const binaryString = atob(base64Url);
             const bytes = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) {
               bytes[i] = binaryString.charCodeAt(i);
@@ -182,7 +192,6 @@ export default function SignIn(props) {
             const userEmail = payload['user-email'] || payload.userEmail || payload.email;
             const userAvatar = payload['user-avatar'] || payload.userAvatar || payload.avatar || '';
      
-            
             if (userId) {
               // Create user object from JWT data
               const user = {
@@ -198,8 +207,15 @@ export default function SignIn(props) {
               // Also save refreshToken
               localStorage.setItem('refreshToken', response.refreshToken);
               
+              // Clear last workspace info when logging in with a new account
+              // This ensures redirect to select-workspace instead of previous workspace
+              localStorage.removeItem('lastWorkspaceId');
+              localStorage.removeItem('lastWorkspaceType');
+              localStorage.removeItem('currentWorkspace');
+              
               // Navigate to select workspace page after successful login
-              navigate('/select-workspace');
+              // Use replace: true to prevent going back to login page
+              navigate('/select-workspace', { replace: true });
             } else {
               setEmailError(true);
               setEmailErrorMessage('Không thể lấy thông tin người dùng. Vui lòng thử lại.');
@@ -208,6 +224,7 @@ export default function SignIn(props) {
           }
         } catch (jwtError) {
           // Continue anyway, maybe backend will add user object later
+          console.error('🔐 [SignIn] JWT decode error:', jwtError);
         }
         
       } else {

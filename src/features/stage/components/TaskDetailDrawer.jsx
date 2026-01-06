@@ -453,7 +453,6 @@ export default function TaskDetailDrawer({
               )}
 
               {/* Supporters */}
-              {displayTask.supporters?.length > 0 && (
                 <FieldBox sx={{ borderBottom: 'none', mb: 1 }}>
                   <Label sx={{ fontSize: "0.9rem", fontWeight: 600 }}>Người hỗ trợ</Label>
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -481,7 +480,6 @@ export default function TaskDetailDrawer({
                     ))}
                   </Box>
                 </FieldBox>
-              )}
 
               {/* Testers */}
               {displayTask.testers?.length > 0 && (

@@ -226,6 +226,7 @@ const EmptyStateBox = styled(Box)(({ theme }) => ({
   justifyContent: 'center',
   alignItems: 'center',
   width: '100%',
+  gridColumn: '1 / -1',
   height: '100%',
   padding: theme.spacing(3),
   textAlign: 'center',
@@ -1002,7 +1003,7 @@ export default function SelectWorkspacePage() {
                 </Typography>
               </EmptyStateBox>
             ) : activeTab === 'company' && companies.length === 0 ? (
-              <EmptyStateBox>
+              <EmptyStateBox sx={{width: '100%'}}>
                 <BusinessIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1, opacity: 0.5 }} />
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
                   Chưa có doanh nghiệp

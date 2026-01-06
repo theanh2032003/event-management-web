@@ -204,27 +204,15 @@ export default function EventOverview({
     const fetchDropdownData = async () => {
       try {
         setLoadingDropdowns(true);
-        const token = localStorage.getItem("token");
-        
-        if (!token) {
-          console.error("No access token found");
-          return;
-        }
-
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "enterprise-id": eventData.enterpriseId || getCurrentEnterpriseId(),
-        };
-        
         // Fetch group task types using axiosClient
-        const typesResponse = await axiosClient.get("/group-task-type", { headers });
-        const typesData = typesResponse?.data || typesResponse;
-        setGroupTaskTypes(Array.isArray(typesData) ? typesData : []);
+        // const typesResponse = await axiosClient.get("/group-task-type");
+        // const typesData = typesResponse?.data || typesResponse;
+        // setGroupTaskTypes(Array.isArray(typesData) ? typesData : []);
         
-        // Fetch locations
-        const locationsResponse = await locationApi.getLocations(eventData.enterpriseId);
-        const locationsData = locationsResponse?.data || locationsResponse;
-        setLocations(Array.isArray(locationsData) ? locationsData : []);
+        // // Fetch locations
+        // const locationsResponse = await locationApi.getLocations(eventData.enterpriseId);
+        // const locationsData = locationsResponse?.data || locationsResponse;
+        // setLocations(Array.isArray(locationsData) ? locationsData : []);
         
       } catch (error) {
         toast.error('Không thể tải dữ liệu danh sách');

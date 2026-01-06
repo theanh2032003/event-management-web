@@ -155,7 +155,7 @@ const ScheduleDialog = ({
   const fetchLocations = async () => {
     try {
       setLoadingLocations(true);
-      const response = await locationApi.getLocations(enterpriseId);
+      const response = await locationApi.getLocations(true);
       // API returns {data: Array, metadata: {}} structure
       const locationData = response?.data || response;
       setLocations(Array.isArray(locationData) ? locationData : []);
@@ -317,19 +317,19 @@ const ScheduleDialog = ({
       const childStart = new Date(scheduleForm.startedAt);
       const childEnd = new Date(scheduleForm.endedAt);
 
-      if (childStart < parentStart) {
-        errors.startedAt = "Thời gian bắt đầu phải >= thời gian bắt đầu của lịch trình chính";
-      }
-      if (childEnd > parentEnd) {
-        errors.endedAt = "Thời gian kết thúc phải <= thời gian kết thúc của lịch trình chính";
-      }
+      // if (childStart < parentStart) {
+      //   errors.startedAt = "Thời gian bắt đầu phải >= thời gian bắt đầu của lịch trình chính";
+      // }
+      // if (childEnd > parentEnd) {
+      //   errors.endedAt = "Thời gian kết thúc phải <= thời gian kết thúc của lịch trình chính";
+      // }
     }
 
     // If there are errors, set them and don't save
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
-      return;
-    }
+    // if (Object.keys(errors).length > 0) {
+    //   setFieldErrors(errors);
+    //   return;
+    // }
 
     // Clear errors if validation passes
     setFieldErrors({});
@@ -491,7 +491,9 @@ const ScheduleDialog = ({
                   <Select
                     labelId="location-select-label"
                     value={scheduleForm.locationId}
-                    label="Địa điểm *"
+                    label="Địa điểm"
+                    required
+                    disabled={submitting || loadingLocations}
                     onChange={(e) => {
                       setScheduleForm({ ...scheduleForm, locationId: e.target.value });
                       if (fieldErrors.locationId) {
