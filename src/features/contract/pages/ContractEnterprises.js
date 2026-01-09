@@ -143,7 +143,7 @@ export default function Contracts() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmContractId, setDeleteConfirmContractId] = useState(null);
 
-  const isUnauthorized = !permissionsLoading && !isOwner;
+  const isUnauthorized = !permissionsLoading && !isOwner && !hasPermission(PERMISSION_CODES.CONTRACT_MANAGE);
 
   // Modal states
   const [viewMode, setViewMode] = useState("list"); // "list" or "detail"

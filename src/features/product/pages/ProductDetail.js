@@ -20,6 +20,7 @@ import QuoteRequestModal from "../components/QuoteRequestModal";
 import ProductSummaryCard from "../components/ProductSummaryCard";
 import ProductDescriptionCard from "../components/ProductDescriptionCard";
 import SupplierInfoCard from "../components/SupplierInfoCard";
+import { PERMISSION_CODES, PERMISSION_TYPES } from '../../../shared/constants/permissions';
 
 /**
  * Product Detail Page
@@ -101,8 +102,8 @@ export default function ProductDetail() {
   };
 
   const userId = getUserId();
-  const { isOwner, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
-  const isUnauthorized = !permissionsLoading && !isOwner;
+  const { isOwner, hasPermission, loading: permissionsLoading } = useEnterpriseUserPermissions(userId);
+  const isUnauthorized = !permissionsLoading && !isOwner && !hasPermission(PERMISSION_CODES.MARKETPLACE_VIEW);
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);

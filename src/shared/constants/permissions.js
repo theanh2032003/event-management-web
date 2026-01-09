@@ -15,7 +15,8 @@ export const PERMISSION_CODES = {
   ENTERPRISE_USER_MANAGE: 'enterprise_user_manage', // Quản lý người dùng
   STATISTICAL_VIEW: 'statistical_view',          // Xem thống kê
   PROJECT_CREATE: 'project_create',              // Tạo sự kiện
-
+  MARKETPLACE_VIEW: 'marketplace_view',        // Xem marketplace
+  CONTRACT_MANAGE: 'contract_manage',        // Quản lý hợp đồng
   // ==================== PROJECT PERMISSIONS ====================
   PROJECT_SCHEDULE_MANAGE: 'project_schedule_manage', // Quản lý lịch trình
   PROJECT_USER_MANAGE: 'project_user_manage',        // Quản lý người dùng (PROJECT)
